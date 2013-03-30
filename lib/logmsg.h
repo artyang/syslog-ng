@@ -227,6 +227,12 @@ gboolean log_msg_is_handle_macro(NVHandle handle);
 gboolean log_msg_is_handle_sdata(NVHandle handle);
 gboolean log_msg_is_handle_match(NVHandle handle);
 
+static inline gboolean
+log_msg_is_handle_settable_with_an_indirect_value(NVHandle handle)
+{
+  return (handle >= LM_V_MAX);
+}
+
 const gchar *log_msg_get_macro_value(LogMessage *self, gint id, gssize *value_len);
 
 static inline const gchar *
