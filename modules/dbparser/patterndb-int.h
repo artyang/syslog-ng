@@ -202,6 +202,7 @@ typedef struct _PDBRuleSet
   RNode *programs;
   gchar *version;
   gchar *pub_date;
+  gboolean is_empty;
 } PDBRuleSet;
 
 gboolean pdb_rule_set_load(PDBRuleSet *self, GlobalConfig *cfg, const gchar *config, GList **examples);
