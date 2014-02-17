@@ -18,6 +18,12 @@ set -e
      echo "PE module: $pemodrepo"
  fi
 
+ if [ ! -e "$pemodrepo" ]
+ then
+     echo "Unable to locate syslog-ng-pe-modules under $ZWA_ROOT/work :-(" >&2
+     exit 1
+ fi
+
  for pe_module_path in `ls -d $pemodrepo/modules/*/`; do
     pe_module_basename=`basename $pe_module_path`
     if [ -d $pe_module_path ]; then
