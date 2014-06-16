@@ -10,7 +10,7 @@ SUBDIRS += afmongodb
 SUBDIRS += afsmtp
 
 # pe modules
-SUBDIRS += license confighash diskq logstore rltp-proto snmp
+SUBDIRS += license confighash diskq logstore-common logstore indexed_logstore rltp-proto snmp
 
 if !IS_WINDOWS
 SUBDIRS += afsqlsource systemd-journal
