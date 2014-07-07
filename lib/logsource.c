@@ -312,6 +312,9 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
         {
           stats_instant_inc_dynamic_counter(3, SCS_SENDER | SCS_SOURCE, NULL, log_msg_get_value(msg, LM_V_HOST_FROM, NULL), msg->timestamps[LM_TS_RECVD].tv_sec);
           stats_instant_inc_dynamic_counter(3, SCS_PROGRAM | SCS_SOURCE, NULL, log_msg_get_value(msg, LM_V_PROGRAM, NULL), -1);
+
+          stats_instant_inc_dynamic_counter(3, SCS_HOST | SCS_SOURCE, self->options->group_name, log_msg_get_value(msg, LM_V_HOST, NULL), msg->timestamps[LM_TS_RECVD].tv_sec);
+          stats_instant_inc_dynamic_counter(3, SCS_SENDER | SCS_SOURCE, self->options->group_name, log_msg_get_value(msg, LM_V_HOST_FROM, NULL), msg->timestamps[LM_TS_RECVD].tv_sec);
         }
 
       stats_unlock();
