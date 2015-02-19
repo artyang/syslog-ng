@@ -297,6 +297,7 @@ msg_event_send(LogMessage *lm)
   if (log_syslog)
     {
       syslog(lm->pri, "%s", msg);
+      log_msg_unref(lm);
     }
   else
     {
