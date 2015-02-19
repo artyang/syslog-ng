@@ -316,6 +316,35 @@ assert_guint32_array_non_fatal(guint32 *actual, guint32 actual_length, guint32 *
   return assertion_ok;
 }
 
+gboolean
+assert_guint64_array_non_fatal(guint64 *actual, guint64 actual_length, guint64 *expected, guint64 expected_length, const gchar *error_message, ...)
+{
+  va_list args;
+  gboolean assertion_ok = TRUE;
+  guint64 i;
+
+  va_start(args, error_message);
+
+  assertion_ok = compare_arrays_trivially((void *)actual, actual_length, (void *)expected, expected_length, error_message, args);
+  if (assertion_ok)
+    {
+      for (i = 0; i < expected_length; ++i)
+        {
+          if (expected[i] != actual[i])
+            {
+              print_failure(error_message, args, "actual=%u, expected=%u, index=%u", actual[i], expected[i], i);
+              assertion_ok = FALSE;
+              break;
+            }
+        }
+    }
+
+  va_end(args);
+
+  return assertion_ok;
+}
+
+
 /* NOTE: this does the same as g_strcmp0(), but we use an older glib, which lacks this function */
 static gboolean
 are_strings_equal(gchar *a, gchar *b)
