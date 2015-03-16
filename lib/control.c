@@ -37,7 +37,7 @@ static ControlServer *control_server;
 static GList *command_list = NULL;
 
 void
-control_register_command(gchar *command_name, gchar *description, CommandFunction function)
+control_register_command(const gchar *command_name, const gchar *description, CommandFunction function)
 {
   Commands *new_command = g_new0(Commands, 1);
   new_command->command = command_name;
@@ -128,10 +128,14 @@ Commands commands[] = {
 static void
 register_default_commands()
 {
-  control_register_command("STATS", NULL, control_connection_send_stats);
-  control_register_command("LOG", NULL, control_connection_message_log);
-  control_register_command("STOP", NULL, control_connection_stop_process);
-  control_register_command("RELOAD", NULL, control_connection_reload);
+  int i;
+  Commands *cmd;
+
+  for (i = 0; commands[i].command != NULL; i++)
+    {
+      cmd = &commands[i];
+      control_register_command(cmd->command, cmd->description, cmd->func);
+    }
 }
 
 void 
