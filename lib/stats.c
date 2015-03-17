@@ -72,17 +72,6 @@
  * operations under the protection of the same lock acquiral.
  */
 
-struct _StatsCounter
-{
-  StatsCounterItem counters[SC_TYPE_MAX];
-  guint16 ref_cnt;
-  guint16 source;
-  gchar *id;
-  gchar *instance;
-  guint16 live_mask;
-  guint16 dynamic:1;
-};
-
 /* Static counters for severities and facilities */
 /* LOG_DEBUG 0x7 */
 #define SEVERITY_MAX   (0x7 + 1)
@@ -92,7 +81,6 @@ struct _StatsCounter
 static StatsCounterItem *severity_counters[SEVERITY_MAX];
 static StatsCounterItem *facility_counters[FACILITY_MAX];
 
-static GHashTable *counter_hash;
 GStaticMutex stats_mutex;
 gint current_stats_level;
 gboolean stats_locked;

@@ -7,6 +7,12 @@ template_headers = \
 template_sources = \
 	template/templates.c
 
+stats_headers = \
+    stats/stats-counter.h
+
+stats_sources = \
+    stats/stats-counter.c
+
 YFLAGS=@YFLAGS@
 
 export top_srcdir
@@ -110,6 +116,7 @@ pkginclude_HEADERS = 		\
 	parse-number.h \
 	filter-netmask6.h \
   service-management.h \
+  $(stats_headers) \
   pathutils.h \
   $(template_headers)
 
@@ -216,6 +223,7 @@ libsyslog_ng_la_SOURCES = \
   service-management.c \
 	$(libsyslog_ng_crypto_la_SOURCES) \
 	pathutils.c \
+  $(stats_sources) \
   $(template_sources)
 
 if !IS_WINDOWS
