@@ -89,6 +89,8 @@ void log_writer_reopen(LogPipe *s, LogProto *proto, LogProtoOptions *proto_optio
 LogPipe *log_writer_new(guint32 flags);
 void log_writer_set_queue(LogPipe *s, LogQueue *queue);
 
+LogQueue *log_writer_get_queue(LogWriter *self);
+
 void log_writer_options_set_template_escape(LogWriterOptions *options, gboolean enable);
 void log_writer_options_defaults(LogWriterOptions *options);
 void log_writer_options_init(LogWriterOptions *options, GlobalConfig *cfg, guint32 option_flags);
