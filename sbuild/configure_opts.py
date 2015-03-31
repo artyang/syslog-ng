@@ -1,1 +1,1 @@
-default_opts="--enable-debug --with-ivykis=system --enable-stmp"
+default_opts="--enable-debug --with-ivykis=system --enable-stmp --with-libmongo-client=system"
