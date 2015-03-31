@@ -30,7 +30,10 @@ _reset_counters(gpointer key, gpointer value, gpointer user_data)
 
   for (type = 0; type < SC_TYPE_MAX; ++type)
     {
-      stats_counter_set(&sc->counters[type], 0);
+      if (type != SC_TYPE_STORED)
+        {
+          stats_counter_set(&sc->counters[type], 0);
+        }
     }
 }
 
