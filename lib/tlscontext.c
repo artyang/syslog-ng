@@ -692,6 +692,12 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
     {
       /* hmm. there was no subjectAltName (this is deprecated, but still
        * widely used), look up the Subject, most specific CN */
+
+      /* According to RFC6125 must check SAN first, and if SAN exists,
+       * then CN should not be checked. See "Subject Naming in PKIX Certificates" and
+       * Syslog (2009)" capters.
+      */
+
       X509_NAME *name;
 
       name = X509_get_subject_name(cert);
