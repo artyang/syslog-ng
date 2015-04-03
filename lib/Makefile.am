@@ -110,6 +110,7 @@ pkginclude_HEADERS = 		\
 	parse-number.h \
 	filter-netmask6.h \
   service-management.h \
+  pathutils.h \
   $(template_headers)
 
 if !IS_WINDOWS
@@ -214,6 +215,7 @@ libsyslog_ng_la_SOURCES = \
 	filter-netmask6.c	\
   service-management.c \
 	$(libsyslog_ng_crypto_la_SOURCES) \
+	pathutils.c \
   $(template_sources)
 
 if !IS_WINDOWS

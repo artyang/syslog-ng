@@ -537,7 +537,7 @@ log_writer_start_watches(LogWriter *self)
   self->fd_watch.fd = fd;
   if (self->pollable_state < 0)
     {
-      if (is_file_regular(fd))
+      if (f_is_file_regular(fd))
         self->pollable_state = 0;
       else
         self->pollable_state = !iv_fd_register_try(&self->fd_watch);

@@ -976,7 +976,7 @@ log_reader_init(LogPipe *s)
       gint fd = log_proto_get_fd(self->proto);
       if (fd >= 0)
         {
-          self->is_regular = is_file_regular(fd);
+          self->is_regular = f_is_file_regular(fd);
         }
     }
 
@@ -1061,7 +1061,7 @@ log_reader_reopen_deferred(gpointer s)
       gint fd = log_proto_get_fd(proto);
       if (fd >= 0)
         {
-          self->is_regular = is_file_regular(fd);
+          self->is_regular = f_is_file_regular(fd);
         }
 
       if (*immediate_check)

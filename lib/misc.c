@@ -922,7 +922,7 @@ get_pid_string()
 }
 
 gboolean
-is_file_regular(gint fd)
+f_is_file_regular(gint fd)
 {
   struct stat st;
 
