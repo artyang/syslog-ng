@@ -131,7 +131,6 @@ testcase_frequent_words(gchar* logs, guint support, gchar *expected)
 void
 frequent_words_tests()
 {
-
   /* simple tests */
 
   testcase_frequent_words(
@@ -425,7 +424,7 @@ int
 main()
 {
   app_startup();
-  configuration = cfg_new(VERSION_VALUE_2_1);
+  configuration = cfg_new(0x0201);
   plugin_load_module("syslogformat", configuration, NULL);
   msg_format_options_defaults(&parse_options);
   msg_format_options_init(&parse_options, configuration);

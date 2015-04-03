@@ -1,3 +1,27 @@
+/*
+ * Copyright (c) 2012 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2012 Balázs Scheidler
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * As an additional exemption you are allowed to compile & link against the
+ * OpenSSL libraries as published by the OpenSSL project. See the file
+ * COPYING for details.
+ *
+ */
+
 #include "testutils.h"
 #include "messages.h"
 
@@ -49,9 +73,6 @@ start_stopwatch(void)
   gettimeofday(&start_time_val, NULL);
 }
 
-/*ignoring the G_GUINT64_FORMAT warning*/
-#pragma GCC diagnostic ignored "-Wformat"
-#pragma GCC diagnostic ignored "-Wformat-extra-args"
 void
 stop_stopwatch_and_display_result(gchar *message_template, ...)
 {
@@ -65,10 +86,8 @@ stop_stopwatch_and_display_result(gchar *message_template, ...)
   va_end(args);
 
   diff = (end_time_val.tv_sec - start_time_val.tv_sec) * 1000000 + end_time_val.tv_usec - start_time_val.tv_usec;
-  printf("; runtime=%" G_GUINT64_FORMAT ".%06" G_GUINT64_FORMAT " s\n", diff / 1000000, diff % 1000000);
+  printf("; runtime=%lu.%06lu s\n", diff / 1000000, diff % 1000000);
 }
-#pragma GCC diagnostic warning "-Wformat"
-#pragma GCC diagnostic warning "-Wformat-extra-args"
 
 static void
 grab_message(LogMessage *msg)
@@ -189,6 +208,21 @@ assert_guint64_non_fatal(guint64 actual, guint64 expected, const gchar *error_me
 
   va_start(args, error_message);
   print_failure(error_message, args, "actual=%llu, expected=%llu", actual, expected);
+  va_end(args);
+
+  return FALSE;
+}
+
+gboolean
+assert_gdouble_non_fatal(gdouble actual, gdouble expected, const gchar *error_message, ...)
+{
+  va_list args;
+
+  if (actual == expected)
+    return TRUE;
+
+  va_start(args, error_message);
+  print_failure(error_message, args, "actual=%f, expected=%f", actual, expected);
   va_end(args);
 
   return FALSE;
@@ -346,7 +380,7 @@ assert_null_non_fatal(void *pointer, const gchar *error_message, ...)
     return TRUE;
 
   va_start(args, error_message);
-  print_failure(error_message, args, "Pointer expected to be NULL; pointer=%p", pointer);
+  print_failure(error_message, args, "Pointer expected to be NULL; pointer=%llx", (guint64)pointer);
   va_end(args);
 
   return FALSE;

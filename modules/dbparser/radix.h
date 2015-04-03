@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2002-2010 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2010 Balázs Scheidler
+ * Copyright (c) 2002-2012 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 1998-2012 Balázs Scheidler
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * As an additional exemption you are allowed to compile & link against the
@@ -40,7 +40,13 @@ enum
   RPT_ANYSTRING,
   RPT_IPV6,
   RPT_IP,
-  RPT_FLOAT
+  RPT_FLOAT,
+  RPT_SET,
+  RPT_MACADDR,
+  RPT_PCRE,
+  RPT_EMAIL,
+  RPT_HOSTNAME,
+  RPT_LLADDR,
 };
 
 typedef struct _RParserMatch
@@ -124,6 +130,16 @@ r_parser_type_name(guint8 type)
         return "IP";
       case RPT_FLOAT:
         return "FLOAT";
+      case RPT_SET:
+        return "SET";
+      case RPT_MACADDR:
+        return "MACADDR";
+      case RPT_EMAIL:
+        return "EMAIL";
+      case RPT_HOSTNAME:
+        return "HOSTNAME";
+      case RPT_LLADDR:
+        return "LLADDR";
       default:
         return "UNKNOWN";
     }
@@ -131,9 +147,10 @@ r_parser_type_name(guint8 type)
 
 RNode *r_new_node(guint8 *key, gpointer value);
 void r_free_node(RNode *node, void (*free_fn)(gpointer data));
-void r_insert_node(RNode *root, guint8 *key, gpointer value, gboolean parser, RNodeGetValueFunc value_func);
-RNode *r_find_node(RNode *root, guint8 *whole_key, guint8 *key, gint keylen, GArray *matches);
-RNode *r_find_node_dbg(RNode *root, guint8 *whole_key, guint8 *key, gint keylen, GArray *matches, GArray *dbg_list);
+void r_insert_node(RNode *root, guint8 *key, gpointer value, RNodeGetValueFunc value_func);
+RNode *r_find_node(RNode *root, guint8 *key, gint keylen, GArray *matches);
+RNode *r_find_node_dbg(RNode *root, guint8 *key, gint keylen, GArray *matches, GArray *dbg_list);
+gchar **r_find_all_applicable_nodes(RNode *root, guint8 *key, gint keylen, RNodeGetValueFunc value_func);
 
 #endif
 

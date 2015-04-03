@@ -1,10 +1,34 @@
+/*
+ * Copyright (c) 2012 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2012 Balázs Scheidler
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * As an additional exemption you are allowed to compile & link against the
+ * OpenSSL libraries as published by the OpenSSL project. See the file
+ * COPYING for details.
+ *
+ */
+
 #ifndef LIBTEST_H_INCLUDED
 #define LIBTEST_H_INCLUDED
 
 #include <glib.h>
 #include <sys/time.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 #include "logmsg.h"
 
 #define PRETTY_STRING_FORMAT "%s%s%s"
@@ -18,7 +42,7 @@
 #define gboolean_to_string(value) (value ? "TRUE" : "FALSE")
 
 #define ASSERTION_ERROR(message) "%s:%d/%s\n  #       %s", \
-                                 __FILE__, __LINE__, __FUNCTION__, ((message) ? (message) : "")
+                                 basename(__FILE__), __LINE__, __FUNCTION__, ((message) ? (message) : "")
 
 void start_stopwatch();
 void stop_stopwatch_and_display_result(gchar *message_template, ...);
@@ -35,6 +59,7 @@ gchar **fill_string_array(gint number_of_elements, ...);
 gboolean assert_guint16_non_fatal(guint16 actual, guint16 expected, const gchar *error_message, ...);
 gboolean assert_gint64_non_fatal(gint64 actual, gint64 expected, const gchar *error_message, ...);
 gboolean assert_guint64_non_fatal(guint64 actual, guint64 expected, const gchar *error_message, ...);
+gboolean assert_gdouble_non_fatal(gdouble actual, gdouble expected, const gchar *error_message, ...);
 gboolean assert_nstring_non_fatal(const gchar *actual, gint actual_len, const gchar *expected, gint expected_len, const gchar *error_message, ...);
 gboolean assert_guint32_array_non_fatal(guint32 *actual, guint32 actual_length, guint32 *expected, guint32 expected_length, const gchar *error_message, ...);
 gboolean assert_string_array_non_fatal(gchar **actual, guint32 actual_length, gchar **expected, guint32 expected_length, const gchar *error_message, ...);
@@ -57,6 +82,8 @@ gboolean assert_msg_field_equals_non_fatal(LogMessage *msg, gchar *field_name, g
 
 #define assert_gint32(actual, expected, error_message, ...) (assert_gint64((gint64)actual, (gint64)expected, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
 #define assert_guint32(actual, expected, error_message, ...) (assert_guint64((guint64)actual, (guint64)expected, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
+
+#define assert_gdouble(actual, expected, error_message, ...) (assert_gdouble_non_fatal(actual, expected, error_message, ##__VA_ARGS__) ? 1 : (exit (1),0))
 
 #define assert_string(actual, expected, error_message, ...) (assert_nstring_non_fatal(actual, -1, expected, -1, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
 #define assert_nstring(actual, actual_len, expected, expected_len, error_message, ...) (assert_nstring_non_fatal(actual, actual_len, expected, expected_len, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
@@ -86,18 +113,6 @@ extern GString *current_testcase_description;
 extern gchar *current_testcase_function;
 extern gchar *current_testcase_file;
 
-#ifdef _WIN32
-static inline char *basename(const char *path)
-{
-  char *result = strrchr(path,'/');
-  if (result)
-    {
-      result++;
-    }
-  return result;
-}
-#endif
-
 #define testcase_begin(description_template, ...) \
     do { \
       if (current_testcase_description != NULL) \
@@ -109,7 +124,7 @@ static inline char *basename(const char *path)
       current_testcase_description = g_string_sized_new(0); \
       g_string_printf(current_testcase_description, description_template, ##__VA_ARGS__); \
       current_testcase_function = (gchar *)(__FUNCTION__); \
-      current_testcase_file = strchr(__FILE__, '/') ? basename(__FILE__) : __FILE__; \
+      current_testcase_file = basename(__FILE__); \
     } while (0)
 
 #define testcase_end() \

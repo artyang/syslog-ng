@@ -55,14 +55,14 @@ insert_node(RNode *root, gchar *key)
    * and it might be a read-only string literal */
 
   dup = g_strdup(key);
-  r_insert_node(root, dup, key, TRUE, NULL);
+  r_insert_node(root, dup, key, NULL);
   g_free(dup);
 }
 
 void
 test_search_value(RNode *root, gchar *key, gchar *expected_value)
 {
-  RNode *ret = r_find_node(root, key, key, strlen(key), NULL);
+  RNode *ret = r_find_node(root, key, strlen(key), NULL);
 
   if (ret && expected_value)
     {
@@ -107,7 +107,7 @@ test_search_matches(RNode *root, gchar *key, gchar *name1, ...)
   g_array_set_size(matches, 1);
   va_start(args, name1);
 
-  ret = r_find_node(root, key, key, strlen(key), matches);
+  ret = r_find_node(root, key, strlen(key), matches);
   if (ret && !name1)
     {
       printf("FAIL: found unexpected: '%s' => '%s' matches: ", key, (gchar *) ret->value);
@@ -298,6 +298,14 @@ test_parsers(void)
   insert_node(root, "xxx@ANYSTRING@x");
   printf("We excpect an error message\n");
   insert_node(root, "AAA@NUMBER:invalid=@AAA");
+  printf("We excpect an error message\n");
+  insert_node(root, "AAA@SET@AAA");
+  printf("We excpect an error message\n");
+  insert_node(root, "AAA@SET:set@AAA");
+  insert_node(root, "AAA@MACADDR@AAA");
+
+  printf("We excpect an error message\n");
+  insert_node(root, "AAA@PCRE:set@AAA");
 
   test_search_value(root, "a@", NULL);
   test_search_value(root, "a@NUMBER@aa@@", "a@@NUMBER@@aa@@@@");
@@ -338,6 +346,14 @@ test_matches(void)
   insert_node(root, "eee @STRING:string@");
   insert_node(root, "fff @FLOAT:float@");
   insert_node(root, "zzz @ESTRING:test:gép@");
+  insert_node(root, "ggg @SET:set: 	@");
+  insert_node(root, "iii @MACADDR:macaddr@");
+  insert_node(root, "hhh @EMAIL:email:[<]>@");
+  insert_node(root, "kkk @HOSTNAME:hostname@");
+  insert_node(root, "lll @LLADDR:lladdr6:6@");
+
+  insert_node(root, "jjj @PCRE:regexp:[abc]+@");
+  insert_node(root, "jjjj @PCRE:regexp:[abc]+@d foobar");
 
   test_search_matches(root, "aaa 12345 hihihi",
                       "number", "12345",
@@ -605,6 +621,23 @@ test_matches(void)
   test_search_matches(root, "dddd v12345", NULL);
   test_search_matches(root, "fff v12345", NULL);
   test_search_matches(root, "fff 12345.hihihi","float", "12345.", NULL);
+  test_search_matches(root, "ggg  aaa", "set", " ", NULL);
+  test_search_matches(root, "ggg   aaa", "set", "  ", NULL);
+  test_search_matches(root, "ggg 	aaa", "set", "	", NULL);
+  test_search_matches(root, "iii 82:63:25:93:eb:51.iii", "macaddr", "82:63:25:93:eb:51", NULL);
+  test_search_matches(root, "iii 82:63:25:93:EB:51.iii", "macaddr", "82:63:25:93:EB:51", NULL);
+  test_search_matches(root, "jjj abcabcd", "regexp", "abcabc", NULL);
+  test_search_matches(root, "jjjj abcabcd foobar", "regexp", "abcabc", NULL);
+  test_search_matches(root, "hhh blint@balabit.hu","email", "blint@balabit.hu", NULL);
+  test_search_matches(root, "hhh <blint@balabit.hu>","email", "blint@balabit.hu", NULL);
+  test_search_matches(root, "hhh [blint@balabit.hu]","email", "blint@balabit.hu", NULL);
+
+  test_search_matches(root, "kkk www.example.org", "hostname", "www.example.org", NULL);
+  test_search_matches(root, "kkk www.example.org. kkk", "hostname", "www.example.org.", NULL);
+
+  test_search_matches(root, "lll 83:63:25:93:eb:51:aa:bb.iii", "lladdr6", "83:63:25:93:eb:51", NULL);
+  test_search_matches(root, "lll 83:63:25:93:EB:51:aa:bb.iii", "lladdr6", "83:63:25:93:EB:51", NULL);
+
   test_search_matches(root, "zzz árvíztűrőtükörfúrógép", "test", "árvíztűrőtükörfúró", NULL);
 
   r_free_node(root, NULL);
@@ -616,10 +649,10 @@ test_zorp_logs(void)
   RNode *root = r_new_node("", NULL);
 
   /* these are conflicting logs */
-  r_insert_node(root, strdup("core.error(2): (svc/@STRING:service:._@:@NUMBER:instance_id@/plug): Connection to remote end failed; local='AF_INET(@IPv4:local_ip@:@NUMBER:local_port@)', remote='AF_INET(@IPv4:remote_ip@:@NUMBER:remote_port@)', error=@QSTRING:errormsg:'@"), "ZORP", TRUE, NULL);
-  r_insert_node(root, strdup("core.error(2): (svc/@STRING:service:._@:@NUMBER:instance_id@/plug): Connection to remote end failed; local=@QSTRING:p:'@, remote=@QSTRING:p:'@, error=@QSTRING:p:'@"), "ZORP1", TRUE, NULL);
-  r_insert_node(root, strdup("Deny@QSTRING:FIREWALL.DENY_PROTO: @src@QSTRING:FIREWALL.DENY_O_INT: :@@IPv4:FIREWALL.DENY_SRCIP@/@NUMBER:FIREWALL.DENY_SRCPORT@ dst"), "CISCO", TRUE, NULL);
-  r_insert_node(root, strdup("@NUMBER:Seq@, @ESTRING:DateTime:,@@ESTRING:Severity:,@@ESTRING:Comp:,@"), "3com", TRUE, NULL);
+  r_insert_node(root, strdup("core.error(2): (svc/@STRING:service:._@:@NUMBER:instance_id@/plug): Connection to remote end failed; local='AF_INET(@IPv4:local_ip@:@NUMBER:local_port@)', remote='AF_INET(@IPv4:remote_ip@:@NUMBER:remote_port@)', error=@QSTRING:errormsg:'@"), "ZORP", NULL);
+  r_insert_node(root, strdup("core.error(2): (svc/@STRING:service:._@:@NUMBER:instance_id@/plug): Connection to remote end failed; local=@QSTRING:p:'@, remote=@QSTRING:p:'@, error=@QSTRING:p:'@"), "ZORP1", NULL);
+  r_insert_node(root, strdup("Deny@QSTRING:FIREWALL.DENY_PROTO: @src@QSTRING:FIREWALL.DENY_O_INT: :@@IPv4:FIREWALL.DENY_SRCIP@/@NUMBER:FIREWALL.DENY_SRCPORT@ dst"), "CISCO", NULL);
+  r_insert_node(root, strdup("@NUMBER:Seq@, @ESTRING:DateTime:,@@ESTRING:Severity:,@@ESTRING:Comp:,@"), "3com", NULL);
 
   test_search_value(root, "core.error(2): (svc/intra.servers.alef_SSH_dmz.zajin:111/plug): Connection to remote end failed; local='AF_INET(172.16.0.1:56867)', remote='AF_INET(172.18.0.1:22)', error='No route to host'PAS", "ZORP");
   test_search_value(root, "Deny udp src OUTSIDE:10.0.0.0/1234 dst INSIDE:192.168.0.0/5678 by access-group \"OUTSIDE\" [0xb74026ad, 0x0]", "CISCO");
