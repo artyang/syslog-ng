@@ -499,6 +499,8 @@ pdb_action_generate_new_message_with_timestamp_of_the_triggering_message(LogStam
   genmsg = log_msg_new_empty();
   genmsg->flags |= LF_LOCAL;
   genmsg->timestamps[LM_TS_STAMP] = *msgstamp;
+  log_msg_create_rcptid(genmsg);
+
   return genmsg;
 }
 
