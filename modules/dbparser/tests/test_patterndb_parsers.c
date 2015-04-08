@@ -228,6 +228,15 @@ clean_pattern_db(PDBRuleSet *patterndb, gchar**filename)
 
 }
 
+static inline void
+_init_pdb_lookup_params(PDBLookupParams *lookup, LogMessage *msg)
+{
+  lookup->msg = msg;
+  lookup->program_handle = LM_V_PROGRAM;
+  lookup->message_handle = LM_V_MESSAGE;
+  lookup->message_len = 0;
+}
+
 void
 test_case(gchar **testcase)
 {
@@ -251,7 +260,9 @@ test_case(gchar **testcase)
    * log_pattern_database_lookup(), while parsed entries are only added to the LogMessage.
    * This unit test tests the latter, the entries set in the LogMessage.
    */
-  result = pdb_rule_set_lookup(patterndb, msg, NULL);
+  PDBLookupParams p;
+  _init_pdb_lookup_params(&p, msg);
+  result = pdb_rule_set_lookup(patterndb, &p, NULL);
   if (result)
     {
        /* we only need to search for values if the list in the testcase is not empty */
