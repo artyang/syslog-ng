@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2002-2010 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2010 Balázs Scheidler
+ * Copyright (c) 2002-2013 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 1998-2013 Balázs Scheidler
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * As an additional exemption you are allowed to compile & link against the
@@ -28,10 +28,11 @@
 
 #include "patterndb.h"
 
+typedef struct _PDBLookupParams PDBLookupParams;
 typedef struct _PDBRule PDBRule;
 
 /* rule context scope */
-enum
+typedef enum
 {
   /* correllation happens globally, e.g. log messages even on different hosts are considered */
   RCS_GLOBAL,
@@ -41,25 +42,32 @@ enum
   RCS_PROGRAM,
   /* correllation happens for the same process only, e.g. messages from a different program/pid are not considered */
   RCS_PROCESS,
-};
+} PDBCorrellationScope;
 
 /* type field for state key */
-enum
+typedef enum
 {
   /* state entry contains a context */
   PSK_CONTEXT,
   /* state entry contains a ratelimit state */
   PSK_RATE_LIMIT,
-};
+} PDBStateKeyType;
 
+/* Our state hash contains a mixed set of values, they are either
+ * correllation contexts or the state entry required by rate limiting. The
+ * keys of these distinct structures are differentied by their key->type
+ * value, which has one of values of the PSK_* enums above.  */
 typedef struct _PDBStateKey
 {
   const gchar *host;
   const gchar *program;
   const gchar *pid;
   gchar *session_id;
-  guint8 scope;
-  guint8 type;
+
+  /* we use guint8 to limit the size of this structure, we can have 10s of
+   * thousands of this structure present in memory */
+  guint8 /* PDBCorrellationScope */ scope;
+  guint8 /* PDBStateKeyType */ type;
 } PDBStateKey;
 
 /* This class encapsulates a correllation context, keyed by PDBStateKey, type == PSK_RULE. */
@@ -105,30 +113,41 @@ typedef struct _PDBMessage
 } PDBMessage;
 
 /* rule action triggers */
-enum
+typedef enum
  {
   RAT_MATCH = 1,
   RAT_TIMEOUT
-};
+} PDBActionTrigger;
 
 /* action content*/
-enum
+typedef enum
 {
   RAC_NONE,
   RAC_MESSAGE
-};
+} PDBActionContentType;
+
+typedef enum
+{
+  RAC_MSG_INHERIT_NONE,
+  RAC_MSG_INHERIT_LAST_MESSAGE,
+  RAC_MSG_INHERIT_CONTEXT
+} PDBActionMessageInheritMode;
 
 /* a rule may contain one or more actions to be performed */
 typedef struct _PDBAction
 {
   FilterExprNode *condition;
-  guint8 trigger;
-  guint8 content_type;
+  PDBActionTrigger trigger;
+  PDBActionContentType content_type;
+  guint32 rate_quantum;
   guint16 rate;
-  guint32 id:8, rate_quantum:24;
+  guint8 id;
   union
   {
-    PDBMessage message;
+    struct {
+      PDBMessage message;
+      PDBActionMessageInheritMode inherit_mode;
+    };
   } content;
 } PDBAction;
 
@@ -143,11 +162,12 @@ struct _PDBRule
   gchar *rule_id;
   PDBMessage msg;
   gint context_timeout;
-  gint context_scope;
+  PDBCorrellationScope context_scope;
   LogTemplate *context_id_template;
   GPtrArray *actions;
 };
 
+gchar *pdb_rule_get_name(PDBRule *self);
 void pdb_rule_unref(PDBRule *self);
 
 /* this class encapsulates an example message in the pattern database
@@ -185,10 +205,19 @@ typedef struct _PDBRuleSet
 } PDBRuleSet;
 
 gboolean pdb_rule_set_load(PDBRuleSet *self, GlobalConfig *cfg, const gchar *config, GList **examples);
-PDBRule *pdb_rule_set_lookup(PDBRuleSet *self, LogMessage *msg, GArray *dbg_list);
+PDBRule *pdb_rule_set_lookup(PDBRuleSet *self, PDBLookupParams *input, GArray *dbg_list);
 
 PDBRuleSet *pdb_rule_set_new(void);
 void pdb_rule_set_free(PDBRuleSet *self);
+
+struct _PDBLookupParams
+{
+  LogMessage *msg;
+  NVHandle program_handle;
+  NVHandle message_handle;
+  const gchar *message_string;
+  gssize message_len;
+};
 
 struct _PatternDB
 {

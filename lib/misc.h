@@ -152,4 +152,4 @@ gchar *replace_string(const gchar *source, const gchar *substring, const gchar *
 gchar *get_pid_string();
 #endif
 
-gboolean is_file_regular(gint fd);
+gboolean f_is_file_regular(gint fd);

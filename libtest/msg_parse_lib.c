@@ -1,10 +1,34 @@
+/*
+ * Copyright (c) 2012 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2012 Balázs Scheidler
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * As an additional exemption you are allowed to compile & link against the
+ * OpenSSL libraries as published by the OpenSSL project. See the file
+ * COPYING for details.
+ *
+ */
+
 #include "msg_parse_lib.h"
-#include "msg_parse_lib.h"
+#include "plugin.h"
 
 void
 init_and_load_syslogformat_module()
 {
-  configuration = cfg_new(CURRENT_VERSION_VALUE);
+  configuration = cfg_new(CFG_CURRENT_VERSION);
   plugin_load_module("syslogformat", configuration, NULL);
   msg_format_options_defaults(&parse_options);
   msg_format_options_init(&parse_options, configuration);
@@ -25,14 +49,29 @@ assert_log_message_has_tag(LogMessage *log_message, const gchar *tag_name)
 }
 
 void
+assert_log_message_doesnt_have_tag(LogMessage *log_message, const gchar *tag_name)
+{
+  assert_false(log_msg_is_tag_by_name(log_message, tag_name), "Expected message not to have '%s' tag", tag_name);
+}
+
+void
 assert_log_message_value(LogMessage *self, NVHandle handle, const gchar *expected_value)
 {
   gssize key_name_length;
-  gssize value_len;
+  gssize value_length;
   const gchar *key_name = log_msg_get_value_name(handle, &key_name_length);
-  const gchar *actual_value = log_msg_get_value(self, handle, &value_len);
+  const gchar *actual_value = log_msg_get_value(self, handle, &value_length);
 
-  assert_string(actual_value, expected_value, "Value is not expected for key %s", key_name);
+  if (expected_value)
+    assert_string(actual_value, expected_value, "Value is not expected for key %s", key_name);
+  else
+    assert_string(actual_value, "", "No value is expected for key %s but its value is %s", key_name, actual_value);
+}
+
+void
+assert_log_message_value_by_name(LogMessage *self, const gchar *name, const gchar *expected_value)
+{
+  assert_log_message_value(self, log_msg_get_value_handle(name), expected_value);
 }
 
 void

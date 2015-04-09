@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2002-2010 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2010 Balázs Scheidler
+ * Copyright (c) 2002-2013 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 1998-2013 Balázs Scheidler
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * As an additional exemption you are allowed to compile & link against the
@@ -35,7 +35,10 @@
 #include "patternize.h"
 #include "patterndb-int.h"
 #include "apphook.h"
+#include "logtransport.h"
+#include "logproto.h"
 #include "reloc.h"
+#include "pathutils.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -271,11 +274,11 @@ pdbtool_merge_dir(const gchar *dir, gboolean recursive, GString *merged)
     {
       gchar *full_name = g_build_filename(dir, filename, NULL);
 
-      if (recursive && g_file_test(full_name, G_FILE_TEST_IS_DIR))
+      if (recursive && is_file_directory(full_name))
         {
           ok = pdbtool_merge_dir(full_name, recursive, merged);
         }
-      else if (g_file_test(full_name, G_FILE_TEST_IS_REGULAR) && (!merge_glob || g_pattern_match_simple(merge_glob, filename)))
+      else if (is_file_regular(full_name) && (!merge_glob || g_pattern_match_simple(merge_glob, filename)))
         {
           ok = pdbtool_merge_file(full_name, merged);
         }
@@ -310,7 +313,7 @@ pdbtool_merge(int argc, char *argv[])
   g_date_clear(&date, 1);
   g_date_set_time_t(&date, time (NULL));
 
-  buff = g_markup_printf_escaped("<?xml version='1.0' encoding='UTF-8'?>\n<patterndb version='3' pub_date='%04d-%02d-%02d'>",
+  buff = g_markup_printf_escaped("<?xml version='1.0' encoding='UTF-8'?>\n<patterndb version='4' pub_date='%04d-%02d-%02d'>",
                                     g_date_get_year(&date), g_date_get_month(&date), g_date_get_day(&date));
   g_string_append(merged, buff);
   g_free(buff);
@@ -383,6 +386,9 @@ pdbtool_pdb_emit(LogMessage *msg, gboolean synthetic, gpointer user_data)
             printf("\nValues:\n");
 
           nv_table_foreach(msg->payload, logmsg_registry, pdbtool_match_values, ret);
+          g_string_truncate(output, 0);
+          log_msg_print_tags(msg, output);
+          printf("TAGS=%s\n", output->str);
           printf("\n");
         }
       else
@@ -404,7 +410,6 @@ pdbtool_match(int argc, char *argv[])
   const gchar *name = NULL;
   gssize name_len = 0;
   MsgFormatOptions parse_options;
-  LogProtoOptions proto_options;
   gboolean eof = FALSE;
   const guchar *buf = NULL;
   gsize buflen;
@@ -413,8 +418,9 @@ pdbtool_match(int argc, char *argv[])
   GString *output = NULL;
   FilterExprNode *filter = NULL;
   LogProto *proto = NULL;
+  LogProtoOptions proto_options;
   gboolean may_read = TRUE;
-  /* flush must be FALSE, otherwise log_proto_fetch() fails to read any data from the source ... - Folti */
+  gpointer args[4];
   gboolean flush = FALSE;
 
   memset(&parse_options, 0, sizeof(parse_options));
@@ -434,8 +440,8 @@ pdbtool_match(int argc, char *argv[])
       log_template_compile(template, t, NULL);
       g_free(t);
 
-      output = g_string_sized_new(512);
     }
+  output = g_string_sized_new(512);
 
   if (filter_string)
     {
@@ -492,7 +498,7 @@ pdbtool_match(int argc, char *argv[])
       proto_options.super.flags = 0;
       if (proto_factory)
         {
-          proto = proto_factory->create(transport,&proto_options,NULL);
+          proto = proto_factory->create(transport, &proto_options, NULL);
         }
       else
         {
@@ -504,14 +510,17 @@ pdbtool_match(int argc, char *argv[])
 
   if (!debug_pattern)
     {
-      gpointer args[] = { filter, template, &ret, output };
+      args[0] = filter;
+      args[1] = template;
+      args[2] = &ret;
+      args[3] = output;
       pattern_db_set_emit_func(patterndb, pdbtool_pdb_emit, args);
     }
   else
     {
       dbg_list = g_array_new(FALSE, FALSE, sizeof(RDebugInfo));
     }
-  while (!eof)
+  while (!eof && (buf || match_message))
     {
       invalidate_cached_time();
       if (G_LIKELY(proto))
@@ -524,11 +533,8 @@ pdbtool_match(int argc, char *argv[])
       if (G_UNLIKELY(debug_pattern))
         {
           const gchar *msg_string;
-          PDBRule *rule;
 
-          rule = pdb_rule_set_lookup(patterndb->ruleset, msg, dbg_list);
-          if (rule)
-            pdb_rule_unref(rule);
+          pattern_db_debug_ruleset(patterndb, msg, dbg_list);
 
           msg_string = log_msg_get_value(msg, LM_V_MESSAGE, NULL);
           pos = 0;
@@ -570,7 +576,7 @@ pdbtool_match(int argc, char *argv[])
             }
 
           if (debug_pattern_parse)
-            printf("PDBTOOL_HEADER=i:len:keylen:match_off:match_len:parser_type:parser_name\n");
+            printf("PDBTOOL_HEADER=i:len:key;keylen:match_off;match_len:parser_type:parser_name\n");
 
           pos = 0;
           for (i = 0; i < dbg_list->len; i++)
@@ -613,6 +619,7 @@ pdbtool_match(int argc, char *argv[])
 
       if (G_LIKELY(proto))
         {
+          buf = NULL;
           eof = log_proto_fetch(proto, &buf, &buflen, NULL, &may_read, flush, NULL) != LPS_SUCCESS;
         }
       else
@@ -669,7 +676,7 @@ pdbtool_test_value(LogMessage *msg, const gchar *name, const gchar *test_value)
   gssize value_len;
   gboolean ret = TRUE;
 
-  value = log_msg_get_value(msg, log_msg_get_value_handle(name), &value_len);
+  value = log_msg_get_value_by_name(msg, name, &value_len);
   if (!(value && strncmp(value, test_value, value_len) == 0 && value_len == strlen(test_value)))
     {
       if (value)
@@ -686,6 +693,42 @@ pdbtool_test_value(LogMessage *msg, const gchar *name, const gchar *test_value)
 }
 
 gchar *path_xsddir;
+
+static void
+pdbtool_test_find_conflicts(PatternDB *patterndb, LogMessage *msg)
+{
+  const gchar *program;
+  const gchar *message;
+  RNode *node;
+
+  program = log_msg_get_value(msg, LM_V_PROGRAM, NULL);
+  message = log_msg_get_value(msg, LM_V_MESSAGE, NULL);
+
+  node = r_find_node(patterndb->ruleset->programs, (gchar *) program, strlen(program), NULL);
+  if (node)
+    {
+      PDBProgram *program_rules = (PDBProgram *) node->value;
+      gchar **matching_ids;
+      gint matching_ids_len;
+
+      matching_ids = r_find_all_applicable_nodes(program_rules->rules, (guint8 *) message, strlen(message), (RNodeGetValueFunc) pdb_rule_get_name);
+      matching_ids_len = g_strv_length(matching_ids);
+
+      if (matching_ids_len > 1)
+        {
+          gint i;
+
+          printf(" Rule conflict! Multiple rules match this message, list of IDs follow\n");
+          for (i = 0; matching_ids[i]; i++)
+            {
+              printf("  %s\n", matching_ids[i]);
+            }
+        }
+
+
+      g_strfreev(matching_ids);
+    }
+}
 
 static gint
 pdbtool_test(int argc, char *argv[])
@@ -743,11 +786,11 @@ pdbtool_test(int argc, char *argv[])
 
           if (example->message && example->program)
             {
-
               if (test_ruleid)
                 {
                   if (strcmp(example->rule->rule_id, test_ruleid) != 0)
                     {
+                      pdb_example_free(example);
                       examples = g_list_delete_link(examples, examples);
                       continue;
                     }
@@ -760,15 +803,21 @@ pdbtool_test(int argc, char *argv[])
               if (example->program && example->program[0])
                 log_msg_set_value(msg, LM_V_PROGRAM, example->program, strlen(example->program));
 
-              printf("Testing message program='%s' message='%s'\n", example->program, example->message);
+              printf("Testing message: program='%s' message='%s'\n", example->program, example->message);
+
+              pdbtool_test_find_conflicts(patterndb, msg);
               pattern_db_process(patterndb, msg);
 
-              if (!pdbtool_test_value(msg, ".classifier.rule_id", example->rule->rule_id) && debug_pattern)
+              if (!pdbtool_test_value(msg, ".classifier.rule_id", example->rule->rule_id))
                 {
-                  match_message = example->message;
-                  match_program = example->program;
-                  patterndb_file = argv[arg_pos];
-                  pdbtool_match(0, NULL);
+                  failed_to_match = TRUE;
+                  if (debug_pattern)
+                    {
+                      match_message = example->message;
+                      match_program = example->program;
+                      patterndb_file = argv[arg_pos];
+                      pdbtool_match(0, NULL);
+                    }
                 }
 
               for (i = 0; example->values && i < example->values->len; i++)
@@ -780,6 +829,16 @@ pdbtool_test(int argc, char *argv[])
 
               log_msg_unref(msg);
             }
+          else if (!example->program && example->message)
+            {
+              printf("NOT Testing message as program is unset: message='%s'\n", example->message);
+            }
+          else if (example->program && !example->message)
+            {
+              printf("NOT Testing message as message is unset: program='%s'\n", example->program);
+            }
+
+          pdb_example_free(example);
           examples = g_list_delete_link(examples, examples);
         }
 
@@ -854,7 +913,7 @@ pdbtool_dump(int argc, char *argv[])
     pdbtool_walk_tree(patterndb->ruleset->programs, 0, TRUE);
   else if (match_program)
     {
-      RNode *ruleset = r_find_node(patterndb->ruleset->programs, g_strdup(match_program), g_strdup(match_program), strlen(match_program), NULL);
+      RNode *ruleset = r_find_node(patterndb->ruleset->programs, match_program, strlen(match_program), NULL);
       if (ruleset && ruleset->value)
         {
           RNode *root = ((PDBProgram *) ruleset->value)->rules;
@@ -874,10 +933,10 @@ pdbtool_dump(int argc, char *argv[])
 
 static GOptionEntry dump_options[] =
 {
+  { "pdb",       'p', 0, G_OPTION_ARG_STRING, &patterndb_file,
+    "Name of the patterndb file", "<patterndb_file>" },
   { "program", 'P', 0, G_OPTION_ARG_STRING, &match_program,
     "Program name ($PROGRAM) to dump", "<program>" },
-  { "pdb", 'p', 0, G_OPTION_ARG_STRING, &patterndb_file,
-    "Name of the patterndb file", "<patterndb_file>" },
   { "program-tree", 'T', 0, G_OPTION_ARG_NONE, &dump_program_tree,
     "Dump the program ($PROGRAM) tree", NULL },
   { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL }
@@ -955,7 +1014,7 @@ pdbtool_dictionary(int argc, char *argv[])
 
   if (match_program)
     {
-      RNode *ruleset = r_find_node(rule_set.programs, g_strdup(match_program), g_strdup(match_program), strlen(match_program), NULL);
+      RNode *ruleset = r_find_node(rule_set.programs, match_program, strlen(match_program), NULL);
       if (ruleset && ruleset->value)
         pdbtool_dictionary_walk(((PDBProgram *)ruleset->value)->rules, (gchar *)ruleset->key);
     }
@@ -1148,14 +1207,6 @@ main(int argc, char *argv[])
     }
 
   setlocale(LC_ALL, "");
-  if (!g_option_context_parse(ctx, &argc, &argv, &error))
-    {
-      fprintf(stderr, "Error parsing command line arguments: %s\n", error ? error->message : "Invalid arguments");
-      g_clear_error(&error);
-      g_option_context_free(ctx);
-      return 1;
-    }
-  g_option_context_free(ctx);
 
   msg_init(TRUE);
   stats_init();
@@ -1166,11 +1217,21 @@ main(int argc, char *argv[])
 
   configuration = cfg_new(CFG_CURRENT_VERSION);
 
+  if (!g_option_context_parse(ctx, &argc, &argv, &error))
+    {
+      fprintf(stderr, "Error parsing command line arguments: %s\n", error ? error->message : "Invalid arguments");
+      g_clear_error(&error);
+      g_option_context_free(ctx);
+      return 1;
+    }
+  g_option_context_free(ctx);
+
   plugin_load_module("syslogformat", configuration, NULL);
   plugin_load_module("basicfuncs", configuration, NULL);
   plugin_load_module("basic-proto", configuration, NULL);
 
-  proto_factory = log_proto_get_factory(configuration,LPT_SERVER,"stream-newline");
+  proto_factory = log_proto_get_factory(configuration, LPT_SERVER, "stream-newline");
+
   if (color_out)
     colors = full_colors;
 

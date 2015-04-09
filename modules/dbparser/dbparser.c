@@ -1,18 +1,18 @@
 /*
- * Copyright (c) 2002-2010 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2010 Balázs Scheidler
+ * Copyright (c) 2002-2013 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 1998-2013 Balázs Scheidler
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
  * by the Free Software Foundation, or (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  * As an additional exemption you are allowed to compile & link against the
@@ -25,7 +25,7 @@
 #include "patterndb.h"
 #include "radix.h"
 #include "apphook.h"
-#include "versioning.h"
+#include "reloc.h"
 
 #include <sys/stat.h>
 #include <iv.h>
@@ -152,7 +152,6 @@ log_db_parser_init(LogPipe *s)
         }
       else if (self->db_file_inode != st.st_ino || self->db_file_mtime != st.st_mtime)
         {
-          self->db = pattern_db_new();
           log_db_parser_reload_database(self);
           self->db_file_inode = st.st_ino;
           self->db_file_mtime = st.st_mtime;
@@ -193,12 +192,11 @@ log_db_parser_deinit(LogPipe *s)
 }
 
 static gboolean
-log_db_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_options, const gchar *input, gsize input_len)
+log_db_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_options, const char *input, gsize input_len)
 {
   LogDBParser *self = (LogDBParser *) s;
-  LogMessage *msg = *pmsg;
 
-  if (G_UNLIKELY(!self->db_file_reloading && (self->db_file_last_check == 0 || self->db_file_last_check < msg->timestamps[LM_TS_RECVD].tv_sec - 5)))
+  if (G_UNLIKELY(!self->db_file_reloading && (self->db_file_last_check == 0 || self->db_file_last_check < (*pmsg)->timestamps[LM_TS_RECVD].tv_sec - 5)))
     {
       /* first check if we need to reload without doing a lock, then grab
        * the lock, recheck the condition to rule out parallel database
@@ -206,9 +204,9 @@ log_db_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *pat
 
       g_static_mutex_lock(&self->lock);
 
-      if (!self->db_file_reloading && (self->db_file_last_check == 0 || self->db_file_last_check < msg->timestamps[LM_TS_RECVD].tv_sec - 5))
+      if (!self->db_file_reloading && (self->db_file_last_check == 0 || self->db_file_last_check < (*pmsg)->timestamps[LM_TS_RECVD].tv_sec - 5))
         {
-          self->db_file_last_check = msg->timestamps[LM_TS_RECVD].tv_sec;
+          self->db_file_last_check = (*pmsg)->timestamps[LM_TS_RECVD].tv_sec;
           self->db_file_reloading = TRUE;
           g_static_mutex_unlock(&self->lock);
 
@@ -221,7 +219,12 @@ log_db_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *pat
       g_static_mutex_unlock(&self->lock);
     }
   if (self->db)
-    pattern_db_process(self->db, msg);
+    {
+      if (G_UNLIKELY(self->super.template))
+        pattern_db_process_with_custom_message(self->db, *pmsg, input, input_len);
+      else
+        pattern_db_process(self->db, *pmsg);
+    }
   return TRUE;
 }
 
@@ -261,7 +264,7 @@ log_db_parser_clone(LogProcessPipe *s)
   LogDBParser *clone;
   LogDBParser *self = (LogDBParser *) s;
 
-  clone = (LogDBParser *) log_db_parser_new();
+  clone = (LogDBParser *) log_db_parser_new(s->super.cfg);
   log_db_parser_set_db_file(clone, self->db_file);
   return &clone->super.super.super;
 }
@@ -271,6 +274,8 @@ log_db_parser_free(LogPipe *s)
 {
   LogDBParser *self = (LogDBParser *) s;
 
+  g_static_mutex_free(&self->lock);
+
   if (self->db)
     pattern_db_free(self->db);
 
@@ -279,10 +284,8 @@ log_db_parser_free(LogPipe *s)
   log_parser_free_method(s);
 }
 
-extern gchar *path_patterndb_file;
-
 LogParser *
-log_db_parser_new(void)
+log_db_parser_new(GlobalConfig *cfg)
 {
   LogDBParser *self = g_new0(LogDBParser, 1);
 
@@ -296,7 +299,8 @@ log_db_parser_new(void)
   g_static_mutex_init(&self->lock);
   if (!cfg_check_current_config_version(VERSION_VALUE_3_3))
     {
-      msg_warning("WARNING: The default behaviour for injecting messages in db-parser() has changed in " VERSION_3_3 " from internal to pass-through, use an explicit inject-mode(internal) option for old behaviour", NULL);
+      msg_warning("WARNING: The default behaviour for injecting messages in db-parser() has changed in " VERSION_3_3 " from internal to pass-through, use an explicit inject-mode(internal) option for old behaviour",
+                       NULL);
       self->inject_mode = LDBP_IM_INTERNAL;
     }
   else

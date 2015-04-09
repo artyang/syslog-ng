@@ -35,6 +35,6 @@ pdbtool_CPPFLAGS = $(AM_CPPFLAGS) @OPENSSL_CFLAGS@
 pdbtool_LDADD = libsyslog-ng-patterndb.a ../../lib/libsyslog-ng.la @TOOL_DEPS_LIBS@ @OPENSSL_LIBS@
 
 BUILT_SOURCES = dbparser-grammar.y dbparser-grammar.c dbparser-grammar.h
-EXTRA_DIST = $(BUILT_SOURCES) radix-find.c dbparser-grammar.ym
+EXTRA_DIST = $(BUILT_SOURCES) dbparser-grammar.ym
 
 include $(top_srcdir)/build/lex-rules.am

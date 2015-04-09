@@ -300,6 +300,27 @@ tf_indent_multi_line(LogMessage *msg, gint argc, GString *argv[], GString *text)
 
 TEMPLATE_FUNCTION_SIMPLE(tf_indent_multi_line);
 
+
+gboolean
+tf_context_length_prepare(LogTemplateFunction *self, LogTemplate *parent, gint argc, gchar *argv[], gpointer *state, GDestroyNotify *state_destroy, GError **error)
+{
+  return TRUE;
+}
+
+void
+tf_context_length_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id, GString *result)
+{
+  g_string_append_printf(result, "%d", num_messages);
+}
+
+void
+tf_context_length_eval(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id)
+{
+  return;
+}
+
+TEMPLATE_FUNCTION(tf_context_length, tf_context_length_prepare, tf_context_length_eval, tf_context_length_call, NULL);
+
 static Plugin basicfuncs_plugins[] =
 {
   TEMPLATE_FUNCTION_PLUGIN(tf_echo, "echo"),
@@ -311,6 +332,7 @@ static Plugin basicfuncs_plugins[] =
   TEMPLATE_FUNCTION_PLUGIN(tf_num_multi, "*"),
   TEMPLATE_FUNCTION_PLUGIN(tf_num_div, "/"),
   TEMPLATE_FUNCTION_PLUGIN(tf_num_mod, "%"),
+  TEMPLATE_FUNCTION_PLUGIN(tf_context_length, "context-length")
 };
 
 gboolean
