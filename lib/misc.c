@@ -70,6 +70,8 @@ g_string_steal(GString *s)
 gboolean
 resolve_hostname(GSockAddr **addr, gchar *name)
 {
+  char ip_addr[256];
+
   if (addr)
     {
 #if HAVE_GETADDRINFO
@@ -87,20 +89,27 @@ resolve_hostname(GSockAddr **addr, gchar *name)
           switch ((*addr)->sa.sa_family)
             {
             case AF_INET:
-              g_sockaddr_inet_set_address((*addr), ((struct sockaddr_in *) res->ai_addr)->sin_addr);
-              break;
+                {
+                  struct sockaddr_in *res_addr = (struct sockaddr_in *) res->ai_addr;
+
+                  g_sockaddr_inet_set_address((*addr), res_addr->sin_addr);
+                  inet_ntop(AF_INET, &(res_addr->sin_addr), ip_addr, sizeof(ip_addr));
+                  break;
+                }
 #if ENABLE_IPV6
             case AF_INET6:
               {
                 guint16 port;
+                struct sockaddr_in6 *res_addr = (struct sockaddr_in6 *) res->ai_addr;
 
                 /* we need to copy the whole sockaddr_in6 structure as it
                  * might contain scope and other required data */
                 port = g_sockaddr_inet6_get_port(*addr);
-                *g_sockaddr_inet6_get_sa(*addr) = *((struct sockaddr_in6 *) res->ai_addr);
+                *g_sockaddr_inet6_get_sa(*addr) = *(res_addr);
 
                 /* we need to restore the port number as it is zeroed out by the previous assignment */
                 g_sockaddr_inet6_set_port(*addr, port);
+                inet_ntop(AF_INET6, &(res_addr->sin6_addr), ip_addr, sizeof(ip_addr));
                 break;
               }
 #endif
@@ -132,6 +141,7 @@ resolve_hostname(GSockAddr **addr, gchar *name)
               break;
             }
           G_UNLOCK(resolv_lock);
+          strncpy(ip_addr, he->h_name, sizeof(ip_addr));
         }
       else
         {
@@ -150,6 +160,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
   const gchar *hname = NULL;
   gboolean positive;
   gchar buf[256];
+  gchar ip_addr[256];
 #ifndef HAVE_GETNAMEINFO
   gchar hostent_buf[256];
 #endif
@@ -197,6 +208,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
                     }
                   G_UNLOCK(resolv_lock);
 #endif
+
                   if (hname)
                     positive = TRUE;
 
@@ -210,8 +222,12 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
 
           if (!hname)
             {
-              inet_ntop(saddr->sa.sa_family, addr, buf, sizeof(buf));
-              hname = buf;
+              inet_ntop(saddr->sa.sa_family, addr, ip_addr, sizeof(ip_addr));
+              msg_debug("Can't bind hostname for the IP address, therefore using IP address as hostname",
+                        evt_tag_str("IP address", ip_addr),
+                        NULL);
+
+              hname = ip_addr;
               if (use_dns_cache)
                 dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, FALSE);
             }
