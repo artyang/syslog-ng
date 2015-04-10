@@ -28,6 +28,7 @@
 #include <glib.h>
 #include <sys/time.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include "logmsg.h"
 
@@ -42,7 +43,7 @@
 #define gboolean_to_string(value) (value ? "TRUE" : "FALSE")
 
 #define ASSERTION_ERROR(message) "%s:%d/%s\n  #       %s", \
-                                 basename(__FILE__), __LINE__, __FUNCTION__, ((message) ? (message) : "")
+                                 __FILE__, __LINE__, __FUNCTION__, ((message) ? (message) : "")
 
 void start_stopwatch();
 void stop_stopwatch_and_display_result(gchar *message_template, ...);
@@ -113,6 +114,18 @@ extern GString *current_testcase_description;
 extern gchar *current_testcase_function;
 extern gchar *current_testcase_file;
 
+#ifdef _WIN32
+static inline char *basename(const char *path)
+{
+  char *result = strrchr(path,'/');
+  if (result)
+    {
+      result++;
+    }
+  return result;
+}
+#endif
+
 #define testcase_begin(description_template, ...) \
     do { \
       if (current_testcase_description != NULL) \
@@ -124,7 +137,7 @@ extern gchar *current_testcase_file;
       current_testcase_description = g_string_sized_new(0); \
       g_string_printf(current_testcase_description, description_template, ##__VA_ARGS__); \
       current_testcase_function = (gchar *)(__FUNCTION__); \
-      current_testcase_file = basename(__FILE__); \
+      current_testcase_file = strchr(__FILE__, '/') ? basename(__FILE__) : __FILE__; \
     } while (0)
 
 #define testcase_end() \

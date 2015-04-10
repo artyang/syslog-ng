@@ -1,4 +1,5 @@
 #include "affile_common.h"
+#include "logwriter.h"
 #include "driver.h"
 #include "messages.h"
 #include "misc.h"
@@ -1259,6 +1260,8 @@ affile_dd_format_persist_name(AFFileDestDriver *self)
 static void
 affile_dd_reap_writer(AFFileDestDriver *self, AFFileDestWriter *dw)
 {
+  LogWriter *writer = (LogWriter *)dw->writer;
+
   main_loop_assert_main_thread();
 
   if ((self->flags & AFFILE_NO_EXPAND) == 0)
@@ -1276,6 +1279,7 @@ affile_dd_reap_writer(AFFileDestDriver *self, AFFileDestWriter *dw)
       g_static_mutex_unlock(&self->lock);
     }
 
+  log_dest_driver_release_queue(&self->super, log_writer_get_queue(writer));
   log_pipe_deinit(&dw->super);
   log_pipe_unref(&dw->super);
 }

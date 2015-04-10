@@ -2654,6 +2654,22 @@ log_proto_framed_client_post(LogProto *s, LogMessage *logmsg, guchar *msg, gsize
   return LPS_SUCCESS;
 }
 
+static LogProtoStatus
+log_proto_framed_client_flush(LogProto *s)
+{
+  LogProtoFramedClient *self = (LogProtoFramedClient *) s;
+
+  LogProtoStatus result = log_proto_text_client_flush(s);
+  if (result == LPS_SUCCESS)
+    {
+      if ((self->state == LPFCS_FRAME_SEND) && (self->frame_hdr_len != self->frame_hdr_pos))
+        {
+          result = LPS_AGAIN;
+        }
+    }
+  return result;
+}
+
 LogProto *
 log_proto_framed_client_new(LogTransport *transport)
 {
@@ -2661,7 +2677,7 @@ log_proto_framed_client_new(LogTransport *transport)
 
   self->super.super.prepare = log_proto_text_client_prepare;
   self->super.super.post = log_proto_framed_client_post;
-  self->super.super.flush = log_proto_text_client_flush;
+  self->super.super.flush = log_proto_framed_client_flush;
   self->super.super.transport = transport;
   self->super.super.convert = (GIConv) -1;
   self->super.super.keep_one_message = FALSE;
