@@ -73,6 +73,7 @@ start_stopwatch(void)
   gettimeofday(&start_time_val, NULL);
 }
 
+#pragma GCC diagnostic ignored "-Wformat"
 void
 stop_stopwatch_and_display_result(gchar *message_template, ...)
 {
@@ -86,8 +87,9 @@ stop_stopwatch_and_display_result(gchar *message_template, ...)
   va_end(args);
 
   diff = (end_time_val.tv_sec - start_time_val.tv_sec) * 1000000 + end_time_val.tv_usec - start_time_val.tv_usec;
-  printf("; runtime=%lu.%06lu s\n", diff / 1000000, diff % 1000000);
+  printf("; runtime=%" G_GUINT64_FORMAT ".%" G_GUINT64_FORMAT " s\n", diff / 1000000, diff % 1000000);
 }
+#pragma GCC diagnostic warning "-Wformat"
 
 static void
 grab_message(LogMessage *msg)
@@ -380,7 +382,7 @@ assert_null_non_fatal(void *pointer, const gchar *error_message, ...)
     return TRUE;
 
   va_start(args, error_message);
-  print_failure(error_message, args, "Pointer expected to be NULL; pointer=%llx", (guint64)pointer);
+  print_failure(error_message, args, "Pointer expected to be NULL; pointer=%" G_GUINT64_FORMAT "x", pointer);
   va_end(args);
 
   return FALSE;
