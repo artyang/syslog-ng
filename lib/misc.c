@@ -21,7 +21,7 @@
  * COPYING for details.
  *
  */
-  
+
 #include "misc.h"
 #include "hostname.h"
 #include "dnscache.h"
@@ -70,8 +70,10 @@ g_string_steal(GString *s)
 gboolean
 resolve_hostname(GSockAddr **addr, gchar *name)
 {
+  char ip_addr[256];
+
   if (addr)
-    { 
+    {
 #if HAVE_GETADDRINFO
       struct addrinfo hints;
       struct addrinfo *res;
@@ -80,31 +82,38 @@ resolve_hostname(GSockAddr **addr, gchar *name)
       hints.ai_family = (*addr)->sa.sa_family;
       hints.ai_socktype = 0;
       hints.ai_protocol = 0;
-      
+
       if (getaddrinfo(name, NULL, &hints, &res) == 0)
         {
           /* we only use the first entry in the returned list */
           switch ((*addr)->sa.sa_family)
             {
             case AF_INET:
-              g_sockaddr_inet_set_address((*addr), ((struct sockaddr_in *) res->ai_addr)->sin_addr);
-              break;
+                {
+                  struct sockaddr_in *res_addr = (struct sockaddr_in *) res->ai_addr;
+
+                  g_sockaddr_inet_set_address((*addr), res_addr->sin_addr);
+                  inet_ntop(AF_INET, &(res_addr->sin_addr), ip_addr, sizeof(ip_addr));
+                  break;
+                }
 #if ENABLE_IPV6
             case AF_INET6:
               {
                 guint16 port;
+                struct sockaddr_in6 *res_addr = (struct sockaddr_in6 *) res->ai_addr;
 
                 /* we need to copy the whole sockaddr_in6 structure as it
                  * might contain scope and other required data */
                 port = g_sockaddr_inet6_get_port(*addr);
-                *g_sockaddr_inet6_get_sa(*addr) = *((struct sockaddr_in6 *) res->ai_addr);
+                *g_sockaddr_inet6_get_sa(*addr) = *(res_addr);
 
                 /* we need to restore the port number as it is zeroed out by the previous assignment */
                 g_sockaddr_inet6_set_port(*addr, port);
+                inet_ntop(AF_INET6, &(res_addr->sin6_addr), ip_addr, sizeof(ip_addr));
                 break;
               }
 #endif
-            default: 
+            default:
               g_assert_not_reached();
               break;
             }
@@ -117,7 +126,7 @@ resolve_hostname(GSockAddr **addr, gchar *name)
         }
 #else
       struct hostent *he;
-      
+
       G_LOCK(resolv_lock);
       he = gethostbyname(name);
       if (he)
@@ -127,11 +136,12 @@ resolve_hostname(GSockAddr **addr, gchar *name)
             case AF_INET:
               g_sockaddr_inet_set_address((*addr), *(struct in_addr *) he->h_addr);
               break;
-            default: 
+            default:
               g_assert_not_reached();
               break;
             }
           G_UNLOCK(resolv_lock);
+          strncpy(ip_addr, he->h_name, sizeof(ip_addr));
         }
       else
         {
@@ -150,6 +160,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
   const gchar *hname = NULL;
   gboolean positive;
   gchar buf[256];
+  gchar ip_addr[256];
 #ifndef HAVE_GETNAMEINFO
   gchar hostent_buf[256];
 #endif
@@ -164,7 +175,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
         {
           void *addr;
           socklen_t addr_len G_GNUC_UNUSED;
-          
+
           if (saddr->sa.sa_family == AF_INET)
             {
               addr = &((struct sockaddr_in *) &saddr->sa)->sin_addr;
@@ -197,6 +208,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
                     }
                   G_UNLOCK(resolv_lock);
 #endif
+
                   if (hname)
                     positive = TRUE;
 
@@ -205,17 +217,21 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
                       /* resolution success, store this as a positive match in the cache */
                       dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, TRUE);
                     }
-                } 
+                }
             }
-            
-          if (!hname) 
+
+          if (!hname)
             {
-              inet_ntop(saddr->sa.sa_family, addr, buf, sizeof(buf));
-              hname = buf;
+              inet_ntop(saddr->sa.sa_family, addr, ip_addr, sizeof(ip_addr));
+              msg_debug("Can't bind hostname for the IP address, therefore using IP address as hostname",
+                        evt_tag_str("IP address", ip_addr),
+                        NULL);
+
+              hname = ip_addr;
               if (use_dns_cache)
                 dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, FALSE);
             }
-          else 
+          else
             {
               if (!usefqdn && positive)
                 {
@@ -241,7 +257,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
           g_assert_not_reached();
         }
     }
-  else 
+  else
     {
       if (usefqdn)
         {
@@ -315,7 +331,7 @@ g_fd_set_cloexec(int fd, gboolean enable)
   return TRUE;
 }
 
-gboolean 
+gboolean
 resolve_user(const char *user, gint *uid)
 {
   struct passwd *pw;
@@ -337,7 +353,7 @@ resolve_user(const char *user, gint *uid)
   return TRUE;
 }
 
-gboolean 
+gboolean
 resolve_group(const char *group, gint *gid)
 {
   struct group *gr;
@@ -346,7 +362,7 @@ resolve_group(const char *group, gint *gid)
   *gid = 0;
   if (!(*group))
     return FALSE;
-    
+
   *gid = strtol(group, &endptr, 0);
   if (*endptr)
     {
@@ -359,7 +375,7 @@ resolve_group(const char *group, gint *gid)
   return TRUE;
 }
 
-gboolean 
+gboolean
 resolve_user_group(char *arg, gint *uid, gint *gid)
 {
   char *user, *group;
@@ -367,7 +383,7 @@ resolve_user_group(char *arg, gint *uid, gint *gid)
   *uid = 0;
   user = strtok(arg, ":.");
   group = strtok(NULL, "");
-  
+
   if (user && !resolve_user(user, uid))
     return FALSE;
   if (group && !resolve_group(group, gid))
@@ -451,12 +467,12 @@ create_containing_directory(gchar *name, gint dir_uid, gint dir_gid, gint dir_mo
   gint rc;
   gchar *p;
   cap_t saved_caps;
-  
+
   /* check that the directory exists */
   dirname = g_path_get_dirname(name);
   rc = stat(dirname, &st);
   g_free(dirname);
-  
+
   if (rc == 0)
     {
       /* directory already exists */
@@ -467,12 +483,12 @@ create_containing_directory(gchar *name, gint dir_uid, gint dir_gid, gint dir_mo
       /* some real error occurred */
       return FALSE;
     }
-    
+
   /* directory does not exist */
   p = name + 1;
-  
+
   p = strchr(p, G_DIR_SEPARATOR);
-  while (p) 
+  while (p)
     {
       *p = '\0';
 #ifdef _WIN32
@@ -483,12 +499,12 @@ create_containing_directory(gchar *name, gint dir_uid, gint dir_gid, gint dir_mo
           continue;
         }
 #endif
-      if (stat(name, &st) == 0) 
+      if (stat(name, &st) == 0)
         {
           if (!S_ISDIR(st.st_mode))
             return FALSE;
         }
-      else if (errno == ENOENT) 
+      else if (errno == ENOENT)
         {
           if (g_mkdir(name, dir_mode < 0 ? 0700 : (mode_t) dir_mode) == -1)
             return FALSE;
@@ -544,7 +560,7 @@ format_hex_string(gpointer data, gsize data_len, gchar *result, gsize result_len
     {
       g_snprintf(result + pos, 3, "%02x", str[i]);
       pos += 2;
-    }   
+    }
   return result;
 }
 
@@ -614,30 +630,30 @@ find_cr_or_lf(gchar *s, gsize n)
       else if (*char_ptr == 0)
         return NULL;
     }
-    
+
   longword_ptr = (LONGDEF *) char_ptr;
 
 #if GLIB_SIZEOF_VOID_P == 8
   magic_bits = 0x7efefefefefefeffL;
 #elif GLIB_SIZEOF_VOID_P == 4
-  magic_bits = 0x7efefeffL; 
+  magic_bits = 0x7efefeffL;
 #else
   #error "unknown architecture"
 #endif
   memset(&cr_charmask, CR, sizeof(cr_charmask));
   memset(&lf_charmask, LF, sizeof(lf_charmask));
-    
+
   while (n > sizeof(longword))
     {
       longword = *longword_ptr++;
       if ((((longword + magic_bits) ^ ~longword) & ~magic_bits) != 0 ||
-          ((((longword ^ cr_charmask) + magic_bits) ^ ~(longword ^ cr_charmask)) & ~magic_bits) != 0 || 
+          ((((longword ^ cr_charmask) + magic_bits) ^ ~(longword ^ cr_charmask)) & ~magic_bits) != 0 ||
           ((((longword ^ lf_charmask) + magic_bits) ^ ~(longword ^ lf_charmask)) & ~magic_bits) != 0)
         {
           gint i;
 
           char_ptr = (gchar *) (longword_ptr - 1);
-          
+
           for (i = 0; i < sizeof(longword); i++)
             {
               if (*char_ptr == CR || *char_ptr == LF)
@@ -669,12 +685,12 @@ string_array_to_list(const gchar *strlist[])
 {
   gint i;
   GList *l = NULL;
-  
+
   for (i = 0; strlist[i]; i++)
     {
       l = g_list_prepend(l, g_strdup(strlist[i]));
     }
-  
+
   return g_list_reverse(l);
 }
 
@@ -695,6 +711,49 @@ string_list_free(GList *l)
         g_free(l->data);
       l = g_list_delete_link(l, l);
     }
+}
+
+typedef struct _WorkerThreadParams
+{
+  GThreadFunc func;
+  gpointer data;
+} WorkerThreadParams;
+
+static gpointer
+worker_thread_func(gpointer st)
+{
+  WorkerThreadParams *p = st;
+  gpointer res;
+  sigset_t mask;
+
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGHUP);
+  sigaddset(&mask, SIGCHLD);
+  sigaddset(&mask, SIGTERM);
+  sigaddset(&mask, SIGINT);
+  sigprocmask(SIG_BLOCK, &mask, NULL);
+  res = p->func(p->data);
+  g_free(st);
+  return res;
+}
+
+GThread *
+create_worker_thread(GThreadFunc func, gpointer data, gboolean joinable, GError **error)
+{
+  GThread *h;
+  WorkerThreadParams *p;
+
+  p = g_new0(WorkerThreadParams, 1);
+  p->func = func;
+  p->data = data;
+
+  h = g_thread_create_full(worker_thread_func, p, 128 * 1024, joinable, TRUE, G_THREAD_PRIORITY_NORMAL, error);
+  if (!h)
+    {
+      g_free(p);
+      return NULL;
+    }
+  return h;
 }
 
 gchar *
