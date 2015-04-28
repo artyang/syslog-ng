@@ -638,6 +638,7 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
   gchar pattern_buf[256];
   gint ext_ndx;
   gboolean found = FALSE, result = FALSE;
+  gint num = 0;
 
   ext_ndx = X509_get_ext_by_NID(cert, NID_subject_alt_name, -1);
   if (ext_ndx >= 0)
@@ -651,9 +652,13 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
       alt_names = X509V3_EXT_d2i(ext);
       if (alt_names)
         {
-          gint num, i;
+          gint i;
 
           num = sk_GENERAL_NAME_num(alt_names);
+
+          msg_debug("Found subjectAltNames in certificate, check them",
+                    evt_tag_int("number of subjectAltName(s)", num),
+                    NULL);
 
           for (i = 0; !result && i < num; i++)
             {
@@ -675,6 +680,10 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
                   /* we have found a DNS name as alternative subject name */
                   found = TRUE;
                   result = tls_wildcard_match(host_name, pattern_buf);
+                  msg_debug("Cheking item of subjectAltName",
+                            evt_tag_str("DNS name", (char*)dnsname),
+                            evt_tag_int("result", result),
+                            NULL);
                 }
               else if (gen_name->type == GEN_IPADD)
                 {
@@ -683,6 +692,10 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
                   g_strlcpy(pattern_buf, dotted_ip, sizeof(pattern_buf));
                   found = TRUE;
                   result = strcasecmp(host_name, pattern_buf) == 0;
+                  msg_debug("Cheking item of subjectAltName",
+                            evt_tag_str("IP", dotted_ip),
+                            evt_tag_int("result", result),
+                            NULL);
                 }
             }
           sk_GENERAL_NAME_free(alt_names);
@@ -692,6 +705,12 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
     {
       /* hmm. there was no subjectAltName (this is deprecated, but still
        * widely used), look up the Subject, most specific CN */
+
+      /* According to RFC6125 must check SAN first, and if SAN exists,
+       * then CN should not be checked. See "Subject Naming in PKIX Certificates" and
+       * Syslog (2009)" capters.
+      */
+
       X509_NAME *name;
 
       name = X509_get_subject_name(cert);
@@ -705,6 +724,7 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
       msg_error("Certificate subject does not match configured hostname",
                 evt_tag_str("hostname", host_name),
                 evt_tag_str("certificate", pattern_buf),
+                evt_tag_int("number of subjectAltNames", num),
                 evt_tag_id(MSG_CERTIFICATE_VALIDATION_FAILED),
                 NULL);
     }
