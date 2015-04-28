@@ -320,6 +320,17 @@ afsocket_sc_set_owner(AFSocketSourceConnection *self, AFSocketSourceDriver *owne
   log_pipe_append(&self->super, &owner->super.super.super);
 }
 
+static void
+afsocket_sc_kill_connection(AFSocketSourceConnection *self)
+{
+  /* Remove the circular reference between the connection and its
+   * reader (through the connection->reader and reader->control
+   * pointers these have a circular references).
+   */
+  log_pipe_unref(self->reader);
+  self->reader = NULL;
+  log_pipe_unref(&self->super);
+}
 
 /*
   This should be called by log_reader_free -> log_pipe_unref
@@ -383,14 +394,7 @@ afsocket_sd_remove_and_kill_connection(AFSocketSourceDriver *self, AFSocketSourc
 
   log_pipe_deinit(&connection->super);
 
-  /* Remove the circular reference between the connection and its
-   * reader (through the connection->reader and reader->control
-   * pointers these have a circular references).
-   */
-  log_pipe_unref(connection->reader);
-  connection->reader = NULL;
-
-  log_pipe_unref(&connection->super);
+  afsocket_sc_kill_connection(connection);
 }
 
 static void
@@ -406,6 +410,10 @@ afsocket_sd_kill_connection_list(GList *list)
       if (connection->owner)
         {
           afsocket_sd_remove_and_kill_connection(connection->owner, connection);
+        }
+      else
+        {
+          afsocket_sc_kill_connection(connection);
         }
     }
 }
