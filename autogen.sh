@@ -34,14 +34,16 @@ set -e
      echo "Unable to locate syslog-ng-pe-modules under $ZWA_ROOT/work :-(" >&2
      exit 1
  fi
- pemodpath="$pemodrepo/modules"
- echo "PEMODPATH=$pemodpath"
- for pemod in license logstore diskq confighash snmp afsqlsource rltp-proto eventlog agent-config windows-resource; do
-    if [ -d $pemodpath/$pemod ]; then
-        if [ -h modules/$pemod ] || [ -d modules/$pemod ]; then rm -rf modules/$pemod; fi
-        ln -s $pemodpath/$pemod modules/$pemod
+
+ for pe_module_path in `ls -d $pemodrepo/modules/*/`; do
+    pe_module_basename=`basename $pe_module_path`
+    if [ -d $pe_module_path ]; then
+        if [ -h modules/$pe_module_basename ] || [ -d modules/$pe_module_basename ]; then rm -rf modules/$pe_module_basename; fi
+        echo "Creating symlink for module $pe_module_basename..."
+        ln -s $pe_module_path modules/$pe_module_basename
     fi
  done
+
  petests_orig="$pemodrepo/tests"
  petests="pe-tests"
  if [ -d $petests_orig ]; then

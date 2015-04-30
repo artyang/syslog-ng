@@ -72,7 +72,20 @@ typedef struct _AFSocketSourceConnection
   GSockAddr *peer_addr;
 } AFSocketSourceConnection;
 
+typedef struct _AFSocketReloadInfo
+{
+  LogPipe *writer;
+  LogProtoFactory *proto_factory;
+} AFSocketReloadInfo;
+
 static void afsocket_sd_close_connection(AFSocketSourceDriver *self, AFSocketSourceConnection *sc);
+
+void
+afsocket_reload_info_free(AFSocketReloadInfo *reload_info)
+{
+  log_pipe_unref(reload_info->writer);
+  g_free(reload_info);
+}
 
 gboolean
 afsocket_setup_socket(gint fd, SocketOptions *sock_options, AFSocketDirection dir)
@@ -1315,6 +1328,7 @@ afsocket_dd_init(LogPipe *s)
   AFSocketDestDriver *self = (AFSocketDestDriver *) s;
   GlobalConfig *cfg = log_pipe_get_config(s);
   gchar *persist_name;
+  AFSocketReloadInfo *reload_info;
 
   if (!log_dest_driver_init_method(s))
     return FALSE;
@@ -1339,7 +1353,22 @@ afsocket_dd_init(LogPipe *s)
    * the connection is not closed when syslog-ng is reloaded.
    */
   log_writer_options_init(&self->writer_options, cfg, 0);
-  self->writer = cfg_persist_config_fetch(cfg, afsocket_dd_format_persist_name(self, FALSE));
+  reload_info = cfg_persist_config_fetch(cfg, afsocket_dd_format_persist_name(self, FALSE));
+
+  if (reload_info)
+    {
+      if (reload_info->proto_factory->create == self->proto_factory->create)
+        {
+          self->writer = reload_info->writer;
+        }
+      else
+        {
+          log_pipe_unref(reload_info->writer);
+        }
+
+      g_free(reload_info);
+    }
+
   if (!self->writer)
     {
       /* NOTE: we open our writer with no fd, so we can send messages down there
@@ -1389,6 +1418,7 @@ afsocket_dd_deinit(LogPipe *s)
 {
   AFSocketDestDriver *self = (AFSocketDestDriver *) s;
   GlobalConfig *cfg = log_pipe_get_config(s);
+  AFSocketReloadInfo *reload_info;
 
   afsocket_dd_stop_watches(self);
 
@@ -1397,7 +1427,11 @@ afsocket_dd_deinit(LogPipe *s)
 
   if (self->flags & AFSOCKET_KEEP_ALIVE)
     {
-      cfg_persist_config_add(cfg, afsocket_dd_format_persist_name(self, FALSE), self->writer, (GDestroyNotify) log_pipe_unref, FALSE);
+      reload_info = g_new(AFSocketReloadInfo, 1);
+      reload_info->writer = self->writer;
+      reload_info->proto_factory = self->proto_factory;
+
+      cfg_persist_config_add(cfg, afsocket_dd_format_persist_name(self, FALSE), reload_info, (GDestroyNotify) afsocket_reload_info_free, FALSE);
       self->writer = NULL;
     }
 

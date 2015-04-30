@@ -1225,6 +1225,9 @@ if test "x$default_modules" = "xauto"; then
     if test "x$enable_sun_streams" = "xyes"; then
         default_modules="$default_modules,afstreams"
     fi
+    if test "x$enable_indexer" = "xyes"; then
+        default_modules="$default_modules,indexed_logstore"
+    fi
 fi
 
 if test "x$module_path" = "x"; then
@@ -1540,6 +1543,8 @@ AC_OUTPUT(dist.conf
           tools/Makefile
           modules/Makefile
           modules/dummy/Makefile
+          modules/indexed_logstore/Makefile
+          modules/logstore-common/Makefile
           modules/basic-proto/Makefile
           modules/afsocket/Makefile
           modules/afsql/Makefile
