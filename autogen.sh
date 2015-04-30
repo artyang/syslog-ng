@@ -9,18 +9,6 @@
 set -e
 
 (
- if [ -z "$pemodrepo" ]
- then
-   pemodrepo="$ZWA_ROOT/work/syslog-ng-pe-mainline-5.3/syslog-ng-pe-modules"
- fi
- if [ ! -e "$pemodrepo" ]
- then
-     pemodrepo="$ZWA_ROOT/work/syslog-ng-pe-5.3/syslog-ng-pe-modules"
- fi
- if [ ! -e "$pemodrepo" ]
- then
-     pemodrepo="$ZWA_ROOT/projects/syslog-ng-pe-5.3/source/syslog-ng-pe-modules"
- fi
  if [ ! -e "$pemodrepo" ]
  then
      old_pwd=$PWD
@@ -28,11 +16,6 @@ set -e
      pemodrepo=$PWD
      cd $old_pwd
      echo "PE module: $pemodrepo"
- fi
- if [ ! -e "$pemodrepo" ]
- then
-     echo "Unable to locate syslog-ng-pe-modules under $ZWA_ROOT/work :-(" >&2
-     exit 1
  fi
 
  for pe_module_path in `ls -d $pemodrepo/modules/*/`; do
