@@ -18,6 +18,16 @@ dnl definitions
 
 PACKAGE="syslog-ng-premium-edition"
 VERSION="`cat $srcdir/VERSION`"
+SSB_VERSION="`cat $srcdir/SSB_VERSION`"
+
+if [[ -z "$SSB_RELEASE" ]]; then
+  SSB_RELEASE=0
+fi
+
+if test $SSB_RELEASE -eq 1; then
+  VERSION="$VERSION$SSB_VERSION"
+fi
+
 
 dnl ***************************************************************************
 dnl dependencies
