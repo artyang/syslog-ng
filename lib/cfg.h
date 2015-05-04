@@ -44,8 +44,8 @@ struct _LogConnection;
 struct _LogCenter;
 struct _LogTemplate;
 
-#define CFG_CURRENT_VERSION 0x0503
-#define CFG_CURRENT_VERSION_STRING "5.3"
+#define CFG_CURRENT_VERSION 0x0504
+#define CFG_CURRENT_VERSION_STRING "5.4"
 
 /* configuration data kept between configuration reloads */
 typedef struct _PersistConfig PersistConfig;
