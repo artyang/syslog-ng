@@ -1,1 +1,1 @@
-include 'dummy', 'hdfs'
+include 'dummy', 'hdfs', 'elastic'
