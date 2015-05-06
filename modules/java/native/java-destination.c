@@ -139,8 +139,9 @@ java_dd_send_to_object(JavaDestDriver *self, LogMessage *msg)
 }
 
 gboolean
-java_dd_open(JavaDestDriver *self)
+java_dd_open(LogThrDestDriver *s)
 {
+  JavaDestDriver *self = (JavaDestDriver *)s;
   if (!java_destination_proxy_is_opened(self->proxy))
     {
       return java_destination_proxy_open(self->proxy);
@@ -149,8 +150,9 @@ java_dd_open(JavaDestDriver *self)
 }
 
 void
-java_dd_close(JavaDestDriver *self)
+java_dd_close(LogThrDestDriver *s)
 {
+  JavaDestDriver *self = (JavaDestDriver *)s;
   if (java_destination_proxy_is_opened(self->proxy))
     {
       java_destination_proxy_close(self->proxy);
@@ -161,7 +163,7 @@ static worker_insert_result_t
 java_worker_insert(LogThrDestDriver *s, LogMessage *msg)
 {
   JavaDestDriver *self = (JavaDestDriver *)s;
-  if (!java_dd_open(self))
+  if (!java_dd_open(s))
     {
       return WORKER_INSERT_RESULT_NOT_CONNECTED;
     }
@@ -179,8 +181,7 @@ java_worker_message_queue_empty(LogThrDestDriver *d)
 static void
 java_worker_thread_deinit(LogThrDestDriver *d)
 {
-  JavaDestDriver *self = (JavaDestDriver *)d;
-  java_dd_close(self);
+  java_dd_close(d);
   java_machine_detach_thread();
 }
 
@@ -229,6 +230,8 @@ java_dd_new(GlobalConfig *cfg)
 
   self->super.worker.thread_deinit = java_worker_thread_deinit;
   self->super.worker.insert = java_worker_insert;
+  self->super.worker.connect = java_dd_open;
+  self->super.worker.disconnect = java_dd_close;
   self->super.worker.worker_message_queue_empty = java_worker_message_queue_empty;
 
   self->super.format.stats_instance = java_dd_format_stats_instance;
