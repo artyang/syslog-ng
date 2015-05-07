@@ -5,17 +5,17 @@ public class IntegerOptionDecorator extends OptionDecorator {
 	public IntegerOptionDecorator(Option decoratedOption) {
 		super(decoratedOption);
 	}
-	
-	public void init() throws OptionException {
-		decoratedOption.init();
+
+	public void validate() throws InvalidOptionException {
+		decoratedOption.validate();
 		try {
 			Integer.parseInt(decoratedOption.getValue());
 		}
 		catch (NumberFormatException e) {
-			throw new OptionException("option " + decoratedOption.getName() + " must be numerical");
-			
+			throw new InvalidOptionException("option " + decoratedOption.getName() + " must be numerical");
+
 		}
 	}
-	
+
 
 }

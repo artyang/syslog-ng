@@ -27,38 +27,30 @@ import org.syslog_ng.LogMessage;
 import org.syslog_ng.StructuredLogDestination;
 import org.syslog_ng.elasticsearch.client.ESClient;
 import org.syslog_ng.elasticsearch.client.ESClientFactory;
+import org.syslog_ng.elasticsearch.client.UnknownESClientModeException;
 import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.logging.SyslogNgInternal;
 import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessor;
 import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessorFactory;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
-import org.syslog_ng.elasticsearch.options.OptionException;
+import org.syslog_ng.elasticsearch.options.InvalidOptionException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.elasticsearch.action.bulk.BulkProcessor;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 
-public class ElasticSearchDestination extends StructuredLogDestination implements BulkProcessor.Listener {
+public class ElasticSearchDestination extends StructuredLogDestination {
 
 	ESClient client;
 	ESMessageProcessor msgProcessor;
 	ElasticSearchOptions options;
-	
+
 	boolean opened;
-	
+
 	public ElasticSearchDestination(long handle) {
 		super(handle);
 		Logger.getRootLogger().setLevel(Level.OFF);
 		InternalLogger.setLogger(new SyslogNgInternal());
-		opened = false;
 		options = new ElasticSearchOptions(this);
-		client = ESClientFactory.getESClient(options);
-		msgProcessor = ESMessageProcessorFactory.getMessageProcessor(options, client, this);
-		if (options.getClientMode().equals(ElasticSearchOptions.CLIENT_MODE_TRANSPORT) && options.getFlushLimit() > 1) {
-			InternalLogger.warning("Using transport client mode with bulk message processing (flush_limit > 1) can cause high message dropping rate in case of connection broken, using node client mode is suggested");
-		}
 	}
 
 	@Override
@@ -66,10 +58,15 @@ public class ElasticSearchDestination extends StructuredLogDestination implement
 		boolean result = false;
 		try {
 			options.init();
+			client = ESClientFactory.getESClient(options);
+			msgProcessor = ESMessageProcessorFactory.getMessageProcessor(options, client);
 			client.init();
+			if (options.getClientMode().equals(ElasticSearchOptions.CLIENT_MODE_TRANSPORT) && options.getFlushLimit() > 1) {
+				InternalLogger.warning("Using transport client mode with bulk message processing (flush_limit > 1) can cause high message dropping rate in case of connection broken, using node client mode is suggested");
+			}
 			result = true;
 		}
-		catch (OptionException e){
+		catch (InvalidOptionException | UnknownESClientModeException e){
 			InternalLogger.error(e.getMessage());
 			return false;
 		}
@@ -87,8 +84,8 @@ public class ElasticSearchDestination extends StructuredLogDestination implement
 		msgProcessor.init();
 		return opened;
 	}
-	
-    protected IndexRequest createIndexRequest(LogMessage msg) {
+
+    private IndexRequest createIndexRequest(LogMessage msg) {
     	String formattedMessage = options.getMessageTemplate().getResolvedString(msg);
 		String customId = options.getCustomId().getResolvedString(msg);
 		String index = options.getIndex().getResolvedString(msg);
@@ -120,26 +117,5 @@ public class ElasticSearchDestination extends StructuredLogDestination implement
 	protected void deinit() {
 		client.deinit();
 		options.deinit();
-	}
-
-	@Override
-	public void beforeBulk(long executionId, BulkRequest request) {
-		InternalLogger.debug("Start bulk processing, id='" + executionId + "'");
-	}
-
-	@Override
-	public void afterBulk(long executionId, BulkRequest request,
-			BulkResponse response) {
-		InternalLogger.debug("Bulk processing finished successfully, id='" + executionId + "'");
-	}
-
-	@Override
-	public void afterBulk(long executionId, BulkRequest request,
-			Throwable failure) {
-		String errorMessage = "Bulk processing failed,";
-		errorMessage += " id='" + executionId + "'";
-		errorMessage += ", numberOfMessages='" + request.numberOfActions() + "'";
-		errorMessage += ", error='" + failure.getMessage() + "'";
-		InternalLogger.error(errorMessage);
 	}
 }

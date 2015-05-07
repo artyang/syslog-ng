@@ -9,7 +9,7 @@ import org.syslog_ng.elasticsearch.options.StringOption;
 public class TestRequiredOptionDecorator extends TestOption {
 	Option stringOption;
 	Option decorator;
-	
+
 	@Before
 	public void setUp() throws Exception {
 		super.setUp();
@@ -21,17 +21,17 @@ public class TestRequiredOptionDecorator extends TestOption {
 	public void testNormal() {
 		options.put("required", "test");
 		assertInitOptionSuccess(decorator);
-		
+
 		options.remove("required");
 		stringOption = new StringOption(owner, "required", "default");
 		decorator = new RequiredOptionDecorator(stringOption);
 		assertInitOptionSuccess(decorator);
 	}
-	
+
 	@Test
 	public void testInvalid() {
 		assertInitOptionFailed(decorator, "option required is a required option");
 	}
-	
+
 
 }

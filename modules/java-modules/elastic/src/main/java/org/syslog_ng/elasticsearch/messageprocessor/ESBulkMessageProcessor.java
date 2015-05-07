@@ -25,18 +25,43 @@ package org.syslog_ng.elasticsearch.messageprocessor;
 
 import java.util.concurrent.TimeUnit;
 
-
 import org.elasticsearch.action.bulk.BulkProcessor;
+import org.elasticsearch.action.bulk.BulkRequest;
+import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.syslog_ng.elasticsearch.client.ESClient;
+import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESBulkMessageProcessor extends ESMessageProcessor {
 	private BulkProcessor bulkProcessor;
-	
-	public ESBulkMessageProcessor(ElasticSearchOptions options, ESClient client, BulkProcessor.Listener listener) {
-		super(options, client, listener);
+
+	private class BulkProcessorListener implements BulkProcessor.Listener {
+		@Override
+		public void beforeBulk(long executionId, BulkRequest request) {
+			InternalLogger.debug("Start bulk processing, id='" + executionId + "'");
+		}
+
+		@Override
+		public void afterBulk(long executionId, BulkRequest request,
+				BulkResponse response) {
+			InternalLogger.debug("Bulk processing finished successfully, id='" + executionId + "'");
+		}
+
+		@Override
+		public void afterBulk(long executionId, BulkRequest request,
+				Throwable failure) {
+			String errorMessage = "Bulk processing failed,";
+			errorMessage += " id='" + executionId + "'";
+			errorMessage += ", numberOfMessages='" + request.numberOfActions() + "'";
+			errorMessage += ", error='" + failure.getMessage() + "'";
+			InternalLogger.error(errorMessage);
+		}
+	}
+
+	public ESBulkMessageProcessor(ElasticSearchOptions options, ESClient client) {
+		super(options, client);
 	}
 
 	@Override
@@ -44,24 +69,25 @@ public class ESBulkMessageProcessor extends ESMessageProcessor {
 		bulkProcessor.add(req);
 		return true;
 	}
-	
+
 	@Override
 	public void flush() {
 		bulkProcessor.flush();
 	}
-	
+
 	@Override
 	public void init() {
+
 		bulkProcessor = BulkProcessor.builder(
 				client.getClient(),
-				listener
+				new BulkProcessorListener()
 			)
 			.setBulkActions(options.getFlushLimit())
 			.setFlushInterval(new TimeValue(1000))
 			.setConcurrentRequests(0)
 			.build();
 	}
-	
+
 	@Override
 	public void deinit() {
 		try {

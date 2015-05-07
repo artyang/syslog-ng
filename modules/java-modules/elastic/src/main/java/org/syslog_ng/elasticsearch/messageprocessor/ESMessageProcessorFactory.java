@@ -23,21 +23,20 @@
 
 package org.syslog_ng.elasticsearch.messageprocessor;
 
-import org.elasticsearch.action.bulk.BulkProcessor;
 import org.syslog_ng.elasticsearch.client.ESClient;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESMessageProcessorFactory {
-	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client, BulkProcessor.Listener listener) {
+	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client) {
 		int flush_limit = options.getFlushLimit();
 		if (flush_limit > 1) {
-			return new ESBulkMessageProcessor(options, client, listener);
+			return new ESBulkMessageProcessor(options, client);
 		}
-		if (flush_limit == 0) {
-			return new DummyProcessor(options, client, listener);
+		if (flush_limit == -1) {
+			return new DummyProcessor(options, client);
 		}
 		else {
-			return new ESSingleMessageProcessor(options, client, listener);
+			return new ESSingleMessageProcessor(options, client);
 		}
 	}
 }

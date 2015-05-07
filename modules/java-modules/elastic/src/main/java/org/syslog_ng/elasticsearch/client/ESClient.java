@@ -26,50 +26,49 @@ package org.syslog_ng.elasticsearch.client;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.client.Client;
 import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public abstract class ESClient {
 	private Client client;
-	
+	private static final String TIMEOUT = "5s";
+
 	protected ElasticSearchOptions options;
-	
+
 	public ESClient(ElasticSearchOptions options) {
 		this.options = options;
 	}
-	
-	public void initConnection() throws ElasticsearchException {
-		
-		InternalLogger.info("connecting to cluster, cluster_name='" + options.getCluster() + "'");
+
+	private boolean waitForStatus(ClusterHealthStatus status) {
 		ClusterHealthRequestBuilder healthRequest = client.admin().cluster().prepareHealth();
-		healthRequest.setTimeout("5s");
-		healthRequest.setWaitForGreenStatus();
-		ClusterHealthResponse response = (ClusterHealthResponse) healthRequest
-				.execute().actionGet();
-		if (response.isTimedOut()) {
+		healthRequest.setTimeout(TIMEOUT);
+		healthRequest.setWaitForStatus(status);
+		ClusterHealthResponse response = (ClusterHealthResponse) healthRequest.execute().actionGet();
+		return !response.isTimedOut();
+	}
+
+	public void connect() throws ElasticsearchException {
+		InternalLogger.info("connecting to cluster, cluster_name='" + options.getCluster() + "'");
+		if (!waitForStatus(ClusterHealthStatus.GREEN)) {
 			InternalLogger.debug("Failed to wait for green");
 			InternalLogger.debug("Wait for read yellow status...");
-			healthRequest = client.admin().cluster().prepareHealth();
-			healthRequest.setTimeout("5s");
-			healthRequest.setWaitForYellowStatus();
-			response = (ClusterHealthResponse) healthRequest.execute()
-					.actionGet();
-			if (response.isTimedOut()) {
+
+			if (!waitForStatus(ClusterHealthStatus.YELLOW)) {
 				InternalLogger.debug("Timedout");
-				throw new ElasticsearchException(
-						"Can't connect to cluster: " + options.getCluster());
+				throw new ElasticsearchException("Can't connect to cluster: " + options.getCluster());
 			}
 		}
 		InternalLogger.info("conneted to cluster, cluster_name='" + options.getCluster() + "'");
-	}	
-	
+	}
+
 	public final boolean open() {
 		if (client == null) {
 			client = createClient();
 		}
 		try {
-			initConnection();
+			connect();
 		}
 		catch (ElasticsearchException e) {
 			InternalLogger.error("Failed to connect to " +options.getCluster() + ", reason='" + e.getMessage() + "'");
@@ -77,23 +76,23 @@ public abstract class ESClient {
 		}
 		return true;
 	}
-	
-	public abstract boolean isOpened();
-	
+
 	public abstract void close();
-	
+
+	public abstract boolean isOpened();
+
 	public abstract void deinit();
-	
+
 	public final void init() {
 		client = createClient();
 	}
-	
+
 	public abstract Client createClient();
-	
+
 	public Client getClient() {
 		return client;
 	}
-	
+
 	protected void resetClient() {
 		this.client = null;
 	}

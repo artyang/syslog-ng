@@ -26,13 +26,13 @@ package org.syslog_ng.elasticsearch.options;
 import java.util.Set;
 
 public class EnumOptionDecorator extends OptionDecorator {
-	private Set<String> possibleValues; 
-	
+	private Set<String> possibleValues;
+
 	public EnumOptionDecorator(Option decoratedOption, Set<String> possibleValues) {
 		super(decoratedOption);
-		this.possibleValues = possibleValues; 
+		this.possibleValues = possibleValues;
 	}
-	
+
 	public String getPossibleValuesAsString() {
 		String result = "[";
 		for (String value: possibleValues) {
@@ -44,12 +44,12 @@ public class EnumOptionDecorator extends OptionDecorator {
 		result += "]";
 		return result;
 	}
-	
-	public void init() throws OptionException {
-		decoratedOption.init();
+
+	public void validate() throws InvalidOptionException {
+		decoratedOption.validate();
 		String value = decoratedOption.getValue();
 		if (!possibleValues.contains(value)) {
-			throw new OptionException("option " + decoratedOption.getName() + " must be one of the following values: " + getPossibleValuesAsString());
+			throw new InvalidOptionException("option " + decoratedOption.getName() + " must be one of the following values: " + getPossibleValuesAsString());
 		}
 	}
 

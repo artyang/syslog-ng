@@ -23,35 +23,32 @@
 
 package org.syslog_ng.elasticsearch.messageprocessor;
 
-import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.index.IndexRequest;
 import org.syslog_ng.elasticsearch.client.ESClient;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public abstract class ESMessageProcessor {
 	ElasticSearchOptions options;
-	BulkProcessor.Listener listener;
 	ESClient client;
-	
-	
-	public ESMessageProcessor(ElasticSearchOptions options, ESClient client, BulkProcessor.Listener listener) {
+
+
+	public ESMessageProcessor(ElasticSearchOptions options, ESClient client) {
 		this.options = options;
 		this.client = client;
-		this.listener = listener;
 	}
-	
+
 	public void init() {
-		
+
 	}
-	
+
 	public void flush() {
-		
+
 	}
-	
+
 	public void deinit() {
-		
+
 	}
-	
+
 	public abstract boolean send(IndexRequest req);
 
 }

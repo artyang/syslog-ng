@@ -9,7 +9,7 @@ import org.syslog_ng.elasticsearch.options.StringOption;
 public class TestPortCheckDecorator extends TestOption {
 	Option stringOption;
 	Option decorator;
-	
+
 	@Before
 	public void setUp() throws Exception {
 		super.setUp();

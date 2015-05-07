@@ -28,14 +28,14 @@ public class RequiredOptionDecorator extends OptionDecorator {
 	public RequiredOptionDecorator(Option decoratedOption) {
 		super(decoratedOption);
 	}
-	
+
 	@Override
-	public void init() throws OptionException {
+	public void validate() throws InvalidOptionException {
 		String value = decoratedOption.getValue();
 		if (value == null) {
-			throw new  OptionException("option " + decoratedOption.getName() + " is a required option");
+			throw new  InvalidOptionException("option " + decoratedOption.getName() + " is a required option");
 		}
-		decoratedOption.init();
+		decoratedOption.validate();
 	}
 
 }

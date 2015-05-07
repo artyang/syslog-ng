@@ -8,7 +8,7 @@ import org.syslog_ng.elasticsearch.options.Option;
 import org.syslog_ng.elasticsearch.options.StringOption;
 
 public class TestStringOption extends TestOption {
-	
+
 
 	@Before
 	public void setUp() throws Exception {
@@ -31,49 +31,49 @@ public class TestStringOption extends TestOption {
 		assertInitOptionSuccess(stringOption);
 		assertEquals("syslog-ng", stringOption.getValue());
 	}
-	
+
 	@Test
 	public void testNonExisting() {
 		Option stringOption = new StringOption(owner, "badcluster");
 		assertInitOptionSuccess(stringOption);
 		assertEquals(null, stringOption.getValue());
 	}
-	
+
 	@Test
 	public void testNonExistingWithDefaultValue() {
 		Option stringOption = new StringOption(owner, "badcluster", "something else");
 		assertInitOptionSuccess(stringOption);
 		assertEquals("something else", stringOption.getValue());
 	}
-	
+
 	@Test
 	public void testWithValidInteger() {
 		Option stringOption = new StringOption(owner, "port");
 		assertInitOptionSuccess(stringOption);
 		assertEquals(new Integer(9300), stringOption.getValueAsInterger());
 	}
-	
+
 	@Test
 	public void testWithInValidInteger() {
 		Option stringOption = new StringOption(owner, "cluster");
 		assertInitOptionSuccess(stringOption);
 		assertEquals(null, stringOption.getValueAsInterger());
 	}
-	
+
 	@Test
 	public void testWithValidStringList() {
 		Option stringOption = new StringOption(owner, "server");
 		assertInitOptionSuccess(stringOption);
 		assertArrayEquals(new String[] {"localhost", "remote_host"} , stringOption.getValueAsStringList(" "));
 	}
-	
+
 	@Test
 	public void testWithInValidStringList() {
 		Option stringOption = new StringOption(owner, "badcluster");
 		assertInitOptionSuccess(stringOption);
 		assertArrayEquals(null, stringOption.getValueAsStringList(" "));
 	}
-	
+
 	@Test
 	public void testWithSingleValidStringList() {
 		Option stringOption = new StringOption(owner, "cluster");

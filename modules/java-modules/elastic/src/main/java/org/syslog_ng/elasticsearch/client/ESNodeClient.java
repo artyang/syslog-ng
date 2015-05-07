@@ -33,12 +33,13 @@ import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings.Builder;
 import org.elasticsearch.common.settings.SettingsException;
 import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeBuilder;
 import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESNodeClient extends ESClient {
 	private Node node;
-	
+
 	public ESNodeClient(ElasticSearchOptions options) {
 		super(options);
 	}
@@ -48,24 +49,32 @@ public class ESNodeClient extends ESClient {
 		getClient().close();
 	}
 
+	private NodeBuilder createNodeBuilder(String cluster) {
+		return  nodeBuilder().clusterName(cluster)
+				  .data(false)
+				  .client(true)
+				  .loadConfigSettings(false);
+	}
+
+	private void loadConfigFile(String cfgFile, NodeBuilder nodeBuilder) {
+		if (cfgFile == null) {
+			return;
+		}
+		try {
+			URL url = new File(cfgFile).toURI().toURL();
+			Builder builder = nodeBuilder().settings().loadFromUrl(url);
+			nodeBuilder = nodeBuilder.settings(builder);
+		} catch (MalformedURLException e) {
+			InternalLogger.warning("Bad filename format, filename = '" + cfgFile + "'");
+		} catch (SettingsException e) {
+			InternalLogger.warning("Can't load settings from file, file = '" + cfgFile + "', reason = '" + e.getMessage() + "'");
+		}
+	}
+
 	@Override
 	public Client createClient() {
-		String clusterName = options.getCluster();
-		String cfgFile = options.getConfigFile();
-		org.elasticsearch.node.NodeBuilder nodeBuilder = nodeBuilder().clusterName(clusterName).data(false).client(true).loadConfigSettings(false);
-		
-		if (cfgFile != null) {
-			try {
-				URL url = new File(cfgFile).toURI().toURL();
-				Builder builder = nodeBuilder().settings().loadFromUrl(url);
-				nodeBuilder = nodeBuilder.settings(builder);
-			} catch (MalformedURLException e) {
-				InternalLogger.warning("Bad filename format, filename = '" + cfgFile + "'");
-			} catch (SettingsException e) {
-				InternalLogger.warning("Can't load settings from file, file = '" + cfgFile + "', reason = '" + e.getMessage() + "'");
-			}
-		}
-		
+		NodeBuilder nodeBuilder = createNodeBuilder(options.getCluster());
+		loadConfigFile(options.getConfigFile(), nodeBuilder);
 		node = nodeBuilder.node();
 	    return node.client();
 	}
@@ -77,6 +86,6 @@ public class ESNodeClient extends ESClient {
 
 	@Override
 	public void deinit() {
-		node.close();	
+		node.close();
 	}
 }

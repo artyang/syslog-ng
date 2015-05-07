@@ -32,27 +32,27 @@ import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESTransportClient extends ESClient {
 	private Settings settings;
-	private TransportClient transport;
-	
+	private TransportClient transportClient;
+
 	public ESTransportClient(ElasticSearchOptions options) {
 		super(options);
 	}
-	
+
 	public Client createClient() {
 		settings = ImmutableSettings.settingsBuilder()
 				.put("client.transport.sniff", true)
 				.put("cluster.name", options.getCluster())
 				.classLoader(Settings.class.getClassLoader()).build();
-		
+
 		String[] servers =  options.getServerList();
 
-		transport = new TransportClient(settings);
+		transportClient = new TransportClient(settings);
 
 		for (String server: servers) {
-			transport.addTransportAddress(new InetSocketTransportAddress(server,
+			transportClient.addTransportAddress(new InetSocketTransportAddress(server,
 					options.getPort()));
 		}
-		return transport;
+		return transportClient;
 	}
 
 	public void close() {
@@ -62,11 +62,11 @@ public class ESTransportClient extends ESClient {
 
 	@Override
 	public boolean isOpened() {
-		return !transport.connectedNodes().isEmpty();
+		return !transportClient.connectedNodes().isEmpty();
 	}
 
 	@Override
 	public void deinit() {
-		
+
 	}
 }

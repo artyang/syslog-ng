@@ -16,7 +16,7 @@ public class TestEnumOptionDecorator extends TestOption {
 
 
 	@Before
-	public void setUp() throws Exception {		
+	public void setUp() throws Exception {
 		super.setUp();
 		options.put("cluster", "syslog-ng");
 	}
@@ -27,7 +27,7 @@ public class TestEnumOptionDecorator extends TestOption {
 		Set<String> values = new HashSet<String>(Arrays.asList("syslog-ng", "test"));
 		Option enumdecorator = new EnumOptionDecorator(stringOption, values);
 		assertInitOptionSuccess(enumdecorator);
-		
+
 		options.put("cluster", "test");
 		assertInitOptionSuccess(enumdecorator);
 	}
@@ -37,11 +37,11 @@ public class TestEnumOptionDecorator extends TestOption {
 		Option stringOption = new StringOption(owner, "cluster");
 		Set<String> values = new HashSet<String>(Arrays.asList("syslog-ng", "test"));
 		Option enumdecorator = new EnumOptionDecorator(stringOption, values);
-		
+
 		options.put("cluster", "invalid");
 		assertInitOptionFailed(enumdecorator,
 				"option cluster must be one of the following values");
-		
+
 		options.remove("cluster");
 		assertEquals(null, stringOption.getValue());
 		assertInitOptionFailed(enumdecorator,

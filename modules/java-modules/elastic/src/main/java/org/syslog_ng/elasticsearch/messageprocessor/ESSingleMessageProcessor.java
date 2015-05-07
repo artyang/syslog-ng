@@ -24,7 +24,6 @@
 package org.syslog_ng.elasticsearch.messageprocessor;
 
 import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.bulk.BulkProcessor;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.syslog_ng.elasticsearch.client.ESClient;
@@ -33,8 +32,8 @@ import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESSingleMessageProcessor extends ESMessageProcessor {
 
-	public ESSingleMessageProcessor(ElasticSearchOptions options, ESClient client, BulkProcessor.Listener listener) {
-		super(options, client, listener);
+	public ESSingleMessageProcessor(ElasticSearchOptions options, ESClient client) {
+		super(options, client);
 	}
 
 	@Override

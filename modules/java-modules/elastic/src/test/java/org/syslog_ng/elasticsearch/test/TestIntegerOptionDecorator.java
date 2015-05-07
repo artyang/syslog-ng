@@ -14,7 +14,7 @@ public class TestIntegerOptionDecorator extends TestOption {
 		super.setUp();
 		stringOption = new StringOption(owner, "port");
 		intdecorator = new IntegerOptionDecorator(stringOption);
-		
+
 		options.put("name", "value");
 	}
 
@@ -23,12 +23,12 @@ public class TestIntegerOptionDecorator extends TestOption {
 		options.put("port", "9300");
 		assertInitOptionSuccess(intdecorator);
 	}
-	
+
 	@Test
 	public void testInvalid() {
 		options.put("port", "value");
 		assertInitOptionFailed(intdecorator, "option port must be numerical");
-		
+
 		options.remove("port");
 		assertInitOptionFailed(intdecorator, "option port must be numerical");
 	}

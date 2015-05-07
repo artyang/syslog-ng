@@ -24,7 +24,7 @@
 package org.syslog_ng.elasticsearch.options;
 
 public abstract class OptionDecorator implements Option {
-	
+
 	protected Option decoratedOption;
 
 	public OptionDecorator(Option decoratedOption) {
@@ -35,19 +35,15 @@ public abstract class OptionDecorator implements Option {
 		return decoratedOption.getValue();
 	}
 
-	public void init() throws OptionException {
-		decoratedOption.init();
+	public void validate() throws InvalidOptionException {
+		decoratedOption.validate();
 	}
 
-	public void deinit() {
-		decoratedOption.deinit();
-	}
-	
 	public String getName() {
 		return decoratedOption.getName();
 	}
 
-	
+
 	public Integer getValueAsInterger() {
 		return decoratedOption.getValueAsInterger();
 	}

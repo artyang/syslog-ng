@@ -9,7 +9,7 @@ import org.syslog_ng.elasticsearch.options.StringOption;
 public class TestIntegerRangeCheckOptionDecorator extends TestOption {
 	Option stringOption;
 	Option decorator;
-	
+
 	@Before
 	public void setUp() throws Exception {
 		super.setUp();
@@ -18,27 +18,27 @@ public class TestIntegerRangeCheckOptionDecorator extends TestOption {
 	}
 
 	@Test
-	public void testNormal() {		
+	public void testNormal() {
 		for (int i = 0; i < 1001; i++) {
 			options.put("range", new Integer(i).toString());
 			assertInitOptionSuccess(decorator);
 		}
 	}
-	
+
 	@Test
 	public void testInvalid() {
 		options.put("range", "-1");
 		assertInitOptionFailed(decorator, "option range should be between 0 and 1000");
-		
+
 		options.put("range", "1001");
 		assertInitOptionFailed(decorator, "option range should be between 0 and 1000");
-		
+
 		options.put("range", "0.1");
 		assertInitOptionFailed(decorator, "option range must be numerical");
-		
+
 		options.put("range", "aaa");
 		assertInitOptionFailed(decorator, "option range must be numerical");
-		
+
 		options.remove("range");
 		assertInitOptionFailed(decorator, "option range must be numerical");
 	}

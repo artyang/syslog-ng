@@ -6,37 +6,37 @@ import java.util.Hashtable;
 
 import org.syslog_ng.LogDestination;
 import org.syslog_ng.elasticsearch.options.Option;
-import org.syslog_ng.elasticsearch.options.OptionException;
+import org.syslog_ng.elasticsearch.options.InvalidOptionException;
 
 public class TestOption {
 	public LogDestination owner;
 	public Hashtable<String, String> options;
-	
+
 	public void setUp() throws Exception {
 		options = new Hashtable<String, String>();
 		owner = new MockLogDestination(options);
 	}
-	
-	
+
+
 	public void assertInitOptionSuccess(Option option) {
 		try {
-			option.init();
+			option.validate();
 		}
-		catch (OptionException e) {
+		catch (InvalidOptionException e) {
 			throw new AssertionError("Initialization failed: " + e.getMessage());
 		}
 	}
-	
+
 	public void assertInitOptionFailed(Option option) {
 		assertInitOptionFailed(option, null);
 	}
-	
+
 	public void assertInitOptionFailed(Option option, String expectedErrorMessage) {
 		try {
-			option.init();
+			option.validate();
 			throw new AssertionError("Initialization should be failed");
 		}
-		catch (OptionException e) {
+		catch (InvalidOptionException e) {
 			if (expectedErrorMessage != null) {
 				assertEquals(expectedErrorMessage, e.getMessage().substring(0, expectedErrorMessage.length()));
 			}

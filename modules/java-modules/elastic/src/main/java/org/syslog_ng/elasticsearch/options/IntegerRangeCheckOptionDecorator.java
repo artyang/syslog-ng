@@ -25,18 +25,18 @@ package org.syslog_ng.elasticsearch.options;
 
 public class IntegerRangeCheckOptionDecorator extends OptionDecorator {
 	private int min, max;
-	
+
 	public IntegerRangeCheckOptionDecorator(Option decoratedOption, int min, int max) {
 		super(new IntegerOptionDecorator(decoratedOption));
 		this.min = min;
 		this.max = max;
 	}
-	
-	public void init() throws OptionException {
-		decoratedOption.init();
+
+	public void validate() throws InvalidOptionException {
+		decoratedOption.validate();
 		int value = Integer.parseInt(decoratedOption.getValue());
 		if (value < min || value > max) {
-			throw new OptionException("option " + decoratedOption.getName() + " should be between " + min + " and " + max);
+			throw new InvalidOptionException("option " + decoratedOption.getName() + " should be between " + min + " and " + max);
 		}
 	}
 

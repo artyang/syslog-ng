@@ -26,8 +26,7 @@ package org.syslog_ng.elasticsearch.options;
 public interface Option {
 	public String getName();
 	public String getValue();
-	public void init() throws OptionException;
-	public void deinit();
+	public void validate() throws InvalidOptionException;
 
 	public Integer getValueAsInterger();
 	public String[] getValueAsStringList(String seporator);

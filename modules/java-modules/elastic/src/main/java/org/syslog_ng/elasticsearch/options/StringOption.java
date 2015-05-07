@@ -30,13 +30,13 @@ public class StringOption implements Option {
 	private LogDestination owner;
 	private String name;
 	private String defaultValue;
-	
+
 	public StringOption(LogDestination owner, String name, String defaultValue) {
 		this.owner = owner;
 		this.name = name;
 		this.defaultValue = defaultValue;
 	}
-	
+
 	public StringOption(LogDestination owner, String name) {
 		this(owner, name, null);
 	}
@@ -50,7 +50,7 @@ public class StringOption implements Option {
 		return result;
 	}
 
-	public void init() throws OptionException {
+	public void validate() throws InvalidOptionException {
 	}
 
 	public void deinit() {

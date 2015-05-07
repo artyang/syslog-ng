@@ -5,7 +5,7 @@ import java.util.Hashtable;
 import org.syslog_ng.LogDestination;
 
 public class MockLogDestination extends LogDestination {
-	
+
 	private Hashtable<String, String> options;
 
 	public MockLogDestination(Hashtable<String, String> options) {
@@ -18,7 +18,7 @@ public class MockLogDestination extends LogDestination {
 		// TODO Auto-generated method stub
 
 	}
-	
+
 	@Override
 	public String getOption(String optionName) {
 		return options.get(optionName);

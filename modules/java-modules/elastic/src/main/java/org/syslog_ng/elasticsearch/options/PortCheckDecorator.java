@@ -24,10 +24,10 @@
 package org.syslog_ng.elasticsearch.options;
 
 public class PortCheckDecorator extends IntegerRangeCheckOptionDecorator {
-	
+
 	public static int PORT_MIN = 0;
 	public static int PORT_MAX = 65535;
-	
+
 	public PortCheckDecorator(Option decoratedOption) {
 		super(decoratedOption, PORT_MIN, PORT_MAX);
 	}
