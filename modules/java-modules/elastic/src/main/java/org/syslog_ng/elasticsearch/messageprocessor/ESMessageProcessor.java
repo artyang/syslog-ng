@@ -23,18 +23,21 @@
 
 package org.syslog_ng.elasticsearch.messageprocessor;
 
+import org.apache.log4j.Logger;
 import org.elasticsearch.action.index.IndexRequest;
 import org.syslog_ng.elasticsearch.client.ESClient;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public abstract class ESMessageProcessor {
-	ElasticSearchOptions options;
-	ESClient client;
+	protected ElasticSearchOptions options;
+	protected ESClient client;
+	protected Logger logger;
 
 
 	public ESMessageProcessor(ElasticSearchOptions options, ESClient client) {
 		this.options = options;
 		this.client = client;
+		logger = Logger.getRootLogger();
 	}
 
 	public void init() {

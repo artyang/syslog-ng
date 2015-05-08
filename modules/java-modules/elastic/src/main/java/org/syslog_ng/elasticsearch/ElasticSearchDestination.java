@@ -28,13 +28,12 @@ import org.syslog_ng.StructuredLogDestination;
 import org.syslog_ng.elasticsearch.client.ESClient;
 import org.syslog_ng.elasticsearch.client.ESClientFactory;
 import org.syslog_ng.elasticsearch.client.UnknownESClientModeException;
-import org.syslog_ng.elasticsearch.logging.InternalLogger;
-import org.syslog_ng.elasticsearch.logging.SyslogNgInternal;
+import org.syslog_ng.elasticsearch.logging.SyslogNgInternalLogger;
 import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessor;
 import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessorFactory;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 import org.syslog_ng.elasticsearch.options.InvalidOptionException;
-import org.apache.log4j.Level;
+//import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.elasticsearch.action.index.IndexRequest;
 
@@ -43,13 +42,14 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 	ESClient client;
 	ESMessageProcessor msgProcessor;
 	ElasticSearchOptions options;
+	Logger logger;
 
 	boolean opened;
 
 	public ElasticSearchDestination(long handle) {
 		super(handle);
-		Logger.getRootLogger().setLevel(Level.OFF);
-		InternalLogger.setLogger(new SyslogNgInternal());
+		logger = Logger.getRootLogger();
+		logger.addAppender(new SyslogNgInternalLogger());
 		options = new ElasticSearchOptions(this);
 	}
 
@@ -62,12 +62,12 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 			msgProcessor = ESMessageProcessorFactory.getMessageProcessor(options, client);
 			client.init();
 			if (options.getClientMode().equals(ElasticSearchOptions.CLIENT_MODE_TRANSPORT) && options.getFlushLimit() > 1) {
-				InternalLogger.warning("Using transport client mode with bulk message processing (flush_limit > 1) can cause high message dropping rate in case of connection broken, using node client mode is suggested");
+				logger.warn("Using transport client mode with bulk message processing (flush_limit > 1) can cause high message dropping rate in case of connection broken, using node client mode is suggested");
 			}
 			result = true;
 		}
 		catch (InvalidOptionException | UnknownESClientModeException e){
-			InternalLogger.error(e.getMessage());
+			logger.error(e.getMessage());
 			return false;
 		}
 		return result;
@@ -90,7 +90,7 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 		String customId = options.getCustomId().getResolvedString(msg);
 		String index = options.getIndex().getResolvedString(msg);
 		String type = options.getType().getResolvedString(msg);
-		InternalLogger.debug("Outgoing log entry, json='" + formattedMessage + "'");
+		logger.debug("Outgoing log entry, json='" + formattedMessage + "'");
 	    return new IndexRequest(index, type, customId).source(formattedMessage);
     }
 

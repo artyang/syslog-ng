@@ -49,7 +49,8 @@ struct _JavaDestinationProxy
   jclass loaded_class;
   JavaDestinationImpl dest_impl;
   LogTemplate *template;
-  GString *formatted_message;
+  GString *formatted_message; 
+  JavaLogMessageProxy *msg_builder;
 };
 
 static gboolean
@@ -159,6 +160,11 @@ java_destination_proxy_free(JavaDestinationProxy *self)
     {
       CALL_JAVA_FUNCTION(env, DeleteLocalRef, self->loaded_class);
     }
+
+  if (self->msg_builder)
+    {
+      java_log_message_proxy_free(self->msg_builder);
+    }
   java_machine_unref(self->java_machine);
   g_string_free(self->formatted_message, TRUE);
   log_template_unref(self->template);
@@ -181,6 +187,12 @@ java_destination_proxy_new(const gchar *class_name, const gchar *class_path, gpo
       goto error;
     }
 
+  self->msg_builder = java_log_message_proxy_new();
+  if (!self->msg_builder)
+    {
+      goto error;
+    }
+
   return self;
 error:
   java_destination_proxy_free(self);
@@ -190,20 +202,14 @@ error:
 static gboolean
 __queue_native_message(JavaDestinationProxy *self, JNIEnv *env, LogMessage *msg)
 {
-  JavaLogMessageProxy *jmsg = java_log_message_proxy_new(msg);
-  if (!jmsg)
-    {
-      return FALSE;
-    }
-
+  jobject jmsg = java_log_message_proxy_create_java_object(self->msg_builder, msg);
   jboolean res = CALL_JAVA_FUNCTION(env,
                                     CallBooleanMethod,
                                     self->dest_impl.dest_object,
                                     self->dest_impl.mi_send_msg,
-                                    java_log_message_proxy_get_java_object(jmsg));
+                                    jmsg);
 
-  java_log_message_proxy_free(jmsg);
-
+  CALL_JAVA_FUNCTION(env, DeleteLocalRef, jmsg);
   return !!(res);
 }
 

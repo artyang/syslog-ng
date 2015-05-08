@@ -34,7 +34,6 @@ import org.elasticsearch.common.settings.ImmutableSettings.Builder;
 import org.elasticsearch.common.settings.SettingsException;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
-import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESNodeClient extends ESClient {
@@ -65,9 +64,9 @@ public class ESNodeClient extends ESClient {
 			Builder builder = nodeBuilder().settings().loadFromUrl(url);
 			nodeBuilder = nodeBuilder.settings(builder);
 		} catch (MalformedURLException e) {
-			InternalLogger.warning("Bad filename format, filename = '" + cfgFile + "'");
+			logger.warn("Bad filename format, filename = '" + cfgFile + "'");
 		} catch (SettingsException e) {
-			InternalLogger.warning("Can't load settings from file, file = '" + cfgFile + "', reason = '" + e.getMessage() + "'");
+			logger.warn("Can't load settings from file, file = '" + cfgFile + "', reason = '" + e.getMessage() + "'");
 		}
 	}
 

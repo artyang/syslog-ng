@@ -27,7 +27,6 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESSingleMessageProcessor extends ESMessageProcessor {
@@ -40,11 +39,11 @@ public class ESSingleMessageProcessor extends ESMessageProcessor {
 	public boolean send(IndexRequest req) {
 		try {
 			IndexResponse response = client.getClient().index(req).actionGet();
-			InternalLogger.debug("Message inserted with id: " + response.getId());
+			logger.debug("Message inserted with id: " + response.getId());
 			return true;
 		}
 		catch (ElasticsearchException e) {
-			InternalLogger.error("Failed to send message: " + e.getMessage());
+			logger.error("Failed to send message: " + e.getMessage());
 			return false;
 		}
 	}

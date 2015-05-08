@@ -31,7 +31,6 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public class ESBulkMessageProcessor extends ESMessageProcessor {
@@ -40,13 +39,13 @@ public class ESBulkMessageProcessor extends ESMessageProcessor {
 	private class BulkProcessorListener implements BulkProcessor.Listener {
 		@Override
 		public void beforeBulk(long executionId, BulkRequest request) {
-			InternalLogger.debug("Start bulk processing, id='" + executionId + "'");
+			logger.debug("Start bulk processing, id='" + executionId + "'");
 		}
 
 		@Override
 		public void afterBulk(long executionId, BulkRequest request,
 				BulkResponse response) {
-			InternalLogger.debug("Bulk processing finished successfully, id='" + executionId + "'");
+			logger.debug("Bulk processing finished successfully, id='" + executionId + "'");
 		}
 
 		@Override
@@ -56,7 +55,7 @@ public class ESBulkMessageProcessor extends ESMessageProcessor {
 			errorMessage += " id='" + executionId + "'";
 			errorMessage += ", numberOfMessages='" + request.numberOfActions() + "'";
 			errorMessage += ", error='" + failure.getMessage() + "'";
-			InternalLogger.error(errorMessage);
+			logger.error(errorMessage);
 		}
 	}
 

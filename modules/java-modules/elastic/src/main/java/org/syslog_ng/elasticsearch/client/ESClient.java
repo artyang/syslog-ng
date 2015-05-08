@@ -23,22 +23,24 @@
 
 package org.syslog_ng.elasticsearch.client;
 
+import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.client.Client;
-import org.syslog_ng.elasticsearch.logging.InternalLogger;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
 public abstract class ESClient {
 	private Client client;
 	private static final String TIMEOUT = "5s";
+	protected Logger logger;
 
 	protected ElasticSearchOptions options;
 
 	public ESClient(ElasticSearchOptions options) {
 		this.options = options;
+		logger = Logger.getRootLogger();
 	}
 
 	private boolean waitForStatus(ClusterHealthStatus status) {
@@ -50,17 +52,17 @@ public abstract class ESClient {
 	}
 
 	public void connect() throws ElasticsearchException {
-		InternalLogger.info("connecting to cluster, cluster_name='" + options.getCluster() + "'");
+		logger.info("connecting to cluster, cluster_name='" + options.getCluster() + "'");
 		if (!waitForStatus(ClusterHealthStatus.GREEN)) {
-			InternalLogger.debug("Failed to wait for green");
-			InternalLogger.debug("Wait for read yellow status...");
+			logger.debug("Failed to wait for green");
+			logger.debug("Wait for read yellow status...");
 
 			if (!waitForStatus(ClusterHealthStatus.YELLOW)) {
-				InternalLogger.debug("Timedout");
+				logger.debug("Timedout");
 				throw new ElasticsearchException("Can't connect to cluster: " + options.getCluster());
 			}
 		}
-		InternalLogger.info("conneted to cluster, cluster_name='" + options.getCluster() + "'");
+		logger.info("conneted to cluster, cluster_name='" + options.getCluster() + "'");
 	}
 
 	public final boolean open() {
@@ -71,7 +73,7 @@ public abstract class ESClient {
 			connect();
 		}
 		catch (ElasticsearchException e) {
-			InternalLogger.error("Failed to connect to " +options.getCluster() + ", reason='" + e.getMessage() + "'");
+			logger.error("Failed to connect to " +options.getCluster() + ", reason='" + e.getMessage() + "'");
 			return false;
 		}
 		return true;
