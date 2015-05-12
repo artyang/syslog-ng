@@ -29,6 +29,8 @@
 #include "cfg.h"
 #include "mainloop.h"
 
+GHashTable *counter_hash;
+
 typedef enum
 {
   SC_TYPE_MIN,
@@ -78,11 +80,21 @@ enum
   SCS_SOURCE_MASK    = 0xff
 };
 
-typedef struct _StatsCounter StatsCounter;
 typedef struct _StatsCounterItem
 {
   gint value;
 } StatsCounterItem;
+
+typedef struct _StatsCounter
+{
+  StatsCounterItem counters[SC_TYPE_MAX];
+  guint16 ref_cnt;
+  guint16 source;
+  gchar *id;
+  gchar *instance;
+  guint16 live_mask;
+  guint16 dynamic:1;
+} StatsCounter;
 
 extern gint current_stats_level;
 extern GStaticMutex stats_mutex;

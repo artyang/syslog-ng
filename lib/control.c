@@ -27,6 +27,7 @@
 #include "gsocket.h"
 #include "messages.h"
 #include "stats.h"
+#include "stats/stats-counter.h"
 #include "misc.h"
 #include <errno.h>
 #include <string.h>
@@ -37,7 +38,7 @@ static ControlServer *control_server;
 static GList *command_list = NULL;
 
 void
-control_register_command(gchar *command_name, gchar *description, CommandFunction function)
+control_register_command(const gchar *command_name, const gchar *description, CommandFunction function)
 {
   Commands *new_command = g_new0(Commands, 1);
   new_command->command = command_name;
@@ -52,6 +53,14 @@ control_connection_send_stats(GString *command)
   gchar *stats = stats_generate_csv();
   GString *result = g_string_new(stats);
   g_free(stats);
+  return result;
+}
+
+static GString *
+control_connection_reset_stats(GString *command)
+{
+  GString *result = g_string_new("The statistics of syslog-ng have been reset to 0.");
+  stats_reset_counters(counter_hash);
   return result;
 }
 
@@ -119,6 +128,7 @@ control_connection_reload(GString *command)
 
 Commands commands[] = {
   { "STATS", NULL, control_connection_send_stats },
+  { "RESET_STATS", NULL, control_connection_reset_stats },
   { "LOG", NULL, control_connection_message_log },
   { "STOP", NULL, control_connection_stop_process },
   { "RELOAD", NULL, control_connection_reload },
@@ -128,10 +138,14 @@ Commands commands[] = {
 static void
 register_default_commands()
 {
-  control_register_command("STATS", NULL, control_connection_send_stats);
-  control_register_command("LOG", NULL, control_connection_message_log);
-  control_register_command("STOP", NULL, control_connection_stop_process);
-  control_register_command("RELOAD", NULL, control_connection_reload);
+  int i;
+  Commands *cmd;
+
+  for (i = 0; commands[i].command != NULL; i++)
+    {
+      cmd = &commands[i];
+      control_register_command(cmd->command, cmd->description, cmd->func);
+    }
 }
 
 void 

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2002-2010 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2010 Balázs Scheidler
+ * Copyright (c) 2002-2013 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 1998-2013 Balázs Scheidler
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,16 +21,9 @@
  * COPYING for details.
  *
  */
+#ifndef STATS_COUNTER_H_INCLUDED
+#define STATS_COUNTER_H_INCLUDED 1
 
-#ifndef CONTROL_H_INCLUDED
-#define CONTROL_H_INCLUDED
-
-#include "syslog-ng.h"
-
-typedef GString* (*CommandFunction)(GString *);
-
-void  control_init(const gchar *control_name);
-void control_destroy(void);
-void control_register_command(const gchar *command_name, const gchar *description, CommandFunction function);
+void stats_reset_counters(GHashTable * counter_hash);
 
 #endif
