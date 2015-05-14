@@ -40,7 +40,7 @@ static gchar *control_name = PATH_CONTROL_SOCKET;
 static ControlClient *control_client;
 
 static gboolean
-slng_send_cmd(gchar *cmd)
+slng_send_cmd(const gchar * const cmd)
 {
   if (!control_client_connect(control_client))
     {
@@ -56,7 +56,7 @@ slng_send_cmd(gchar *cmd)
 }
 
 static GString *
-slng_run_command(const gchar *command)
+slng_run_command(const gchar * const command)
 {
   if (slng_send_cmd(command))
     return control_client_read_reply(control_client);
