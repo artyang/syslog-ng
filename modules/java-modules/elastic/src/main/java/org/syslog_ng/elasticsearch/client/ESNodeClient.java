@@ -49,14 +49,18 @@ public class ESNodeClient extends ESClient {
 	}
 
 	private NodeBuilder createNodeBuilder(String cluster) {
-		return  nodeBuilder().clusterName(cluster)
-				  .data(false)
+		NodeBuilder result = nodeBuilder().data(false)
 				  .client(true)
 				  .loadConfigSettings(false);
+
+		if (cluster != null) {
+			result = result.clusterName(cluster);
+		}
+		return result;
 	}
 
 	private void loadConfigFile(String cfgFile, NodeBuilder nodeBuilder) {
-		if (cfgFile == null) {
+		if (cfgFile == null || cfgFile.isEmpty()) {
 			return;
 		}
 		try {

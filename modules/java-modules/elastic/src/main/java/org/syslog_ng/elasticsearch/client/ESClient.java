@@ -52,17 +52,18 @@ public abstract class ESClient {
 	}
 
 	public void connect() throws ElasticsearchException {
-		logger.info("connecting to cluster, cluster_name='" + options.getCluster() + "'");
+		String clusterName = getClusterName();
+		logger.info("connecting to cluster, cluster_name='" + clusterName + "'");
 		if (!waitForStatus(ClusterHealthStatus.GREEN)) {
 			logger.debug("Failed to wait for green");
 			logger.debug("Wait for read yellow status...");
 
 			if (!waitForStatus(ClusterHealthStatus.YELLOW)) {
 				logger.debug("Timedout");
-				throw new ElasticsearchException("Can't connect to cluster: " + options.getCluster());
+				throw new ElasticsearchException("Can't connect to cluster: " + clusterName);
 			}
 		}
-		logger.info("conneted to cluster, cluster_name='" + options.getCluster() + "'");
+		logger.info("conneted to cluster, cluster_name='" + clusterName + "'");
 	}
 
 	public final boolean open() {
@@ -73,10 +74,14 @@ public abstract class ESClient {
 			connect();
 		}
 		catch (ElasticsearchException e) {
-			logger.error("Failed to connect to " +options.getCluster() + ", reason='" + e.getMessage() + "'");
+			logger.error("Failed to connect to " + getClusterName() + ", reason='" + e.getMessage() + "'");
 			return false;
 		}
 		return true;
+	}
+
+	public String getClusterName() {
+		return client.settings().get("cluster.name");
 	}
 
 	public abstract void close();

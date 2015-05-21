@@ -26,6 +26,7 @@ package org.syslog_ng.elasticsearch.client;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.common.settings.ImmutableSettings.Builder;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
@@ -39,10 +40,15 @@ public class ESTransportClient extends ESClient {
 	}
 
 	public Client createClient() {
-		settings = ImmutableSettings.settingsBuilder()
-				.put("client.transport.sniff", true)
-				.put("cluster.name", options.getCluster())
-				.classLoader(Settings.class.getClassLoader()).build();
+		String clusterName = options.getCluster();
+		Builder settingsBuilder = ImmutableSettings.settingsBuilder();
+		settingsBuilder = settingsBuilder.put("client.transport.sniff", true).classLoader(Settings.class.getClassLoader());
+
+		if (clusterName != null) {
+			settingsBuilder = settingsBuilder.put("cluster.name", clusterName);
+		}
+
+		settings = settingsBuilder.build();
 
 		String[] servers =  options.getServerList();
 

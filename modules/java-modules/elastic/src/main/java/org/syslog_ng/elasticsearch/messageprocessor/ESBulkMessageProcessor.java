@@ -45,7 +45,8 @@ public class ESBulkMessageProcessor extends ESMessageProcessor {
 		@Override
 		public void afterBulk(long executionId, BulkRequest request,
 				BulkResponse response) {
-			logger.debug("Bulk processing finished successfully, id='" + executionId + "'");
+			logger.debug("Bulk processing finished successfully, id='" + executionId + "'"
+					+ ", numberOfMessages='" + request.numberOfActions() + "'");
 		}
 
 		@Override

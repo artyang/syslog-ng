@@ -127,7 +127,7 @@ public class ElasticSearchOptions {
 	private void fillStringOptions() {
 		options.put(new StringOption(owner, SERVER, SERVER_DEFAULT));
 		options.put(new PortCheckDecorator(new StringOption(owner, PORT, PORT_DEFAULT)));
-		options.put(new RequiredOptionDecorator(new StringOption(owner, CLUSTER)));
+		options.put(new StringOption(owner, CLUSTER));
 		options.put(new IntegerRangeCheckOptionDecorator(new StringOption(owner, FLUSH_LIMIT, FLUSH_LIMIT_DEFAULT), -1, Integer.MAX_VALUE));
 		options.put(new EnumOptionDecorator(new StringOption(owner, CLIENT_MODE, CLIENT_MODE_DEFAULT), CLIENT_MODES));
 		options.put(new StringOption(owner, CONFIG_FILE));
