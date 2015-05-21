@@ -33,7 +33,6 @@ import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessor;
 import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessorFactory;
 import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 import org.syslog_ng.elasticsearch.options.InvalidOptionException;
-//import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.elasticsearch.action.index.IndexRequest;
 
