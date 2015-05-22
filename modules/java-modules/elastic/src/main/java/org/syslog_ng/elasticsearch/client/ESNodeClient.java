@@ -77,6 +77,7 @@ public class ESNodeClient extends ESClient {
 	@Override
 	public Client createClient() {
 		NodeBuilder nodeBuilder = createNodeBuilder(options.getCluster());
+		nodeBuilder.settings().put("discovery.initial_state_timeout", "5s");
 		loadConfigFile(options.getConfigFile(), nodeBuilder);
 		node = nodeBuilder.node();
 	    return node.client();
