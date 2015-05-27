@@ -49,7 +49,7 @@ endif
 ifneq (,$(findstring linux-glibc2.11,$(ZBS_DIST)))
   CONFIGURE_OPTS+= --enable-java
 ifneq (,$(findstring amd64,$(ZBS_ARCH)))
-  CONFIGURE_OPTS+= --enable-systemd
+  CONFIGURE_OPTS+= --enable-systemd --enable-indexer
 endif
 endif
 
@@ -111,12 +111,12 @@ $(STAMPDIR)/stamp-install: $(STAMPDIR)/stamp-build
 	rm -rf $(ZBS_STAGE_DIR)
 	$(MAKE) install DESTDIR=$(ZBS_STAGE_DIR)
 	$(INSTALL) -d -m 755 $(ZBS_STAGE_DIR)/$(ZBS_PREFIX)/etc
-	
+
 	# Store syslog-ng version
 	. dist.conf; \
 	(echo "VERSION=\"$$TECHNICAL_VERSION\""; echo "BROCHURE_VERSION=\"$$BROCHURE_VERSION\""; echo "EDITION=pe"; echo "BUILD_ARCH=$(ZBS_ARCH)"; echo "BUILD_DIST=$(ZBS_DIST)") > \
 		$(ZBS_STAGE_DIR)/$(ZBS_PREFIX)/etc/install.dat
-	    
+
 	$(INSTALL) -d -m 755 $(ZBS_STAGE_DIR)/$(ZBS_PREFIX)/share/doc
 
 	#Store syslog-ng build options. Has to declare the modulepaths, because
@@ -153,8 +153,8 @@ $(STAMPDIR)/stamp-install: $(STAMPDIR)/stamp-build
 	tar cvf - balabit-initscripts selinux apparmor | (cd $(ZBS_STAGE_DIR)/$(ZBS_PREFIX)/share/doc/ && tar xf -)
 	cd $(ZBS_SOURCE_DIR)
 	rm -rf $(ZBS_STAGE_DIR)/$(ZBS_PREFIX)/share/doc/contrib/Makefile*
- 
-	touch $@ 
+
+	touch $@
 
 clean:
 	rm -rf tgz2build/stamps || true
