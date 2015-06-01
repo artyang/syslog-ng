@@ -276,6 +276,11 @@ public class HdfsDestination extends TextLogDestination {
     }
 
     @Override
+    public String getNameByUniqOptions() {
+        return String.format("hdfs,%s,%s", hdfsUri, hdfsFile);
+    }
+
+    @Override
     public void deinit() {
         printDebugMessage("Deinitialize hdfs destination");
     }

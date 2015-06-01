@@ -65,4 +65,11 @@ public class DummyStructuredDestination extends StructuredLogDestination {
     arg0.release();
     return true;
   }
+
+  @Override
+  public String getNameByUniqOptions() {
+    InternalMessageSender.debug("getNameByUniqOptions");
+    return "DummyStructuredDestination";
+  }
+
 }
