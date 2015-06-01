@@ -41,6 +41,7 @@ typedef struct _JavaDestinationImpl
   jmethodID mi_close;
   jmethodID mi_is_opened;
   jmethodID mi_on_message_queue_empty;
+  jmethodID mi_get_name_by_uniq_options;
 } JavaDestinationImpl;
 
 struct _JavaDestinationProxy
@@ -51,6 +52,7 @@ struct _JavaDestinationProxy
   LogTemplate *template;
   GString *formatted_message; 
   JavaLogMessageProxy *msg_builder;
+  gchar *name_by_uniq_options;
 };
 
 static gboolean
@@ -142,6 +144,20 @@ __load_destination_object(JavaDestinationProxy *self, const gchar *class_name, c
                 NULL);
       return FALSE;
     }
+
+  self->dest_impl.mi_get_name_by_uniq_options = CALL_JAVA_FUNCTION(java_env,
+                                                                   GetMethodID,
+                                                                   self->loaded_class,
+                                                                   "getNameByUniqOptionsProxy",
+                                                                   "()Ljava/lang/String;"
+                                                                  );
+  if (!self->dest_impl.mi_get_name_by_uniq_options)
+    {
+      msg_error("Can't get name by unique options",
+                evt_tag_str("name", class_name),
+                NULL);
+      return FALSE;
+    }
   return TRUE;
 }
 
@@ -167,6 +183,7 @@ java_destination_proxy_free(JavaDestinationProxy *self)
     }
   java_machine_unref(self->java_machine);
   g_string_free(self->formatted_message, TRUE);
+  g_free(self->name_by_uniq_options);
   log_template_unref(self->template);
   g_free(self);
 }
@@ -237,6 +254,47 @@ java_destination_proxy_send(JavaDestinationProxy *self, LogMessage *msg)
     }
 }
 
+gchar *
+java_destination_proxy_get_name_by_uniq_options(JavaDestinationProxy *self)
+{
+  JNIEnv *env = java_machine_get_env(self->java_machine, &env);
+
+  return self->name_by_uniq_options;
+}
+
+static gchar *
+__java_str_dup(JNIEnv *env, jstring java_string)
+{
+  gchar *result = NULL;
+  gchar *c_string = NULL;
+
+  c_string = (gchar *) CALL_JAVA_FUNCTION(env, GetStringUTFChars, java_string, NULL);
+  if (strlen(c_string) == 0)
+    goto exit;
+
+  result = strdup(c_string);
+exit:
+  CALL_JAVA_FUNCTION(env, ReleaseStringUTFChars, java_string, c_string);
+  return result;
+}
+
+static gchar *
+__get_name_by_uniq_options(JavaDestinationProxy *self)
+{
+  JNIEnv *env = java_machine_get_env(self->java_machine, &env);
+  jstring java_string;
+
+  java_string = (jstring) CALL_JAVA_FUNCTION(env, CallObjectMethod, self->dest_impl.dest_object, self->dest_impl.mi_get_name_by_uniq_options);
+  if (!java_string)
+    {
+      msg_error("Can't get name by unique options",
+                NULL);
+      return NULL;
+    }
+
+  return __java_str_dup(env, java_string);
+}
+
 gboolean
 java_destination_proxy_init(JavaDestinationProxy *self)
 {
@@ -244,6 +302,17 @@ java_destination_proxy_init(JavaDestinationProxy *self)
   JNIEnv *env = java_machine_get_env(self->java_machine, &env);
 
   result = CALL_JAVA_FUNCTION(env, CallBooleanMethod, self->dest_impl.dest_object, self->dest_impl.mi_init);
+
+  if (!!(result))
+    {
+      self->name_by_uniq_options = __get_name_by_uniq_options(self);
+      if (!self->name_by_uniq_options)
+        {
+          msg_error("Name by uniq options is empty",
+                    NULL);
+          result = FALSE;
+        }
+    }
 
   return !!(result);
 }
@@ -254,7 +323,6 @@ java_destination_proxy_deinit(JavaDestinationProxy *self)
   JNIEnv *env = java_machine_get_env(self->java_machine, &env);
 
   CALL_JAVA_FUNCTION(env, CallVoidMethod, self->dest_impl.dest_object, self->dest_impl.mi_deinit);
-
 }
 
 void
