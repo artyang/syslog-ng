@@ -14,3 +14,5 @@ libesmtp6
 libesmtp6-dev
 libsystemd-client-dev
 libsystemd-client
+libgoogle-perftools-dev
+libtcmalloc-minimal0
