@@ -199,34 +199,27 @@ inherit_systemd_activation(void)
 #if ENABLE_LINUX_CAPS
 
 static int have_capsyslog = FALSE;
-/**
- * g_process_cap_modify:
- * @capability: capability to turn off or on
- * @onoff: specifies whether the capability should be enabled or disabled
- *
- * This function modifies the current permitted set of capabilities by
- * enabling or disabling the capability specified in @capability.
- *
- * Returns: whether the operation was successful.
- **/
-gboolean 
-g_process_cap_modify(int capability, int onoff)
+
+static inline int
+_when_cap_syslog_is_not_supported_resort_to_cap_sys_admin(int capability)
 {
-  cap_t caps;
-
-  if (!process_opts.caps)
-    return TRUE;
-
-  /*
-   * if libcap or kernel doesn't support cap_syslog, then resort to
-   * cap_sys_admin
-   */
   if (capability == CAP_SYSLOG && (!have_capsyslog || CAP_SYSLOG == -1))
     capability = CAP_SYS_ADMIN;
 
+  return capability;
+}
+
+static cap_t
+_create_caps_with_flag(int capability, int onoff)
+{
+  cap_t caps = NULL;
+
   caps = cap_get_proc();
+
   if (!caps)
-    return FALSE;
+    return NULL;
+
+  capability = _when_cap_syslog_is_not_supported_resort_to_cap_sys_admin(capability);
 
   if (cap_set_flag(caps, CAP_EFFECTIVE, 1, &capability, onoff) == -1)
     {
@@ -234,9 +227,15 @@ g_process_cap_modify(int capability, int onoff)
                 evt_tag_errno("error", errno),
                 NULL);
       cap_free(caps);
-      return FALSE;
+      return NULL;
     }
 
+  return caps;
+}
+
+static gboolean
+_cap_set_proc(cap_t caps)
+{
   if (cap_set_proc(caps) == -1)
     {
       gchar *cap_text;
@@ -247,11 +246,50 @@ g_process_cap_modify(int capability, int onoff)
                 evt_tag_errno("error", errno),
                 NULL);
       cap_free(cap_text);
-      cap_free(caps);
       return FALSE;
     }
-  cap_free(caps);
   return TRUE;
+}
+
+/**
+ * g_process_cap_modify:
+ * @capability: capability to turn off or on
+ * @onoff: specifies whether the capability should be enabled or disabled
+ *
+ * This function modifies the current permitted set of capabilities by
+ * enabling or disabling the capability specified in @capability.
+ *
+ * Returns: whether the operation was successful.
+ **/
+gboolean
+g_process_cap_modify(int capability, int onoff)
+{
+  gboolean res = FALSE;
+  cap_t caps;
+
+  if (!process_opts.caps)
+    return TRUE;
+
+  caps = _create_caps_with_flag(capability, onoff);
+  if (!caps)
+    return FALSE;
+
+  res = _cap_set_proc(caps);
+  cap_free(caps);
+
+  return res;
+}
+
+gboolean
+g_process_cap_raise(int capability)
+{
+  return g_process_cap_modify(capability, TRUE);
+}
+
+gboolean
+g_process_cap_drop(int capability)
+{
+  return g_process_cap_modify(capability, FALSE);
 }
 
 /**
@@ -277,7 +315,6 @@ g_process_cap_save(void)
  *
  * Restore the set of current capabilities specified by @r.
  *
- * Returns: whether the operation was successful.
  **/
 void
 g_process_cap_restore(cap_t r)
@@ -287,22 +324,9 @@ g_process_cap_restore(cap_t r)
   if (!process_opts.caps)
     return;
 
-  rc = cap_set_proc(r) != -1;
-  cap_free(r);
-  if (!rc)
-    {
-      gchar *cap_text;
+  _cap_set_proc(r);
 
-      cap_text = cap_to_text(r, NULL);
-      msg_error("Error managing capability set, cap_set_proc returned an error",
-                evt_tag_str("caps", cap_text),
-                evt_tag_errno("error", errno),
-                NULL);
-      cap_free(cap_text);
-      return;
-    }
-  
-  return;
+  cap_free(r);
 }
 
 #ifndef PR_CAPBSET_READ
