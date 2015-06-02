@@ -261,7 +261,7 @@ _cap_set_proc(cap_t caps)
  *
  * Returns: whether the operation was successful.
  **/
-gboolean
+static gboolean
 g_process_cap_modify(int capability, int onoff)
 {
   gboolean res = FALSE;
