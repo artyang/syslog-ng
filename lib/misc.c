@@ -452,6 +452,25 @@ utf8_to_wide(const gchar *str)
 
 #endif /* _WIN32 */
 
+
+void
+grant_file_permissions(gchar *name, gint dir_uid, gint dir_gid, gint dir_mode)
+{
+  cap_t saved_caps = g_process_cap_save();
+  raise_file_permissions();
+  set_permissions(name, dir_uid, dir_gid, dir_mode);
+  g_process_cap_restore(saved_caps);
+}
+
+void
+grant_file_permissions_fd(gint fd, gint dir_uid, gint dir_gid, gint dir_mode)
+{
+  cap_t saved_caps = g_process_cap_save();
+  raise_file_permissions();
+  set_permissions_fd(fd, dir_uid, dir_gid, dir_mode);
+  g_process_cap_restore(saved_caps);
+}
+
 /**
  *
  * This function receives a complete path (directory + filename) and creates
@@ -466,7 +485,6 @@ create_containing_directory(gchar *name, gint dir_uid, gint dir_gid, gint dir_mo
   struct stat st;
   gint rc;
   gchar *p;
-  cap_t saved_caps;
 
   /* check that the directory exists */
   dirname = g_path_get_dirname(name);
@@ -508,17 +526,14 @@ create_containing_directory(gchar *name, gint dir_uid, gint dir_gid, gint dir_mo
         {
           if (g_mkdir(name, dir_mode < 0 ? 0700 : (mode_t) dir_mode) == -1)
             return FALSE;
-          saved_caps = g_process_cap_save();
-          g_process_cap_modify(CAP_CHOWN, TRUE);
-          g_process_cap_modify(CAP_FOWNER, TRUE);
-          set_permissions(name, dir_uid, dir_gid, dir_mode);
-          g_process_cap_restore(saved_caps);
+          grant_file_permissions(name, dir_uid, dir_gid, dir_mode);
         }
       *p = G_DIR_SEPARATOR;
       p = strchr(p + 1, G_DIR_SEPARATOR);
     }
   return TRUE;
 }
+
 
 gchar *
 find_file_in_path(const gchar *path, const gchar *filename, GFileTest test)
