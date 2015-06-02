@@ -5,6 +5,7 @@
 #ifndef FILEMONITOR_H_INCLUDED
 #define FILEMONITOR_H_INCLUDED
 #include "syslog-ng.h"
+#include "gprocess.h"
 
 #define END_OF_LIST (gchar*)file_monitor_set_file_callback
 
@@ -24,6 +25,7 @@ typedef struct  _FileMonitor
   gboolean recursion;
   MonitorType monitor_type;
   gint poll_freq;
+  gboolean privileged;
 } FileMonitor;
 
 FileMonitor *file_monitor_new();
@@ -36,4 +38,5 @@ gboolean file_monitor_watch_directory(FileMonitor *self, const gchar *filename);
 gboolean file_monitor_stop(FileMonitor *self);
 void file_monitor_deinit(FileMonitor *self);
 gchar *resolve_to_absolute_path(const gchar *path, const gchar *basedir);
+cap_t file_monitor_raise_caps(FileMonitor *self);
 #endif

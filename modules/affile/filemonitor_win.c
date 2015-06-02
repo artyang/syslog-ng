@@ -308,3 +308,9 @@ file_monitor_deinit(FileMonitor *s)
   file_monitor_stop(s);
   return;
 }
+
+cap_t
+file_monitor_raise_caps(FileMonitor *self)
+{
+  return NULL;
+}
