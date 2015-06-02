@@ -113,7 +113,7 @@ create_xconsole() {
 }
 
 check_syntax() {
-	${SYSLOGNG} --syntax-only
+	${SYSLOGNG} --no-caps --syntax-only
 	_rval=$?
 	[ $_rval -eq 0 ] || exit $_rval
 }
