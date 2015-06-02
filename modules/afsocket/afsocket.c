@@ -130,8 +130,8 @@ afsocket_open_socket(GSockAddr *bind_addr, int stream_or_dgram, int *fd)
         }
 #endif
       saved_caps = g_process_cap_save();
-      g_process_cap_modify(CAP_NET_BIND_SERVICE, TRUE);
-      g_process_cap_modify(CAP_DAC_OVERRIDE, TRUE);
+      g_process_cap_raise(CAP_NET_BIND_SERVICE);
+      g_process_cap_raise(CAP_DAC_OVERRIDE);
       if (g_bind(sock, bind_addr) != G_IO_STATUS_NORMAL)
         {
           gchar buf[256];
