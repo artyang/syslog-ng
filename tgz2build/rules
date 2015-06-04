@@ -123,7 +123,7 @@ $(STAMPDIR)/stamp-install: $(STAMPDIR)/stamp-build
 	# syslog-ng doesn't look for them in non-default paths.
 	set -e ; \
 	MODULEPATH=`find $(PWD)/modules -type d -name .libs`; \
-	MODULEPATH=$(ZBS_PREFIX_LIB):$(ZBS_STAGING_DIR)/$(ZBS_PREFIX)/lib:`echo $$MODULEPATH | sed -e 's/ /:/g'`; \
+	MODULEPATH=$(ZBS_PREFIX_LIB):$(ZBS_STAGING_DIR)/$(ZBS_PREFIX)/lib/syslog-ng:`echo $$MODULEPATH | sed -e 's/ /:/g'`; \
 	BUILDOPTS="$(ZBS_STAGE_DIR)/$(ZBS_PREFIX)/share/doc/buildopts"; \
 	echo syslog-ng/syslog-ng -V --module-path "$$MODULEPATH"; \
 	syslog-ng/syslog-ng -V --module-path "$$MODULEPATH" \
