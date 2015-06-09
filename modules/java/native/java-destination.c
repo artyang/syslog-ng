@@ -57,6 +57,13 @@ Java_org_syslog_1ng_LogDestination_getOption(JNIEnv *env, jobject obj, jlong s, 
 }
 
 JNIEXPORT jlong JNICALL
+Java_org_syslog_1ng_LogDestination_getTemplateOptionsHandle(JNIEnv *env, jobject obj, jlong handle)
+{
+  JavaDestDriver *self = (JavaDestDriver *)handle;
+  return (jlong)(&self->template_options);
+}
+
+JNIEXPORT jlong JNICALL
 Java_org_syslog_1ng_LogPipe_getConfigHandle(JNIEnv *env, jobject obj, jlong handle)
 {
   JavaDestDriver *self = (JavaDestDriver *)handle;

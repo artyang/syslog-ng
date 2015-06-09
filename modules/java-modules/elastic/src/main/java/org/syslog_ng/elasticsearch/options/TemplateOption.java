@@ -35,4 +35,16 @@ public class TemplateOption extends OptionDecorator {
 			return template.format(msg);
 		return null;
 	}
+
+	public String getResolvedString(LogMessage msg, long templateOptionsHandle, int timezone) {
+		if (template != null)
+			return template.format(msg, templateOptionsHandle, timezone);
+		return null;
+	}
+
+	public String getResolvedString(LogMessage msg, long templateOptionsHandle) {
+		if (template != null)
+			return template.format(msg, templateOptionsHandle);
+		return null;
+	}
 }
