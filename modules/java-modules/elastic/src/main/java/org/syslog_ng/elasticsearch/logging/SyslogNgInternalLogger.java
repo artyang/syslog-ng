@@ -2,10 +2,24 @@ package org.syslog_ng.elasticsearch.logging;
 
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import org.apache.log4j.spi.LoggingEvent;
 import org.syslog_ng.InternalMessageSender;
 
 public class SyslogNgInternalLogger extends AppenderSkeleton {
+
+	public static final String NAME = "syslog-ng-internal";
+
+	public static void register(Logger logger) {
+		if (logger.getAppender(SyslogNgInternalLogger.NAME) == null) {
+			logger.addAppender(new SyslogNgInternalLogger());
+		}
+	}
+
+	public SyslogNgInternalLogger() {
+		super();
+		this.name = NAME;
+	}
 
 	@Override
 	public void close() {
