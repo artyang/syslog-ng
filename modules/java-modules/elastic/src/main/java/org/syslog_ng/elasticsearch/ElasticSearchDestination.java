@@ -24,6 +24,7 @@
 package org.syslog_ng.elasticsearch;
 
 import org.syslog_ng.LogMessage;
+import org.syslog_ng.LogTemplate;
 import org.syslog_ng.StructuredLogDestination;
 import org.syslog_ng.elasticsearch.client.ESClient;
 import org.syslog_ng.elasticsearch.client.ESClientFactory;
@@ -48,7 +49,7 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 	public ElasticSearchDestination(long handle) {
 		super(handle);
 		logger = Logger.getRootLogger();
-		logger.addAppender(new SyslogNgInternalLogger());
+		SyslogNgInternalLogger.register(logger);
 		options = new ElasticSearchOptions(this);
 	}
 
@@ -80,17 +81,19 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 	@Override
 	protected boolean open() {
 		opened = client.open();
-		msgProcessor.init();
+		if (opened){
+			msgProcessor.init();
+		}
 		return opened;
 	}
 
     private IndexRequest createIndexRequest(LogMessage msg) {
-    	String formattedMessage = options.getMessageTemplate().getResolvedString(msg);
-		String customId = options.getCustomId().getResolvedString(msg);
-		String index = options.getIndex().getResolvedString(msg);
-		String type = options.getType().getResolvedString(msg);
-		logger.debug("Outgoing log entry, json='" + formattedMessage + "'");
-	    return new IndexRequest(index, type, customId).source(formattedMessage);
+    	String formattedMessage = options.getMessageTemplate().getResolvedString(msg, getTemplateOptionsHandle(), LogTemplate.LTZ_SEND);
+    	String customId = options.getCustomId().getResolvedString(msg, getTemplateOptionsHandle(), LogTemplate.LTZ_SEND);
+    	String index = options.getIndex().getResolvedString(msg, getTemplateOptionsHandle(), LogTemplate.LTZ_SEND);
+    	String type = options.getType().getResolvedString(msg, getTemplateOptionsHandle(), LogTemplate.LTZ_SEND);
+    	logger.debug("Outgoing log entry, json='" + formattedMessage + "'");
+    	return new IndexRequest(index, type, customId).source(formattedMessage);
     }
 
 	@Override

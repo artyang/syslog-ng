@@ -33,6 +33,10 @@ public abstract class LogDestination extends LogPipe {
 		return getOption(getHandle(), key);
 	}
 
+	public long getTemplateOptionsHandle() {
+		return getTemplateOptionsHandle(getHandle());
+	}
+
 	protected abstract boolean open();
 
 	protected abstract void close();
@@ -40,6 +44,8 @@ public abstract class LogDestination extends LogPipe {
 	protected abstract boolean isOpened();
 
 	private native String getOption(long ptr, String key);
+
+	private native long getTemplateOptionsHandle(long ptr);
 
 	protected void onMessageQueueEmpty() {
 		return;

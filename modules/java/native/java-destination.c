@@ -57,6 +57,13 @@ Java_org_syslog_1ng_LogDestination_getOption(JNIEnv *env, jobject obj, jlong s, 
 }
 
 JNIEXPORT jlong JNICALL
+Java_org_syslog_1ng_LogDestination_getTemplateOptionsHandle(JNIEnv *env, jobject obj, jlong handle)
+{
+  JavaDestDriver *self = (JavaDestDriver *)handle;
+  return (jlong)(&self->template_options);
+}
+
+JNIEXPORT jlong JNICALL
 Java_org_syslog_1ng_LogPipe_getConfigHandle(JNIEnv *env, jobject obj, jlong handle)
 {
   JavaDestDriver *self = (JavaDestDriver *)handle;
@@ -99,10 +106,13 @@ gboolean
 java_dd_init(LogPipe *s)
 {
   JavaDestDriver *self = (JavaDestDriver *)s;
+  GlobalConfig *cfg = log_pipe_get_config(s);
   GError *error = NULL;
 
   if (!log_dest_driver_init_method(s))
     return FALSE;
+
+  log_template_options_init(&self->template_options, cfg);
 
   if (!log_template_compile(self->template, self->template_string, &error))
     {
@@ -207,6 +217,8 @@ java_dd_free(LogPipe *s)
 
   g_free(self->class_name);
   g_hash_table_unref(self->options);
+
+  log_template_options_destroy(&self->template_options);
   g_string_free(self->class_path, TRUE);
 }
 
@@ -216,6 +228,14 @@ __retry_over_message(LogThrDestDriver *s, LogMessage *msg)
   msg_error("Multiple failures while inserting this record to the java destination, message dropped",
             evt_tag_int("number_of_retries", s->retries.max),
             NULL);
+}
+
+LogTemplateOptions *
+java_dd_get_template_options(LogDriver *s)
+{
+  JavaDestDriver *self = (JavaDestDriver *) s;
+
+  return &self->template_options;
 }
 
 LogDriver *
@@ -246,6 +266,8 @@ java_dd_new(GlobalConfig *cfg)
 
   self->formatted_message = g_string_sized_new(1024);
   self->options = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
+
+  log_template_options_defaults(&self->template_options);
 
   return (LogDriver *)self;
 }
