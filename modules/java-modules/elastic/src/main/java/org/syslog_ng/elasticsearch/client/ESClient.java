@@ -75,6 +75,7 @@ public abstract class ESClient {
 		}
 		catch (ElasticsearchException e) {
 			logger.error("Failed to connect to " + getClusterName() + ", reason='" + e.getMessage() + "'");
+			close();
 			return false;
 		}
 		return true;

@@ -49,7 +49,7 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 	public ElasticSearchDestination(long handle) {
 		super(handle);
 		logger = Logger.getRootLogger();
-		logger.addAppender(new SyslogNgInternalLogger());
+		SyslogNgInternalLogger.register(logger);
 		options = new ElasticSearchOptions(this);
 	}
 
@@ -81,7 +81,9 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 	@Override
 	protected boolean open() {
 		opened = client.open();
-		msgProcessor.init();
+		if (opened){
+			msgProcessor.init();
+		}
 		return opened;
 	}
 
