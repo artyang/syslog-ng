@@ -28,5 +28,37 @@ EXTRA_DIST = \
 	dummy/build.gradle	\
 	dummy/src/main/java/org/syslog_ng/DummyTextDestination.java  \
 	hdfs/build.gradle	\
-	hdfs/src/main/java/org/syslog_ng/hdfs/HdfsDestination.java
-
+	hdfs/src/main/java/org/syslog_ng/hdfs/HdfsDestination.java \
+  elastic/build.gradle \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/InvalidOptionException.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/RequiredOptionDecorator.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/Option.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/TemplateOption.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/PortCheckDecorator.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/OptionDecorator.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/EnumOptionDecorator.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/Options.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/IntegerRangeCheckOptionDecorator.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/IntegerOptionDecorator.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/ElasticSearchOptions.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/options/StringOption.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/messageprocessor/ESMessageProcessor.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/messageprocessor/DummyProcessor.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/messageprocessor/ESBulkMessageProcessor.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/messageprocessor/ESMessageProcessorFactory.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/messageprocessor/ESSingleMessageProcessor.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/ElasticSearchDestination.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/logging/SyslogNgInternalLogger.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/client/ESTransportClient.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/client/ESClient.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/client/ESNodeClient.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/client/UnknownESClientModeException.java \
+  elastic/src/main/java/org/syslog_ng/elasticsearch/client/ESClientFactory.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestEnumOptionDecorator.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestRequiredOptionDecorator.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestStringOption.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestPortCheckDecorator.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestIntegerRangeCheckOptionDecorator.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestOption.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestIntegerOptionDecorator.java \
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/MockLogDestination.java

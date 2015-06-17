@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2010-2015 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 2010-2015 Viktor Juhasz <viktor.juhasz@balabit.com>
+ * Copyright (c) 2015 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2015 Viktor Juhasz <viktor.juhasz@balabit.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -21,18 +21,37 @@
  *
  */
 
+package org.syslog_ng.elasticsearch.messageprocessor;
 
-#ifndef JAVA_LOGMSG_PROXY_H_
-#define JAVA_LOGMSG_PROXY_H_
+import org.apache.log4j.Logger;
+import org.elasticsearch.action.index.IndexRequest;
+import org.syslog_ng.elasticsearch.client.ESClient;
+import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
-#include "LogMessage.h"
-#include "logmsg.h"
+public abstract class ESMessageProcessor {
+	protected ElasticSearchOptions options;
+	protected ESClient client;
+	protected Logger logger;
 
-typedef struct _JavaLogMessageProxy JavaLogMessageProxy;
 
-JavaLogMessageProxy *java_log_message_proxy_new();
-void java_log_message_proxy_free(JavaLogMessageProxy *self);
+	public ESMessageProcessor(ElasticSearchOptions options, ESClient client) {
+		this.options = options;
+		this.client = client;
+		logger = Logger.getRootLogger();
+	}
 
-jobject java_log_message_proxy_create_java_object(JavaLogMessageProxy *self, LogMessage *msg);
+	public void init() {
 
-#endif /* JAVA_LOGMSG_PROXY_H_ */
+	}
+
+	public void flush() {
+
+	}
+
+	public void deinit() {
+
+	}
+
+	public abstract boolean send(IndexRequest req);
+
+}

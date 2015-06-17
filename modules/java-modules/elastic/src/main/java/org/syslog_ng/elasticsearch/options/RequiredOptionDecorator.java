@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2010-2015 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 2010-2015 Viktor Juhasz <viktor.juhasz@balabit.com>
+ * Copyright (c) 2015 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2015 Viktor Juhasz <viktor.juhasz@balabit.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -21,18 +21,21 @@
  *
  */
 
+package org.syslog_ng.elasticsearch.options;
 
-#ifndef JAVA_LOGMSG_PROXY_H_
-#define JAVA_LOGMSG_PROXY_H_
+public class RequiredOptionDecorator extends OptionDecorator {
 
-#include "LogMessage.h"
-#include "logmsg.h"
+	public RequiredOptionDecorator(Option decoratedOption) {
+		super(decoratedOption);
+	}
 
-typedef struct _JavaLogMessageProxy JavaLogMessageProxy;
+	@Override
+	public void validate() throws InvalidOptionException {
+		String value = decoratedOption.getValue();
+		if (value == null) {
+			throw new  InvalidOptionException("option " + decoratedOption.getName() + " is a required option");
+		}
+		decoratedOption.validate();
+	}
 
-JavaLogMessageProxy *java_log_message_proxy_new();
-void java_log_message_proxy_free(JavaLogMessageProxy *self);
-
-jobject java_log_message_proxy_create_java_object(JavaLogMessageProxy *self, LogMessage *msg);
-
-#endif /* JAVA_LOGMSG_PROXY_H_ */
+}

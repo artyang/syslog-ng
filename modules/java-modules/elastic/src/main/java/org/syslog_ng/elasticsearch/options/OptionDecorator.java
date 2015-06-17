@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2010-2015 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 2010-2015 Viktor Juhasz <viktor.juhasz@balabit.com>
+ * Copyright (c) 2015 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2015 Viktor Juhasz <viktor.juhasz@balabit.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -21,18 +21,34 @@
  *
  */
 
+package org.syslog_ng.elasticsearch.options;
 
-#ifndef JAVA_LOGMSG_PROXY_H_
-#define JAVA_LOGMSG_PROXY_H_
+public abstract class OptionDecorator implements Option {
 
-#include "LogMessage.h"
-#include "logmsg.h"
+	protected Option decoratedOption;
 
-typedef struct _JavaLogMessageProxy JavaLogMessageProxy;
+	public OptionDecorator(Option decoratedOption) {
+		this.decoratedOption = decoratedOption;
+	}
 
-JavaLogMessageProxy *java_log_message_proxy_new();
-void java_log_message_proxy_free(JavaLogMessageProxy *self);
+	public String getValue() {
+		return decoratedOption.getValue();
+	}
 
-jobject java_log_message_proxy_create_java_object(JavaLogMessageProxy *self, LogMessage *msg);
+	public void validate() throws InvalidOptionException {
+		decoratedOption.validate();
+	}
 
-#endif /* JAVA_LOGMSG_PROXY_H_ */
+	public String getName() {
+		return decoratedOption.getName();
+	}
+
+
+	public Integer getValueAsInterger() {
+		return decoratedOption.getValueAsInterger();
+	}
+
+	public String[] getValueAsStringList(String seporator) {
+		return decoratedOption.getValueAsStringList(seporator);
+	}
+}

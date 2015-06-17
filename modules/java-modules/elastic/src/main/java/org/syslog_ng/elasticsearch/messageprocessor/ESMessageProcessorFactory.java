@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2010-2015 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 2010-2015 Viktor Juhasz <viktor.juhasz@balabit.com>
+ * Copyright (c) 2015 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2015 Viktor Juhasz <viktor.juhasz@balabit.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -21,18 +21,22 @@
  *
  */
 
+package org.syslog_ng.elasticsearch.messageprocessor;
 
-#ifndef JAVA_LOGMSG_PROXY_H_
-#define JAVA_LOGMSG_PROXY_H_
+import org.syslog_ng.elasticsearch.client.ESClient;
+import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
 
-#include "LogMessage.h"
-#include "logmsg.h"
-
-typedef struct _JavaLogMessageProxy JavaLogMessageProxy;
-
-JavaLogMessageProxy *java_log_message_proxy_new();
-void java_log_message_proxy_free(JavaLogMessageProxy *self);
-
-jobject java_log_message_proxy_create_java_object(JavaLogMessageProxy *self, LogMessage *msg);
-
-#endif /* JAVA_LOGMSG_PROXY_H_ */
+public class ESMessageProcessorFactory {
+	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client) {
+		int flush_limit = options.getFlushLimit();
+		if (flush_limit > 1) {
+			return new ESBulkMessageProcessor(options, client);
+		}
+		if (flush_limit == -1) {
+			return new DummyProcessor(options, client);
+		}
+		else {
+			return new ESSingleMessageProcessor(options, client);
+		}
+	}
+}
