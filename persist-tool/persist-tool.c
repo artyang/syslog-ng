@@ -25,6 +25,7 @@
 #include "dump.h"
 #include "add.h"
 #include "generate.h"
+#include "rename.h"
 #include "generate-agent.h"
 #include "persist-tool.h"
 #include "mainloop.h"
@@ -175,6 +176,13 @@ static GOptionEntry generate_options[] =
     { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL }
   };
 
+static GOptionEntry rename_options[] =
+  {
+    { "old_key", 'o', 0, G_OPTION_ARG_STRING, &old_key, "Old key in persist file", NULL },
+    { "new_key", 'n', 0, G_OPTION_ARG_STRING, &new_key, "New key in persist file", NULL },
+    { NULL, 0, 0, G_OPTION_ARG_NONE, NULL, NULL }
+  };
+
 #ifdef _WIN32
 static GOptionEntry generate_agent_options[] =
   {
@@ -202,8 +210,8 @@ typedef struct _PersistToolMode
 static PersistToolMode modes[] =
   {
     { "dump", dump_options, "Dump the contents of the persist file", "<persist_file>", dump_main },
+    { "rename-key", rename_options, "Rename a key in the persist file with new key", "<persist_file>", rename_main },
     { "generate", generate_options, "Generate a persist file from the configuration file of syslog-ng", "", generate_main },
-
     { "generate-agent", generate_agent_options,
        "Generate persist file for the syslog-ng Agent for Windows application", "", generate_agent_main },
 
@@ -213,6 +221,7 @@ static PersistToolMode modes[] =
 static PersistToolMode modes[] =
   {
     { "dump", dump_options, "Dump the contents of the persist file", "<persist_file>", dump_main },
+    { "rename-key", rename_options, "Rename a key in the persist file with new key", "<persist_file>", rename_main },
     { "generate", generate_options, "Generate a persist file from the configuration file of syslog-ng", "", generate_main },
     { "add", add_options, "Add new or change entry in the persist file", "<input_file>", add_main },
     { NULL, NULL }, };
