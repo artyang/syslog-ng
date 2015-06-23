@@ -33,10 +33,13 @@
 #include "apphook.h"
 #include "timeutils.h"
 #include "mainloop-worker.h"
+#include "reloc.h"
 
 #include <dbi/dbi.h>
 #include <string.h>
 #include <openssl/md5.h>
+
+#define DBI_DRIVERS_PATH "${prefix}/lib/dbd"
 
 /* field flags */
 enum
@@ -1287,6 +1290,7 @@ afsql_dd_init(LogPipe *s)
   AFSqlDestDriver *self = (AFSqlDestDriver *) s;
   GlobalConfig *cfg = log_pipe_get_config(s);
   gint len_cols, len_values;
+  gchar *dbi_driver_dir = get_reloc_string(DBI_DRIVERS_PATH);
 
   if (!server_mode)
     {
@@ -1402,7 +1406,7 @@ afsql_dd_init(LogPipe *s)
 
   if (!dbi_initialized)
     {
-      gint rc = dbi_initialize_r(NULL, &dbi_instance);
+      gint rc = dbi_initialize_r(dbi_driver_dir, &dbi_instance);
 
       if (rc < 0)
         {
