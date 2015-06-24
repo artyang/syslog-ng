@@ -1,6 +1,4 @@
 aix-6.1/powerpc
-freebsd-8.0/amd64
-freebsd-8.0/i386
 hpux-11v2/ia64
 linux-glibc2.3.6/amd64
 linux-glibc2.3.6/i386
