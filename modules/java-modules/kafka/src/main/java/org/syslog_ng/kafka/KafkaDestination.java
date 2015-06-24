@@ -77,7 +77,6 @@ public class KafkaDestination extends StructuredLogDestination {
       logSendError(e);
     }
 
-    this.close();
     return false;
   }
 
