@@ -72,13 +72,18 @@ public class KafkaDestination extends StructuredLogDestination {
       future.get();
       return true;
     } catch (InterruptedException e) {
-      logger.error(e.getMessage());
+      logSendError(e);
     } catch (ExecutionException e) {
-      logger.error(e.getMessage());
+      logSendError(e);
     }
 
     this.close();
     return false;
+  }
+
+  private void logSendError(Exception e) {
+    logger.debug("Unable to send the message at the moment");
+    logger.debug(e.getMessage());
   }
 
   @Override
