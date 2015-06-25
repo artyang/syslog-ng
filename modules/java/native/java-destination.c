@@ -173,10 +173,18 @@ static worker_insert_result_t
 java_worker_insert(LogThrDestDriver *s, LogMessage *msg)
 {
   JavaDestDriver *self = (JavaDestDriver *)s;
+
+  if (!server_mode)
+    {
+      msg_error("syslog-ng running in client/relay mode, java destination does not work", NULL);
+      return WORKER_INSERT_RESULT_DROP;
+    }
+
   if (!java_dd_open(s))
     {
       return WORKER_INSERT_RESULT_NOT_CONNECTED;
     }
+
   gboolean sent = java_dd_send_to_object(self, msg);
   return sent ? WORKER_INSERT_RESULT_SUCCESS : WORKER_INSERT_RESULT_ERROR;
 }
