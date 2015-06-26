@@ -48,4 +48,10 @@ public class MockLogDestination extends LogDestination {
 		return false;
 	}
 
+	@Override
+	protected String getNameByUniqOptions() {
+		// TODO Auto-generated method stub
+		return "Dummy";
+	}
+
 }

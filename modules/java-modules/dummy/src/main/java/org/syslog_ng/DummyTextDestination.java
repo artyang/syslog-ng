@@ -67,4 +67,9 @@ public class DummyTextDestination extends TextLogDestination {
     InternalMessageSender.debug("Incoming message: " + arg0);
     return true;
   }
+
+  public String getNameByUniqOptions() {
+    InternalMessageSender.debug("getNameByUniqOptions");
+    return "Dummy";
+  }
 }

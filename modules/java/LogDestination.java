@@ -43,6 +43,8 @@ public abstract class LogDestination extends LogPipe {
 
 	protected abstract boolean isOpened();
 
+	protected abstract String getNameByUniqOptions();
+
 	private native String getOption(long ptr, String key);
 
 	private native long getTemplateOptionsHandle(long ptr);
@@ -88,4 +90,15 @@ public abstract class LogDestination extends LogPipe {
 			sendExceptionMessage(e);
 		}
 	}
+
+	public String getNameByUniqOptionsProxy() {
+		try {
+			return getNameByUniqOptions();
+		}
+		catch (Exception e) {
+			sendExceptionMessage(e);
+			return null;
+		}
+	}
+
 }
