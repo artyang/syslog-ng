@@ -46,32 +46,36 @@ typedef struct _OpenFileProperties
   gint flags;
 } OpenFileProperties;
 
-static inline gboolean
-affile_set_caps(gchar *name, OpenFileProperties *props, cap_t *act_caps)
-{
-  *act_caps = g_process_cap_save();
 
-  if (props->privileged)
+static inline void
+_raise_syslog_read_caps(OpenFileProperties *props)
+{
+ if (props->privileged)
     {
-      g_process_cap_modify(CAP_DAC_READ_SEARCH, TRUE);
-      g_process_cap_modify(CAP_SYSLOG, TRUE);
+      raise_syslog_privileged_read_permissions();
     }
   else
     {
-      g_process_cap_modify(CAP_DAC_OVERRIDE, TRUE);
+      raise_syslog_read_permissions();
     }
+}
 
-  if (props->create_dirs &&
-     !create_containing_directory(name,
-                                  props->dir_access.uid,
-                                  props->dir_access.gid,
-                                  props->dir_access.mode))
-    {
-      g_process_cap_restore(*act_caps);
-      return FALSE;
-    }
+static gboolean
+_create_directory(gchar *name, OpenFileProperties *props)
+{
+  gboolean res = FALSE;
 
-  return TRUE;
+  cap_t act_caps = g_process_cap_save();
+
+  _raise_syslog_read_caps(props);
+
+  res = create_containing_directory(name,
+                                    props->dir_access.uid,
+                                    props->dir_access.gid,
+                                    props->dir_access.mode);
+  g_process_cap_restore(act_caps);
+
+  return res;
 }
 
 static inline void
@@ -80,13 +84,10 @@ affile_set_fd_permission(OpenFileProperties *props, int fd)
   if (fd != -1)
     {
       g_fd_set_cloexec(fd, TRUE);
-
-      g_process_cap_modify(CAP_CHOWN, TRUE);
-      g_process_cap_modify(CAP_FOWNER, TRUE);
-      set_permissions_fd(fd,
-                         props->file_access.uid,
-                         props->file_access.gid,
-                         props->file_access.mode);
+      grant_file_permissions_fd(fd,
+                                props->file_access.uid,
+                                props->file_access.gid,
+                                props->file_access.mode);
     }
 }
 
@@ -127,12 +128,11 @@ static int
 affile_open_file(gchar *name, OpenFileProperties *props)
 {
   int fd = -1;
-  cap_t saved_caps;
 
   if (affile_is_spurious_path(name, spurious_paths))
     return -1;
 
-  if (!affile_set_caps(name, props, &saved_caps))
+  if (props->create_dirs && !_create_directory(name, props))
     return -1;
 
   affile_check_file_type(name, props);
@@ -140,8 +140,6 @@ affile_open_file(gchar *name, OpenFileProperties *props)
   fd = affile_open_fd(name, props);
 
   affile_set_fd_permission(props, fd);
-
-  g_process_cap_restore(saved_caps);
 
   msg_trace("affile_open_file",
             evt_tag_str("path", name),
@@ -280,6 +278,7 @@ affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
   if (is_wildcard_filename(filename))
     {
       self->file_monitor = file_monitor_new();
+      self->file_monitor->privileged = !!(self->flags & AFFILE_PRIVILEGED);
       self->file_list = uniq_queue_new();
     }
   else

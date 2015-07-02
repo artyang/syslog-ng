@@ -27,6 +27,7 @@
 
 #include "syslog-ng.h"
 #include "gsockaddr.h"
+#include "gprocess.h"
 
 #include <sys/types.h>
 
@@ -96,6 +97,9 @@ gchar *find_file_in_path(const gchar *path, const gchar *filename, GFileTest tes
 gint set_permissions(gchar *name, gint uid, gint gid, gint mode);
 gint set_permissions_fd(gint fd, gint uid, gint gid, gint mode);
 
+void grant_file_permissions(gchar *name, gint dir_uid, gint dir_gid, gint dir_mode);
+void grant_file_permissions_fd(gint fd, gint dir_uid, gint dir_gid, gint dir_mode);
+
 char *escape_windows_path(char *input);
 
 static inline void
@@ -133,6 +137,27 @@ void string_list_free(GList *l);
       } \
     dest = __buf; \
   } while (0)
+
+static inline void
+raise_file_permissions()
+{
+  g_process_cap_raise(CAP_CHOWN);
+  g_process_cap_raise(CAP_FOWNER);
+  g_process_cap_raise(CAP_DAC_OVERRIDE);
+}
+
+static inline void
+raise_syslog_privileged_read_permissions()
+{
+  g_process_cap_raise(CAP_DAC_READ_SEARCH);
+  g_process_cap_raise(CAP_SYSLOG);
+}
+
+static inline void
+raise_syslog_read_permissions()
+{
+  g_process_cap_raise(CAP_DAC_OVERRIDE);
+}
 
 gchar *utf8_escape_string(const gchar *str, gssize len);
 

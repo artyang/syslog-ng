@@ -668,7 +668,7 @@ afinet_dd_init(LogPipe *s)
           device = g_strdup(self->spoof_if);
           msg_warning("using ", evt_tag_str("device", device), NULL);
 #endif
-          g_process_cap_modify(CAP_NET_RAW, TRUE);
+          g_process_cap_raise(CAP_NET_RAW);
           self->lnet_ctx = libnet_init(self->super.dest_addr->sa.sa_family == AF_INET ? LIBNET_RAW4 : LIBNET_RAW6, device, error);
           g_process_cap_restore(saved_caps);
           if (!self->lnet_ctx)

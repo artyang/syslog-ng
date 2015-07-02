@@ -482,18 +482,23 @@ affile_sd_skip_old_messages(LogSrcDriver *s, GlobalConfig *cfg)
   if (self->file_monitor)
     {
       gpointer args[] = {self, cfg};
+      cap_t old_caps; 
       file_monitor_set_file_callback(self->file_monitor, affile_sd_collect_files, args);
+      old_caps = file_monitor_raise_caps(self->file_monitor);
       if (!file_monitor_watch_directory(self->file_monitor, self->filename_pattern->str))
         {
+          g_process_cap_restore(old_caps);
           return FALSE;
         }
       affile_file_monitor_stop(self);
+      g_process_cap_restore(old_caps);
     }
   else
     {
       g_string_assign(self->filename, self->filename_pattern->str);
       affile_sd_set_file_pos(self, cfg);
     }
+
   return TRUE;
 }
 
@@ -775,6 +780,7 @@ affile_sd_init(LogPipe *s)
 
   if (self->file_monitor)
     {
+      cap_t old_caps = file_monitor_raise_caps(self->file_monitor);
       /* watch_directory will use the callback, so set it first */
       file_monitor_set_file_callback(self->file_monitor, affile_sd_monitor_callback, self);
 
@@ -785,6 +791,7 @@ affile_sd_init(LogPipe *s)
           msg_error("Error starting filemonitor",
                     evt_tag_str("filemonitor", self->filename_pattern->str),
                     NULL);
+          g_process_cap_restore(old_caps);
           return FALSE;
         }
       else if (self->reader == NULL)
@@ -795,9 +802,11 @@ affile_sd_init(LogPipe *s)
             {
               g_string_assign(self->filename, filename);
               g_free(filename);
+              g_process_cap_restore(old_caps);
               return affile_sd_open(s, !end_of_list);
             }
         }
+      g_process_cap_restore(old_caps);
       return TRUE;
     }
   else

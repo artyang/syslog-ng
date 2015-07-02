@@ -5,6 +5,7 @@
 #include "messages.h"
 #include "mainloop.h"
 #include "timeutils.h"
+#include "misc.h"
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
@@ -104,6 +105,7 @@ static gboolean
 file_monitor_process_inotify_event(FileMonitor *monitor, MonitorInotify *self)
 {
   struct inotify_event events[32];
+  cap_t caps;
   gint byte_read = 0;
   gint i = 0;
   gchar *path = NULL;
@@ -122,6 +124,7 @@ file_monitor_process_inotify_event(FileMonitor *monitor, MonitorInotify *self)
       return TRUE;
     }
 
+  caps = file_monitor_raise_caps(monitor);
   for (i = 0; i < 32; i++)
     {
       if (events[i].wd == self->watchd)
@@ -146,6 +149,8 @@ file_monitor_process_inotify_event(FileMonitor *monitor, MonitorInotify *self)
       if ((i+1)*sizeof(struct inotify_event) >= byte_read)
         break;
     }
+  g_process_cap_restore(caps);
+
   return TRUE;
 }
 
@@ -271,6 +276,15 @@ file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *f
   return ret;
 }
 
+static inline void
+_raise_read_permissions(FileMonitor *self)
+{
+  if (self->privileged)
+    raise_syslog_privileged_read_permissions();
+  else
+    raise_syslog_read_permissions();
+}
+
 /**
  *
  * This function performs the initial iteration of a monitored directory.
@@ -284,12 +298,15 @@ file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar 
   GError *error = NULL;
   const gchar *file_name = NULL;
   guint files_count = 0;
+  cap_t caps;
 
+  caps = file_monitor_raise_caps(self);
   /* try to open diretory */
   dir = g_dir_open(basedir, 0, &error);
   if (dir == NULL)
     {
       g_clear_error(&error);
+      g_process_cap_restore(caps);
       return FALSE;
     }
 
@@ -314,6 +331,8 @@ file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar 
   g_dir_close(dir);
   if (self->file_callback != NULL)
     self->file_callback(END_OF_LIST, self->user_data, ACTION_NONE);
+  g_process_cap_restore(caps);
+
   return TRUE;
 }
 
@@ -617,6 +636,7 @@ file_monitor_new(void)
   self->recursion = FALSE;
   self->monitor_type = MONITOR_NONE;
   self->poll_freq = 1000; /* 1 sec is the default*/
+  self->privileged = FALSE;
   return self;
 }
 
@@ -660,4 +680,12 @@ file_monitor_free(FileMonitor *self)
       self->sources = NULL;
     }
   g_free(self);
+}
+
+cap_t
+file_monitor_raise_caps(FileMonitor *self)
+{
+  cap_t old = g_process_cap_save();
+  _raise_read_permissions(self);
+  return old;
 }

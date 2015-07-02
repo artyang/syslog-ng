@@ -217,9 +217,9 @@ afunix_sd_init(LogPipe *s)
       cap_t saved_caps;
 
       saved_caps = g_process_cap_save();
-      g_process_cap_modify(CAP_CHOWN, TRUE);
-      g_process_cap_modify(CAP_FOWNER, TRUE);
-      g_process_cap_modify(CAP_DAC_OVERRIDE, TRUE);
+      g_process_cap_raise(CAP_CHOWN);
+      g_process_cap_raise(CAP_FOWNER);
+      g_process_cap_raise(CAP_DAC_OVERRIDE);
       set_permissions(self->filename, self->owner, self->group, self->perm);
       g_process_cap_restore(saved_caps);
 
