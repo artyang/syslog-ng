@@ -34,6 +34,11 @@ public class KafkaDestination extends StructuredLogDestination {
     properties = new KafkaDestinationProperties(options);
   }
 
+    @Override
+    public String getNameByUniqOptions() {
+      return String.format("KafkaDestination,%s,%s", options.getKafkaBootstrapServers(), options.getTopic().getValue());
+    }
+
   @Override
   public boolean send(LogMessage logMessage) {
     String formattedKey = options.getKey().getResolvedString(logMessage);
