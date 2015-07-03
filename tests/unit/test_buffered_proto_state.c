@@ -291,8 +291,8 @@ main(int argc, char *argv[])
   return 0;
 #endif
   app_startup();
-  /*test_state_v4();
-  test_state_v3();*/
+  test_state_v4();
+  test_state_v3();
   test_load_state();
   return 0;
 }
