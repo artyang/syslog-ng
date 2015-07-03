@@ -284,6 +284,39 @@ test_load_state()
   persist_state_free(state);
 }
 
+static void
+test_state_update()
+{
+  PersistState *state;
+  LogProtoBufferedServerState *proto_state;
+
+  TestProto *proto = (TestProto *) test_proto_new();
+
+  unlink(TEST_PERSIST_FILE);
+  state = persist_state_new(TEST_PERSIST_FILE);
+  assert_true(persist_state_start(state),
+      "Error starting persist_state object");
+
+  /* Create new state */
+  assert_true(log_proto_restart_with_state(&proto->super.super, state, TEST_VALUE_NAME),
+      "Can't restart with empty state");
+
+  proto_state = state_handler_get_state(proto->super.state_handler);
+  proto_state->super.version = 0;
+  state_handler_put_state(proto->super.state_handler);
+  log_proto_free(&proto->super.super);
+
+  proto = (TestProto *) test_proto_new();
+  assert_true(log_proto_restart_with_state(&proto->super.super, state, TEST_VALUE_NAME), "Can't restart with empty state");
+  assert_true(proto->super.state_handler->state == NULL, "State handler is not released, after upgraded the state");
+
+  log_proto_free(&proto->super.super);
+
+  persist_state_commit(state);
+  persist_state_free(state);
+  return;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -294,5 +327,8 @@ main(int argc, char *argv[])
   test_state_v4();
   test_state_v3();
   test_load_state();
+  /* Testing of correction bug: 33400 */
+  test_state_update();
+  app_shutdown();
   return 0;
 }
