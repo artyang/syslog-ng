@@ -26,20 +26,20 @@ public class KafkaDestinationProperties {
         String propertiesFile = options.getPropertiesFile();
         this.properties = new Properties();
 
-        this.applyDefaultProperties();
+        this.loadDefaultProperties();
 
         if (propertiesFile != null) {
             this.loadPropertiesFile(propertiesFile);
         }
 
-        this.applySyslogNgOptions();
+        this.loadSyslogNgOptions();
     }
 
     public Properties getProperties() {
         return properties;
     }
 
-    private void applyDefaultProperties() {
+    private void loadDefaultProperties() {
         this.properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         this.properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getName());
     }
@@ -48,7 +48,7 @@ public class KafkaDestinationProperties {
         InputStream inputStream = this.openPropertiesFile(propertiesFile);
 
         if (inputStream != null) {
-            return this.applyPropertiesStream(inputStream);
+            return this.loadPropertiesFromStream(inputStream);
         }
 
         return false;
@@ -67,7 +67,7 @@ public class KafkaDestinationProperties {
         return inputStream;
     }
 
-    private boolean applyPropertiesStream(InputStream inputStream) {
+    private boolean loadPropertiesFromStream(InputStream inputStream) {
         Properties mergedProperties = new Properties();
 
         try {
@@ -82,7 +82,7 @@ public class KafkaDestinationProperties {
         return false;
     }
 
-    private void applySyslogNgOptions() {
+    private void loadSyslogNgOptions() {
         properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, options.getKafkaBootstrapServers());
     }
 }
