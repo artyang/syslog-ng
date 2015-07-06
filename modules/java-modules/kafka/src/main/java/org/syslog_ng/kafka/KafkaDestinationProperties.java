@@ -61,8 +61,7 @@ public class KafkaDestinationProperties {
             inputStream = new FileInputStream(propertiesFile);
             logger.debug(String.format("properties file successfully opened: %s", propertiesFile));
         } catch (FileNotFoundException e) {
-            logger.error(String.format("unable to open properties file: %s", propertiesFile));
-            e.printStackTrace();
+            logger.error(String.format("unable to open properties file: %s", propertiesFile), e);
         }
         return inputStream;
     }
@@ -76,8 +75,7 @@ public class KafkaDestinationProperties {
             logger.debug("properties successfully loaded");
             return true;
         } catch (IOException e) {
-            logger.error("unable to load properties");
-            e.printStackTrace();
+            logger.error("unable to load properties", e);
         }
         return false;
     }
