@@ -19,6 +19,12 @@ libmod_java_la_SOURCES = \
     native/java-grammar.y \
     native/java-plugin.c \
     native/java-destination.c \
+    native/java-class-loader.c \
+    native/java-class-loader.h \
+    native/java-parser.c \
+    native/java-parser.h \
+    native/java_machine.c \
+    native/java_machine.h \
     native/java-destination.h \
     proxies/java-destination-proxy.c \
     proxies/java-destination-proxy.h \
@@ -26,16 +32,11 @@ libmod_java_la_SOURCES = \
     proxies/java-logmsg-proxy.h \
     proxies/java-template-proxy.c \
     proxies/java-template-proxy.h \
-    proxies/internal-message-sender-proxy.c \
-    native/java-class-loader.c \
-    native/java-class-loader.h \
-    native/java-parser.c \
-    native/java-parser.h \
-    native/java_machine.c \
-    native/java_machine.h
+    proxies/internal-message-sender-proxy.c
+
 
 libmod_java_la_LIBADD = \
-    $(JNI_LIBS) $(INCUBATOR_LIBS) ../license/liblicense.la
+    $(JNI_LIBS)
 
 libmod_java_la_LDFLAGS = \
     -avoid-version -module -no-undefined
