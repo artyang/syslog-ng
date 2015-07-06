@@ -45,9 +45,8 @@ public class KafkaDestinationProperties {
     private boolean mergePropertiesFromFile(String propertiesFile) {
         InputStream inputStream = openPropertiesFile(propertiesFile);
 
-        if (inputStream != null)
-        {
-            return mergePropertiesFromStream(inputStream);
+        if (inputStream != null) {
+            return this.applyPropertiesStream(inputStream);
         }
 
         return false;
@@ -66,13 +65,12 @@ public class KafkaDestinationProperties {
         return inputStream;
     }
 
-    private boolean mergePropertiesFromStream(InputStream inputStream) {
+    private boolean applyPropertiesStream(InputStream inputStream) {
         Properties mergedProperties = new Properties();
 
         try {
             mergedProperties.load(inputStream);
-            mergedProperties.putAll(properties);
-            properties = mergedProperties;
+            this.properties.putAll(mergedProperties);
             logger.debug("properties successfully loaded");
             return true;
         } catch (IOException e) {
