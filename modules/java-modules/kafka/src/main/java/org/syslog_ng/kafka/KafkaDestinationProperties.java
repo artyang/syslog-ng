@@ -29,6 +29,8 @@ public class KafkaDestinationProperties {
         this.applyDefaultProperties();
         if (propertiesFile != null)
             mergePropertiesFromFile(propertiesFile);
+
+        this.applySyslogNgOptions();
     }
 
     public Properties getProperties() {
@@ -78,5 +80,9 @@ public class KafkaDestinationProperties {
             e.printStackTrace();
         }
         return false;
+    }
+
+    private void applySyslogNgOptions() {
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, options.getKafkaBootstrapServers());
     }
 }
