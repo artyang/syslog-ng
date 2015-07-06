@@ -24,8 +24,9 @@ public class KafkaDestinationProperties {
 
     public void init() {
         String propertiesFile = options.getPropertiesFile();
-        initPropertiesWithDefaultValues();
+        this.properties = new Properties();
 
+        this.applyDefaultProperties();
         if (propertiesFile != null)
             mergePropertiesFromFile(propertiesFile);
     }
@@ -34,11 +35,9 @@ public class KafkaDestinationProperties {
         return properties;
     }
 
-    private void initPropertiesWithDefaultValues() {
-        properties = new Properties();
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, options.getKafkaBootstrapServers());
-        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+    private void applyDefaultProperties() {
+        this.properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        this.properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getName());
     }
 
     private boolean mergePropertiesFromFile(String propertiesFile) {
