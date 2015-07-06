@@ -8,8 +8,10 @@ if ENABLE_JAVA
 JAVA_MOD_DST_DIR=$(DESTDIR)/$(moduledir)/java-modules
 JARS=$(shell find $(abs_top_builddir)/modules/java-modules -name '*.jar')
 
-all-local:
-	gradle -p $(abs_top_srcdir)/modules/java-modules -PsyslogBuildDir=$(abs_top_builddir)/modules/java-modules -PsyslogDepsDir=$(abs_top_builddir)/modules/java build
+java-modules:
+	 $(AM_V_GEN) $(GRADLE) -p $(abs_top_srcdir)/modules/java-modules -PsyslogBuildDir=$(abs_top_builddir)/modules/java-modules -PsyslogDepsDir=$(abs_top_builddir)/modules/java/syslog-ng-core/libs build > "$(top_builddir)/modules/java-modules/gradle-java-modules.log"
+
+all-local: java-modules
 
 install-exec-local:
 	$(mkinstalldirs) $(JAVA_MOD_DST_DIR)
@@ -18,8 +20,12 @@ install-exec-local:
 uninstall-local:
 	rm -f $(JAVA_MOD_DST_DIR)/*.jar
 
+clean-local:
+	rm -rf $(abs_top_builddir)/modules/java-modules/*.log
+	$(GRADLE) -q -p $(abs_top_srcdir)/modules/java-modules -PsyslogBuildDir=$(abs_top_builddir)/modules/java-modules -PsyslogDepsDir=$(abs_top_builddir)/modules/java/syslog-ng-core/libs clean
+
 eclipse:
-	gradle -p $(abs_top_srcdir)/modules/java-modules -PsyslogBuildDir=$(abs_top_builddir)/modules/java-modules -PsyslogDepsDir=$(abs_top_builddir)/modules/java eclipse
+	$(AM_V_GEN) $(GRADLE) -p $(abs_top_srcdir)/modules/java-modules -PsyslogBuildDir=$(abs_top_builddir)/modules/java-modules -PsyslogDepsDir=$(abs_top_builddir)/modules/java/syslog-ng-core/libs eclipse > "$(top_builddir)/modules/java-modules/gradle-eclipse.log"
 
 endif
 

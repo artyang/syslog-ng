@@ -19,8 +19,8 @@ repositories {
 
 dependencies {
     compile "org.syslog-ng:elasticsearch-destination-build-deps:5.4";
-    compile name: 'SyslogNg'
     compile name: 'syslog-ng-common'
+    compile name: 'syslog-ng-core'
     compile 'junit:junit:4.12'
     compile 'org.hamcrest:hamcrest-core:1.3'
 }

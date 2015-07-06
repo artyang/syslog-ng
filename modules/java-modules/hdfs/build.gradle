@@ -18,5 +18,5 @@ repositories {
 
 dependencies {
     compile "org.syslog-ng:hdfs-destination-deps:5.3";
-    compile name: 'SyslogNg'
+    compile name: 'syslog-ng-core'
 }

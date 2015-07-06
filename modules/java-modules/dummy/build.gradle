@@ -9,5 +9,5 @@ repositories {
 }
 
 dependencies {
-   compile name: 'SyslogNg'
+   compile name: 'syslog-ng-core'
 }
