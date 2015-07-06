@@ -40,8 +40,6 @@ public class KafkaDestinationProperties {
     }
 
     private void loadDefaultProperties() {
-        this.properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        this.properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getName());
     }
 
     private boolean loadPropertiesFile(String propertiesFile) {
@@ -81,6 +79,8 @@ public class KafkaDestinationProperties {
     }
 
     private void loadSyslogNgOptions() {
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, options.getKafkaBootstrapServers());
+        this.properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        this.properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getName());
+        this.properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,      this.options.getKafkaBootstrapServers());
     }
 }
