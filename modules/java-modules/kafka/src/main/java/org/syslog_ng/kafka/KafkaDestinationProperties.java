@@ -65,11 +65,11 @@ public class KafkaDestinationProperties {
     }
 
     private boolean loadPropertiesFromStream(InputStream inputStream) {
-        Properties mergedProperties = new Properties();
+        Properties props = new Properties();
 
         try {
-            mergedProperties.load(inputStream);
-            this.properties.putAll(mergedProperties);
+            props.load(inputStream);
+            this.properties.putAll(props);
             logger.debug("properties successfully loaded");
             return true;
         } catch (IOException e) {
