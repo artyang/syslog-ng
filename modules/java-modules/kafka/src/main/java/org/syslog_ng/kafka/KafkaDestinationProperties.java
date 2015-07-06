@@ -27,8 +27,10 @@ public class KafkaDestinationProperties {
         this.properties = new Properties();
 
         this.applyDefaultProperties();
-        if (propertiesFile != null)
-            mergePropertiesFromFile(propertiesFile);
+
+        if (propertiesFile != null) {
+            this.loadPropertiesFile(propertiesFile);
+        }
 
         this.applySyslogNgOptions();
     }
@@ -42,8 +44,8 @@ public class KafkaDestinationProperties {
         this.properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,   StringSerializer.class.getName());
     }
 
-    private boolean mergePropertiesFromFile(String propertiesFile) {
-        InputStream inputStream = openPropertiesFile(propertiesFile);
+    private boolean loadPropertiesFile(String propertiesFile) {
+        InputStream inputStream = this.openPropertiesFile(propertiesFile);
 
         if (inputStream != null) {
             return this.applyPropertiesStream(inputStream);
