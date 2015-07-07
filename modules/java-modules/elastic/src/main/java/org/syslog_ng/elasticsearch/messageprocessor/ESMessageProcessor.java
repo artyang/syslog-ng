@@ -26,7 +26,7 @@ package org.syslog_ng.elasticsearch.messageprocessor;
 import org.apache.log4j.Logger;
 import org.elasticsearch.action.index.IndexRequest;
 import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
+import org.syslog_ng.elasticsearch.ElasticSearchOptions;
 
 public abstract class ESMessageProcessor {
 	protected ElasticSearchOptions options;

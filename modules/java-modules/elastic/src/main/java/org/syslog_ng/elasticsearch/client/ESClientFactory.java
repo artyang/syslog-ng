@@ -23,7 +23,7 @@
 
 package org.syslog_ng.elasticsearch.client;
 
-import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
+import org.syslog_ng.elasticsearch.ElasticSearchOptions;
 
 public class ESClientFactory {
 	public static ESClient getESClient(ElasticSearchOptions options) throws UnknownESClientModeException {

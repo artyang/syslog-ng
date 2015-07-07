@@ -2,7 +2,7 @@ package org.syslog_ng.elasticsearch.messageprocessor;
 
 import org.elasticsearch.action.index.IndexRequest;
 import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
+import org.syslog_ng.elasticsearch.ElasticSearchOptions;
 
 public class DummyProcessor extends ESMessageProcessor {
 

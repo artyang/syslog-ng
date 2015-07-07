@@ -21,22 +21,14 @@
  *
  */
 
-package org.syslog_ng.elasticsearch.messageprocessor;
+package org.syslog_ng.options;
 
-import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.ElasticSearchOptions;
+public interface Option {
+	String getName();
+	String getValue();
+	void validate() throws InvalidOptionException;
 
-public class ESMessageProcessorFactory {
-	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client) {
-		int flush_limit = options.getFlushLimit();
-		if (flush_limit > 1) {
-			return new ESBulkMessageProcessor(options, client);
-		}
-		if (flush_limit == -1) {
-			return new DummyProcessor(options, client);
-		}
-		else {
-			return new ESSingleMessageProcessor(options, client);
-		}
-	}
+	Integer getValueAsInteger();
+	String[] getValueAsStringList(String separator);
+	Boolean getValueAsBoolean();
 }

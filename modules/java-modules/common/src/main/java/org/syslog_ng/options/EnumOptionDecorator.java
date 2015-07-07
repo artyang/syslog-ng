@@ -21,22 +21,36 @@
  *
  */
 
-package org.syslog_ng.elasticsearch.messageprocessor;
+package org.syslog_ng.options;
 
-import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.ElasticSearchOptions;
+import java.util.Set;
 
-public class ESMessageProcessorFactory {
-	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client) {
-		int flush_limit = options.getFlushLimit();
-		if (flush_limit > 1) {
-			return new ESBulkMessageProcessor(options, client);
+public class EnumOptionDecorator extends OptionDecorator {
+	private Set<String> possibleValues;
+
+	public EnumOptionDecorator(Option decoratedOption, Set<String> possibleValues) {
+		super(decoratedOption);
+		this.possibleValues = possibleValues;
+	}
+
+	public String getPossibleValuesAsString() {
+		String result = "[";
+		for (String value: possibleValues) {
+			if (result.length() > 1) {
+				result += ", ";
+			}
+			result += "'" + value + "'";
 		}
-		if (flush_limit == -1) {
-			return new DummyProcessor(options, client);
-		}
-		else {
-			return new ESSingleMessageProcessor(options, client);
+		result += "]";
+		return result;
+	}
+
+	public void validate() throws InvalidOptionException {
+		decoratedOption.validate();
+		String value = decoratedOption.getValue();
+		if (!possibleValues.contains(value)) {
+			throw new InvalidOptionException("option " + decoratedOption.getName() + " must be one of the following values: " + getPossibleValuesAsString());
 		}
 	}
+
 }

@@ -21,22 +21,15 @@
  *
  */
 
-package org.syslog_ng.elasticsearch.messageprocessor;
+package org.syslog_ng.options;
 
-import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.ElasticSearchOptions;
+public class PortCheckDecorator extends IntegerRangeCheckOptionDecorator {
 
-public class ESMessageProcessorFactory {
-	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client) {
-		int flush_limit = options.getFlushLimit();
-		if (flush_limit > 1) {
-			return new ESBulkMessageProcessor(options, client);
-		}
-		if (flush_limit == -1) {
-			return new DummyProcessor(options, client);
-		}
-		else {
-			return new ESSingleMessageProcessor(options, client);
-		}
+	public static int PORT_MIN = 0;
+	public static int PORT_MAX = 65535;
+
+	public PortCheckDecorator(Option decoratedOption) {
+		super(decoratedOption, PORT_MIN, PORT_MAX);
 	}
+
 }

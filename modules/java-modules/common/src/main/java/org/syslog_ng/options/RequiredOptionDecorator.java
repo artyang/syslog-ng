@@ -21,22 +21,21 @@
  *
  */
 
-package org.syslog_ng.elasticsearch.messageprocessor;
+package org.syslog_ng.options;
 
-import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.ElasticSearchOptions;
+public class RequiredOptionDecorator extends OptionDecorator {
 
-public class ESMessageProcessorFactory {
-	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client) {
-		int flush_limit = options.getFlushLimit();
-		if (flush_limit > 1) {
-			return new ESBulkMessageProcessor(options, client);
-		}
-		if (flush_limit == -1) {
-			return new DummyProcessor(options, client);
-		}
-		else {
-			return new ESSingleMessageProcessor(options, client);
-		}
+	public RequiredOptionDecorator(Option decoratedOption) {
+		super(decoratedOption);
 	}
+
+	@Override
+	public void validate() throws InvalidOptionException {
+		String value = decoratedOption.getValue();
+		if (value == null) {
+			throw new  InvalidOptionException("option " + decoratedOption.getName() + " is a required option");
+		}
+		decoratedOption.validate();
+	}
+
 }

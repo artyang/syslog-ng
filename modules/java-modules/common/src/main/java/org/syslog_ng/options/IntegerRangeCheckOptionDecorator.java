@@ -21,22 +21,23 @@
  *
  */
 
-package org.syslog_ng.elasticsearch.messageprocessor;
+package org.syslog_ng.options;
 
-import org.syslog_ng.elasticsearch.client.ESClient;
-import org.syslog_ng.elasticsearch.ElasticSearchOptions;
+public class IntegerRangeCheckOptionDecorator extends OptionDecorator {
+	private int min, max;
 
-public class ESMessageProcessorFactory {
-	public static ESMessageProcessor getMessageProcessor(ElasticSearchOptions options, ESClient client) {
-		int flush_limit = options.getFlushLimit();
-		if (flush_limit > 1) {
-			return new ESBulkMessageProcessor(options, client);
-		}
-		if (flush_limit == -1) {
-			return new DummyProcessor(options, client);
-		}
-		else {
-			return new ESSingleMessageProcessor(options, client);
+	public IntegerRangeCheckOptionDecorator(Option decoratedOption, int min, int max) {
+		super(new IntegerOptionDecorator(decoratedOption));
+		this.min = min;
+		this.max = max;
+	}
+
+	public void validate() throws InvalidOptionException {
+		decoratedOption.validate();
+		int value = Integer.parseInt(decoratedOption.getValue());
+		if (value < min || value > max) {
+			throw new InvalidOptionException("option " + decoratedOption.getName() + " should be between " + min + " and " + max);
 		}
 	}
+
 }
