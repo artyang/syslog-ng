@@ -40,6 +40,7 @@ public class KafkaDestinationProperties {
     }
 
     private void loadDefaultProperties() {
+        this.properties.put(ProducerConfig.METADATA_FETCH_TIMEOUT_CONFIG, "10000");
     }
 
     private boolean loadPropertiesFile(String propertiesFile) {
