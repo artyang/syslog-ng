@@ -30,6 +30,7 @@
 #include "stats.h"
 #include "logqueue.h"
 #include "driver.h"
+#include "pe_license.h"
 
 extern CfgParser java_parser;
 
@@ -45,6 +46,7 @@ static Plugin java_plugins[] =
 gboolean
 mod_java_module_init(GlobalConfig *cfg, CfgArgs *args)
 {
+  (void)check_license(cfg);
   plugin_register(cfg, java_plugins, G_N_ELEMENTS(java_plugins));
   return TRUE;
 }

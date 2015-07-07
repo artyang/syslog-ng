@@ -12,7 +12,8 @@ libmod_java_la_CFLAGS = \
     -I$(top_srcdir)/modules/java    \
     -I$(top_builddir)/modules/java	\
     -I$(top_srcdir)/modules/java/native \
-    -I$(top_builddir)/modules/java/native
+    -I$(top_builddir)/modules/java/native \
+    -I$(top_srcdir)/modules/license
 
 libmod_java_la_SOURCES = \
     native/java-grammar.y \
@@ -34,7 +35,7 @@ libmod_java_la_SOURCES = \
     native/java_machine.h
 
 libmod_java_la_LIBADD = \
-    $(JNI_LIBS) $(INCUBATOR_LIBS)
+    $(JNI_LIBS) $(INCUBATOR_LIBS) ../license/liblicense.la
 
 libmod_java_la_LDFLAGS = \
     -avoid-version -module -no-undefined

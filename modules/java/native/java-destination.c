@@ -109,6 +109,12 @@ java_dd_init(LogPipe *s)
   GlobalConfig *cfg = log_pipe_get_config(s);
   GError *error = NULL;
 
+  if (!server_mode)
+    {
+      msg_error("syslog-ng running in client/relay mode, Java destination is unavailable", NULL);
+      return FALSE;
+    }
+
   if (!log_dest_driver_init_method(s))
     return FALSE;
 
@@ -173,10 +179,12 @@ static worker_insert_result_t
 java_worker_insert(LogThrDestDriver *s, LogMessage *msg)
 {
   JavaDestDriver *self = (JavaDestDriver *)s;
+
   if (!java_dd_open(s))
     {
       return WORKER_INSERT_RESULT_NOT_CONNECTED;
     }
+
   gboolean sent = java_dd_send_to_object(self, msg);
   return sent ? WORKER_INSERT_RESULT_SUCCESS : WORKER_INSERT_RESULT_ERROR;
 }
