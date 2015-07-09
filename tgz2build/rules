@@ -46,12 +46,6 @@ ifneq (,$(findstring tru64,$(ZBS_DIST)))
   RPATH=-Wl,-rpath,/opt/syslog-ng/lib
 endif
 
-ifneq (,$(findstring linux-glibc2.3.6,$(ZBS_DIST)))
-ifneq (,$(findstring amd64,$(ZBS_ARCH)))
-  CONFIGURE_OPTS+= --enable-indexer
-endif
-endif
-
 ifneq (,$(findstring linux-glibc2.11,$(ZBS_DIST)))
   CONFIGURE_OPTS+= --enable-java
 ifneq (,$(findstring amd64,$(ZBS_ARCH)))
