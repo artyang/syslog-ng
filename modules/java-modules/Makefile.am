@@ -61,4 +61,6 @@ EXTRA_DIST = \
   elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestIntegerRangeCheckOptionDecorator.java \
   elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestOption.java \
   elastic/src/test/java/org/syslog_ng/elasticsearch/test/TestIntegerOptionDecorator.java \
-  elastic/src/test/java/org/syslog_ng/elasticsearch/test/MockLogDestination.java
+  elastic/src/test/java/org/syslog_ng/elasticsearch/test/MockLogDestination.java \
+	kafka/build.gradle	\
+	kafka/src/main/java/org/syslog_ng/kafka/KafkaDestination.java

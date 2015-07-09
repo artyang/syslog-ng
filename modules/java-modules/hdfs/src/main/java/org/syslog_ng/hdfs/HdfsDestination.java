@@ -109,7 +109,7 @@ public class HdfsDestination extends TextLogDestination {
             hdfs = FileSystem.get(new URI(hdfsUri), configuration);
             hdfs.getStatus(); // Just to be sure we are really connected to hdfs
             isOpened = true;
-        } catch (Exception | Error e) {
+        } catch (Exception e) {
             printStackTrace(e);
             closeAll(false);
         }
