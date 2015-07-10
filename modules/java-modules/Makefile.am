@@ -72,5 +72,5 @@ EXTRA_DIST = \
         common/src/test/java/org/syslog_ng/options/test/TestIntegerOptionDecorator.java \
         common/src/test/java/org/syslog_ng/logging/test/MockLogDestination.java \
         hdfs/src/main/java/org/syslog_ng/hdfs/HdfsDestination.java \
-        dummy/src/main/java/org/syslog_ng/DummyTextDestination.java \ 
+        dummy/src/main/java/org/syslog_ng/DummyTextDestination.java 
 
