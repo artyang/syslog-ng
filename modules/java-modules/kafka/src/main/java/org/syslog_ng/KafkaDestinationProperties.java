@@ -4,7 +4,7 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.log4j.Logger;
 import org.syslog_ng.logging.SyslogNgInternalLogger;
-import org.syslog_ng.options.KafkaDestinationOptions;
+import org.syslog_ng.kafka.KafkaDestinationOptions;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

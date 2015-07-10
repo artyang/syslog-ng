@@ -1,6 +1,8 @@
-package org.syslog_ng.options;
+package org.syslog_ng.kafka;
 
 import org.syslog_ng.LogDestination;
+import org.syslog_ng.options.*;
+import org.syslog_ng.logging.*;
 
 public class KafkaDestinationOptions {
     public static String TOPIC = "topic";
@@ -76,3 +78,4 @@ public class KafkaDestinationOptions {
         options.put(new StringOption(owner, PROPERTIES_FILE));
     }
 }
+

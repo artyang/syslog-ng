@@ -14,7 +14,7 @@ import org.syslog_ng.LogMessage;
 import org.syslog_ng.StructuredLogDestination;
 import org.syslog_ng.logging.SyslogNgInternalLogger;
 import org.syslog_ng.options.InvalidOptionException;
-import org.syslog_ng.options.KafkaDestinationOptions;
+import org.syslog_ng.kafka.KafkaDestinationOptions;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
