@@ -13,10 +13,12 @@ repositories {
     }
    flatDir {
        dirs syslogDepsDir
+       dirs syslogBuildDir + '/common/libs'
    }
 }
 
 dependencies {
     compile "org.syslog-ng:hdfs-destination-deps:5.3";
+    compile name: 'syslog-ng-common'
     compile name: 'syslog-ng-core'
 }
