@@ -33,7 +33,9 @@ EXTRA_DIST = README init.d.solaris init.d.HP-UX init.d.RedHat init.d.SuSE 	\
 	balabit-initscripts/init.d.freebsd \
 	balabit-initscripts/init-functions \
 	upstart/syslog-ng.conf.upstart	\
-	systemd/syslog-ng.service
+	systemd/syslog-ng.service \
+	syslog-debun \
+	README.syslog-debun
 
 if ENABLE_SYSTEMD_UNIT_INSTALL
 
