@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 public class KafkaDestination extends StructuredLogDestination {
-  private KafkaProducer producer;
+  private KafkaProducer<String, String> producer;
   private KafkaDestinationProperties properties;
   private boolean isOpened = false;
   private Logger logger;
