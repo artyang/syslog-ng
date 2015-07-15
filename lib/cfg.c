@@ -483,7 +483,7 @@ cfg_new(gint version)
   self->time_reap = 60;
 
   self->log_fifo_size = 10000;
-  self->log_msg_size = 8192;
+  self->log_msg_size = 65536;
 
   self->follow_freq = -1;
   self->file_uid = 0;

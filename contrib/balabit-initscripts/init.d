@@ -59,9 +59,9 @@ exit_noop() {
 # Platform specific echo -n implementation.
 echo_n() {
 	case "$OS" in
-		SunOS) echo "$@\c " 
+		SunOS) echo "$@\c "
 			;;
-		HP-UX) echo "  $@\c " 
+		HP-UX) echo "  $@\c "
 			;;
 		*)     echo -n "$@"
 			;;
@@ -113,7 +113,7 @@ create_xconsole() {
 }
 
 check_syntax() {
-	${SYSLOGNG} --syntax-only
+	${SYSLOGNG} --no-caps --syntax-only
 	_rval=$?
 	[ $_rval -eq 0 ] || exit $_rval
 }
@@ -228,7 +228,7 @@ syslogng_restart() {
 
 syslogng_reload() {
 	echo_n "Reloading syslog-ng's config file: "
-	check_syntax 
+	check_syntax
 	killproc -p ${PIDFILE} ${SYSLOGNG} -HUP
 	retval=$?
 	returnmessage $retval
@@ -250,7 +250,7 @@ syslogng_status() {
 		log_success_msg "$pid running"
 	fi
 	return $retval
-}	
+}
 
 syslogng_probe() {
 	if [ ${CONFFILE} -nt ${PIDFILE} ]; then
@@ -317,7 +317,7 @@ case "$1" in
 		fi
 		;;
 	status)
-		syslogng_status 
+		syslogng_status
 		;;
 	condrestart|try-restart)
 		[ ! -f $lockfile ] || syslogng_restart

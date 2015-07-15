@@ -18,6 +18,16 @@ dnl definitions
 
 PACKAGE="syslog-ng-premium-edition"
 VERSION="`cat $srcdir/VERSION`"
+SSB_VERSION="`cat $srcdir/SSB_VERSION`"
+
+if [[ -z "$SSB_RELEASE" ]]; then
+  SSB_RELEASE=0
+fi
+
+if test $SSB_RELEASE -eq 1; then
+  VERSION="$VERSION$SSB_VERSION"
+fi
+
 
 dnl ***************************************************************************
 dnl dependencies
@@ -34,6 +44,7 @@ LMC_MIN_VERSION="0.1.0"
 XML2_MIN_VERSION="2.9.0"
 JAVA_MIN_VERSION="1.7"
 GRADLE_MIN_VERSION="2.2"
+LIBTCMALLOC_MIN_VERSION="0.98"
 
 dnl ***************************************************************************
 dnl Initial setup
@@ -604,12 +615,14 @@ AC_CHECK_LIB(rt, nanosleep, BASE_LIBS="$BASE_LIBS -lrt")
 AC_CHECK_LIB(nsl, gethostbyname, BASE_LIBS="$BASE_LIBS -lnsl")
 AC_CHECK_LIB(regex, regexec, REGEX_LIBS="-lregex")
 AC_CHECK_LIB(resolv, res_init, RESOLV_LIBS="-lresolv")
+AC_CHECK_LIB(tcmalloc_minimal, malloc, TCMALLOC_LIBS="$TCMALLOC_LIBS -ltcmalloc_minimal")
 LIBS=$old_LIBS
 
 
 if test "x$enable_linux_caps" = "xyes" -o "x$enable_linux_caps" = "xauto"; then
     AC_CHECK_LIB(cap, cap_set_proc, LIBCAP_LIBS="-lcap")
 fi
+
 
 dnl some of these are provided by libs declared in BASE_LIBS on non-Linux/FreeBSD systems.
 old_LIBS=$LIBS
@@ -1286,7 +1299,7 @@ STATIC_MODULE_LDFLAGS="${STATIC_MODULE_LDFLAGS:=-avoid-version -module -no-undef
 MODULE_DEPS_LIBS="\$(top_builddir)/lib/libsyslog-ng.la"
 
 if test "x$linking_mode" = "xdynamic"; then
-    SYSLOGNG_DEPS_LIBS="$LIBS $BASE_LIBS $GLIB_LIBS $EVTLOG_LIBS $RESOLV_LIBS $LIBCAP_LIBS $PCRE_LIBS $REGEX_LIBS $DL_LIBS $LIBXML2_LIBS"
+    SYSLOGNG_DEPS_LIBS="$LIBS $BASE_LIBS $GLIB_LIBS $EVTLOG_LIBS $RESOLV_LIBS $LIBCAP_LIBS $PCRE_LIBS $REGEX_LIBS $DL_LIBS $LIBXML2_LIBS $TCMALLOC_LIBS"
 
     if test "x$with_ivykis" = "xinternal"; then
         # when using the internal ivykis, we're linking it statically into libsyslog-ng.so
@@ -1306,8 +1319,8 @@ if test "x$linking_mode" = "xdynamic"; then
     # syslog-ng binary is linked with the default link command (e.g. libtool)
     SYSLOGNG_LINK='$(LINK)'
 else
-    SYSLOGNG_DEPS_LIBS="$LIBS $BASE_LIBS $RESOLV_LIBS $LD_START_STATIC -Wl,--whole-archive $GLIB_LIBS $EVTLOG_LIBS $PCRE_LIBS $REGEX_LIBS -Wl,--no-whole-archive $IVYKIS_NO_LIBTOOL_LIBS $LD_END_STATIC $LIBCAP_LIBS $DL_LIBS "
-    TOOL_DEPS_LIBS="$LIBS $BASE_LIBS $GLIB_LIBS $EVTLOG_LIBS $RESOLV_LIBS $LIBCAP_LIBS $PCRE_LIBS $REGEX_LIBS $IVYKIS_LIBS $DL_LIBS"
+    SYSLOGNG_DEPS_LIBS="$LIBS $BASE_LIBS $RESOLV_LIBS $LD_START_STATIC -Wl,--whole-archive $GLIB_LIBS $EVTLOG_LIBS $PCRE_LIBS $REGEX_LIBS -Wl,--no-whole-archive $IVYKIS_NO_LIBTOOL_LIBS $LD_END_STATIC $LIBCAP_LIBS $DL_LIBS $TCMALLOC_LIBS "
+    TOOL_DEPS_LIBS="$LIBS $BASE_LIBS $GLIB_LIBS $EVTLOG_LIBS $RESOLV_LIBS $LIBCAP_LIBS $PCRE_LIBS $REGEX_LIBS $IVYKIS_LIBS $DL_LIBS $TCMALLOC_LIBS"
     CORE_DEPS_LIBS=""
 
     # bypass libtool in case we want to do mixed linking because it
@@ -1532,6 +1545,7 @@ case $ostype in
         ;;
 esac
 AC_SUBST(BB_SHREXT)
+AC_SUBST(TCMALLOC_LIBS)
 
 AC_OUTPUT(dist.conf
           Makefile
@@ -1668,7 +1682,7 @@ echo "  Timestamping                : ${enable_timestamping:=no}"
 echo "  SQL support (module)        : ${enable_sql:=no}"
 echo "  PACCT module (EXPERIMENTAL) : ${enable_pacct:=no}"
 echo "  MongoDB destination (module): ${enable_mongodb:=no}"
-echo "  Indexer                     : ${enable_indexer: no}"
+echo "  Indexer                     : ${enable_indexer:=no}"
 echo " Shared Library extension     : $BB_SHREXT"
 echo "  JSON support (module)       : ${enable_json:=no} (using ${with_json})"
 echo "  SMTP support (module)       : ${enable_smtp:=no}"

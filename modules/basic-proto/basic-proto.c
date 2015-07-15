@@ -598,8 +598,9 @@ log_proto_buffered_server_state_swap_bytes(LogProtoBufferedServerState *state)
 }
 
 void
-log_proto_buffered_server_state_correct_endianess(LogProtoBufferedServerState *state)
+log_proto_buffered_server_state_correct_endianess(StateHandler *state_handler)
 {
+  LogProtoBufferedServerState *state = (LogProtoBufferedServerState *)state_handler_get_state(state_handler);
   if ((state->super.big_endian && G_BYTE_ORDER == G_LITTLE_ENDIAN) ||
       (!state->super.big_endian && G_BYTE_ORDER == G_BIG_ENDIAN))
      {
@@ -608,6 +609,7 @@ log_proto_buffered_server_state_correct_endianess(LogProtoBufferedServerState *s
         state->super.big_endian = !state->super.big_endian;
         log_proto_buffered_server_state_swap_bytes(state);
     }
+  state_handler_put_state(state_handler);
 }
 
 NameValueContainer *
@@ -1457,29 +1459,29 @@ log_proto_buffered_server_get_new_state_handler(LogProtoBufferedServer *self, St
   return new_state_handler;
 }
 
-
+static guint8
+__get_state_version(StateHandler *state_handler)
+{
+  LogProtoBufferedServerState *state = (LogProtoBufferedServerState *)state_handler_get_state(state_handler);
+  guint8 state_version = state->super.version;
+  state_handler_put_state(state_handler);
+  return state_version;
+}
 
 gboolean
 log_proto_buffered_server_handle_actual_state_version(LogProtoBufferedServer *self, StateHandler *state_handler)
 {
-  guint8 state_version;
-  LogProtoBufferedServerState *state = (LogProtoBufferedServerState *)state_handler_get_state(state_handler);
-  state_version = state->super.version;
-  state_handler_put_state(state_handler);
-
-  if (state_version == 0)
+  if (__get_state_version(state_handler) == 0)
     {
       state_handler = log_proto_buffered_server_get_new_state_handler(self, state_handler);
       if (!state_handler)
         {
           return FALSE;
         }
-      state = (LogProtoBufferedServerState *)state_handler_get_state(state_handler);
-      state_version = state->super.version;
     }
-  if (state_version == 1)
+  if (__get_state_version(state_handler) == 1)
     {
-      log_proto_buffered_server_state_correct_endianess(state);
+      log_proto_buffered_server_state_correct_endianess(state_handler);
       log_proto_apply_state(&self->super, state_handler);
       return TRUE;
     }
