@@ -29,11 +29,11 @@ import org.syslog_ng.StructuredLogDestination;
 import org.syslog_ng.elasticsearch.client.ESClient;
 import org.syslog_ng.elasticsearch.client.ESClientFactory;
 import org.syslog_ng.elasticsearch.client.UnknownESClientModeException;
-import org.syslog_ng.elasticsearch.logging.SyslogNgInternalLogger;
 import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessor;
 import org.syslog_ng.elasticsearch.messageprocessor.ESMessageProcessorFactory;
-import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
-import org.syslog_ng.elasticsearch.options.InvalidOptionException;
+import org.syslog_ng.elasticsearch.ElasticSearchOptions;
+import org.syslog_ng.options.InvalidOptionException;
+import org.syslog_ng.logging.SyslogNgInternalLogger;
 import org.apache.log4j.Logger;
 import org.elasticsearch.action.index.IndexRequest;
 

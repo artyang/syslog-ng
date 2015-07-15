@@ -29,7 +29,7 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.client.Client;
-import org.syslog_ng.elasticsearch.options.ElasticSearchOptions;
+import org.syslog_ng.elasticsearch.ElasticSearchOptions;
 
 public abstract class ESClient {
 	private Client client;

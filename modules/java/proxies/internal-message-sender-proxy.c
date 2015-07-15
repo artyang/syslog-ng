@@ -22,7 +22,7 @@
  */
 
 #include "messages.h"
-#include "InternalMessageSender.h"
+#include "org_syslog_ng_InternalMessageSender.h"
 
 JNIEXPORT void JNICALL
 Java_org_syslog_1ng_InternalMessageSender_createInternalMessage(JNIEnv *env, jclass cls, jint pri, jstring message)

@@ -1,6 +1,6 @@
 apply plugin: 'java'
 
-project.buildDir = syslogBuildDir+'/dummy'
+project.buildDir = syslogBuildDir+'/dummy/gradle'
 
 repositories {
    flatDir {
@@ -9,5 +9,5 @@ repositories {
 }
 
 dependencies {
-   compile name: 'SyslogNg'
+   compile name: 'syslog-ng-core'
 }

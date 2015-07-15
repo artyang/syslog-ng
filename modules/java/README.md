@@ -4,7 +4,7 @@ java destination
 java destination gives an abstract class to implement destinations based on Java
 
 If you want to implement a java destination, you should extend SyslogNgDestination abstract class
-which is contained by the SyslogNg.jar which jar file will be in the moduledir after make install
+which is contained by the syslog-ng-core.jar which jar file will be in the moduledir after make install
 
 Example implementation of a dummy destination
 
@@ -44,7 +44,7 @@ public class TestClass extends TextLogDestination {
 
 You need compile your written java based destination to create a .class or a .jar file
 ```
-javac -cp /usr/lib/syslog-ng/SyslogNg.jar TestClass.java
+javac -cp /usr/lib/syslog-ng/syslog-ng-core.jar TestClass.java
 ```
 
 You have to set the path of the class file or the name of the jar file (with full path) in the syslog-ng config

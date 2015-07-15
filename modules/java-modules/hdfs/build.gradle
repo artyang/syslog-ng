@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
-project.buildDir = syslogBuildDir+'/hdfs'
+project.buildDir = syslogBuildDir+'/hdfs/gradle'
 
 repositories {
     maven {
@@ -13,10 +13,12 @@ repositories {
     }
    flatDir {
        dirs syslogDepsDir
+       dirs syslogBuildDir + '/common/gradle/libs'
    }
 }
 
 dependencies {
     compile "org.syslog-ng:hdfs-destination-deps:5.3";
-    compile name: 'SyslogNg'
+    compile name: 'syslog-ng-common'
+    compile name: 'syslog-ng-core'
 }

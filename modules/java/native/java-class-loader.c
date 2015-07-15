@@ -27,7 +27,7 @@
 #include "messages.h"
 
 #define SYSLOG_NG_CLASS_LOADER  "org/syslog_ng/SyslogNgClassLoader"
-#define SYSLOG_NG_JAR           "SyslogNg.jar"
+#define SYSLOG_NG_JAR           "syslog-ng-core.jar"
 
 jstring
 __create_class_path(ClassLoader *self, JNIEnv *java_env, const gchar *class_path)
