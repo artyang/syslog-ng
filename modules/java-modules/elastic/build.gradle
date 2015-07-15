@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
-project.buildDir = syslogBuildDir+'/elastic'
+project.buildDir = syslogBuildDir+'/elastic/gradle'
 
 repositories {
     maven {
@@ -13,7 +13,7 @@ repositories {
     }
     flatDir {
        dirs syslogDepsDir
-       dirs syslogBuildDir + '/common/libs'
+       dirs syslogBuildDir + '/common/gradle/libs'
     }
 }
 

@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply plugin: 'eclipse'
 
-project.buildDir = syslogBuildDir + '/common'
+project.buildDir = syslogBuildDir + '/common/gradle'
 
 jar.baseName = 'syslog-ng-common'
 
