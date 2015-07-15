@@ -48,7 +48,9 @@ EXTRA_DIST = \
         elastic/src/main/java/org/syslog_ng/elasticsearch/client/UnknownESClientModeException.java \
         elastic/src/main/java/org/syslog_ng/elasticsearch/client/ESClientFactory.java \
         elastic/src/main/java/org/syslog_ng/elasticsearch/ElasticSearchOptions.java \
-        kafka/src/main/java/org/syslog_ng/kafka/KafkaDestination.java \
+        kafka/src/main/java/org/syslog_ng/KafkaDestination.java \
+        kafka/src/main/java/org/syslog_ng/KafkaDestinationOptions.java \
+        kafka/src/main/java/org/syslog_ng/KafkaDestinationProperties.java \
         common/src/main/java/org/syslog_ng/logging/SyslogNgInternalLogger.java \
         common/src/main/java/org/syslog_ng/options/InvalidOptionException.java \
         common/src/main/java/org/syslog_ng/options/RequiredOptionDecorator.java \
