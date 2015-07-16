@@ -1,19 +1,2 @@
-policy_module(syslog_ng, 1.0.0)
+policy_module(syslog_ng, 1.0.1)
 
-require {
-	class file { execute };
-	class lnk_file { read };
-	type syslog_conf_t;
-	type syslogd_t;
-	type syslogd_exec_t;
-	type syslogd_var_run_t;
-	type syslogd_var_lib_t;
-	type bin_t;
-	type lib_t;
-};
-
-# Debug or development only
-#permissive syslogd_t;
-
-allow syslogd_t syslogd_var_lib_t:file execute;
-allow syslogd_t syslogd_var_lib_t:lnk_file read;

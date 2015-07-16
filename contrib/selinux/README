@@ -1,14 +1,31 @@
-SELINUX SUPPORT FOR SYSLOG-NG ON RHEL-7
+SELINUX SUPPORT FOR SYSLOG-NG
 
   This directory contains syslog-ng's SELinux policy files. By compiling and
   loading them into your kernel, your syslog-ng will be able to work with its
   default configuration in a SELinux enabled environment.
+
+  SELinux support was added in syslog-ng 5.2 on the following platforms:
+
+    Red Hat Enterprise Linux 6.5+ (*)
+    Red Hat Enterprise Linux 7 (7.0, 7.1)
+
+  The installation steps may differ on these operating systems, so you will find
+  RHEL version specific information, too. Root permission is needed to run most
+  commands.
 
   You need the following RPM packages preinstalled to be able to compile and
   load SELinux policy modules:
 
     policycoreutils
     policycoreutils-devel
+    policycoreutils-python
+
+  If they are not installed on your system, you can install them by the
+  following command:
+
+    yum install policycoreutils policycoreutils-devel policycoreutils-python 
+
+  The SELinux policy works only if syslog-ng is started by the init daemon.
 
 INSTALLATION
 
@@ -17,24 +34,48 @@ INSTALLATION
   in syslog-ng's install directory. The changes will be effective after restarting
   syslog-ng:
 
-  cd /opt/syslog-ng/share/doc/selinux
-  ./syslog_ng.sh
-  systemctl restart syslog-ng
+    cd /opt/syslog-ng/share/doc/selinux
+    ./syslog_ng.sh
+
+  For information about restarting syslog-ng, please read the RESTARTING SYSLOG-NG
+  section.
 
 UNINSTALL
 
- The module will be active, until you remove it. Then you have to restart syslog-ng.
+  The module will be active, until you remove it. Then you have to restart syslog-ng.
 
-  semodule --remove=syslog_ng
-  systemctl restart syslog-ng
+    semodule --remove=syslog_ng
+
+  For information about restarting syslog-ng, please read the RESTARTING SYSLOG-NG
+  section.
+
+RESTARTING SYSLOG-NG
+
+  You can restart syslog-ng on RHEL6 by:
+
+    service syslog-ng restart
+
+  On RHEL7 you have to run:
+
+    systemctl restart syslog-ng
+
+RHEL6 SPECIFIC INFORMATION
+
+  You have to update the following packages on RHEL 6.5 to be able to run syslog-ng:
+
+    selinux-policy-3.7.19-231.el6.noarch          -> 3.7.19-260.el6.noarch
+    selinux-policy-targeted-3.7.19-231.el6.noarch -> 3.7.19-260.el6.noarch
+
+  These packages are available in the Red Hat repositories and installed by
+  default on RHEL 6.6. You can update them with the following command:
+
+    yum update selinux-policy
+  
+  Syslog-ng running not in the syslogd_t domain creates files with wrong types. You should run
+  syslog_ng.sh to restore the right context, then you will be able to run syslog-ng
+  again.
 
 ADDITIONAL INFORMATION
-
-  In permissive mode, SELinux logs all file acces by syslog-ng into
-  /var/log/audit/audit.log. If you don't want to fill the audit.log with
-  syslog-ng clutter, generate some dontaudit rule with audit2allow:
-
-    grep syslogd /var/log/audit/audit.log | audit2allow -D -M syslogddontaudit
 
   Syslog-ng is able to create coredumps and it's disabled by default. You can
   enable coredumps by
@@ -44,12 +85,5 @@ ADDITIONAL INFORMATION
   Please note, that this command enables core dumping for all daemons on your sysmtem,
   not just for syslog-ng. There is no way to enable per application core dumps in SELinux.
 
-  If SELinux blocks syslog-ng to acces files, sockets, databases, etc. you can
-  explicitly allow those activities by running the following command and append
-  the allow rules to syslog_ng.te file:
+  If you have problems with SELinux and syslog-ng, you can turn to BalaBit's support team.
 
-    grep syslog-ng /var/log/audit/audit.log | audit2allow -R
-
-  Then you have to run the 'syslog_ng.sh' script again and restart syslog-ng.
-
-  If you have problems with SELinux, you can turn to BalaBit's support team.
