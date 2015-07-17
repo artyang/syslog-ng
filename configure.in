@@ -1588,6 +1588,8 @@ AC_OUTPUT(dist.conf
           modules/convertfuncs/tests/Makefile
           modules/json/Makefile
           modules/json/tests/Makefile
+          modules/kvformat/Makefile
+          modules/kvformat/tests/Makefile
           modules/agent-config/Makefile
           modules/agent-config/tests/Makefile
           modules/agent-config/tests/unit/Makefile
