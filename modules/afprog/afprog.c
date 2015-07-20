@@ -34,6 +34,21 @@
 #include <unistd.h>
 #include <signal.h>
 
+typedef struct _AFProgramReloadInfo
+{
+  LogWriter * writer;
+  int pid;
+} AFProgramReloadInfo;
+
+static inline void
+afprogram_reload_info_free(AFProgramReloadInfo * const reload_info)
+{
+  child_manager_unregister(reload_info->pid);
+  reload_info->pid = -1;
+  log_pipe_unref(reload_info->writer);
+  g_free(reload_info);
+}
+
 static gboolean
 afprogram_popen(const gchar *cmdline, GIOCondition cond, pid_t *pid, gint *fd)
 {
