@@ -29,6 +29,9 @@
 #define LOAD_SYMBOL(library, symbol) g_module_symbol(library, #symbol, (gpointer*)&symbol)
 
 #define JOURNAL_LIBRARY_NAME "libsystemd-journal.so.0"
+#define SYSTEMD_LIBRARY_NAME "libsystemd.so.0"
+
+const char *journald_libraries[] = {JOURNAL_LIBRARY_NAME, SYSTEMD_LIBRARY_NAME, NULL};
 
 static GModule *journald_module;
 
@@ -82,7 +85,11 @@ load_journald_subsystem()
 {
   if (!journald_module)
     {
-      journald_module = g_module_open(JOURNAL_LIBRARY_NAME, 0);
+      gint i;
+      for (i = 0; (journald_libraries[i] != NULL) && !journald_module; i++)
+        {
+          journald_module = g_module_open(journald_libraries[i], 0);
+        }
       if (!journald_module)
         {
           return FALSE;
