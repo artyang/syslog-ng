@@ -286,11 +286,9 @@ afprogram_dd_format_persist_name(AFProgramDestDriver *self)
   return persist_name;
 }
 
-static gboolean
-afprogram_dd_reopen(AFProgramDestDriver *self)
+static inline void
+afprogram_dd_close_program(AFProgramDestDriver * const self)
 {
-  int fd;
-  LogProto *proto = NULL;
 
   if (self->pid != -1)
     {
@@ -302,6 +300,16 @@ afprogram_dd_reopen(AFProgramDestDriver *self)
       kill(self->pid, SIGTERM);
       self->pid = -1;
     }
+
+}
+
+static gboolean
+afprogram_dd_reopen(AFProgramDestDriver *self)
+{
+  int fd;
+  LogProto *proto = NULL;
+
+  afprogram_dd_close_program(self);
 
   msg_verbose("Starting destination program",
               evt_tag_str("cmdline", self->cmdline->str),
@@ -424,16 +432,13 @@ afprogram_dd_deinit(LogPipe *s)
 
   if (self->pid != -1)
     {
-      child_manager_unregister(self->pid);
-
       if (!self->keep_alive)
         {
-          msg_verbose("Sending destination program a TERM signal",
-                      evt_tag_str("cmdline", self->cmdline->str),
-                      evt_tag_int("child_pid", self->pid),
-                      NULL);
-          killpg(getpgid(self->pid), SIGTERM);
-          self->pid = -1;
+          afprogram_dd_close_program(self);
+        }
+      else
+        {
+          child_manager_unregister(self->pid);
         }
     }
 
