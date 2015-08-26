@@ -300,7 +300,28 @@ afprogram_dd_close_program(AFProgramDestDriver * const self)
       killpg(getpgid(self->pid), SIGTERM);
       self->pid = -1;
     }
+}
 
+static inline gboolean
+afprogram_dd_open_program(AFProgramDestDriver * const self, int * const fd)
+{
+  if (self->pid == -1)
+    {
+      msg_verbose("Starting destination program",
+                  evt_tag_str("cmdline", self->cmdline->str),
+                  NULL);
+
+      if (!afprogram_popen(self->cmdline->str, G_IO_OUT, &self->pid, fd))
+        {
+          return FALSE;
+        }
+
+      g_fd_set_nonblock(*fd, TRUE);
+    }
+
+  child_manager_register(self->pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify)log_pipe_unref);
+
+  return TRUE;
 }
 
 static gboolean
@@ -311,16 +332,11 @@ afprogram_dd_reopen(AFProgramDestDriver *self)
 
   afprogram_dd_close_program(self);
 
-  msg_verbose("Starting destination program",
-              evt_tag_str("cmdline", self->cmdline->str),
-              NULL);
+  if (!afprogram_dd_open_program(self, &fd))
+    {
+      return FALSE;
+    }
 
-  if (!afprogram_popen(self->cmdline->str, G_IO_OUT, &self->pid, &fd))
-    return FALSE;
-
-  child_manager_register(self->pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify) log_pipe_unref);
-
-  g_fd_set_nonblock(fd, TRUE);
   if (!self->proto_factory)
     {
       self->proto_factory = log_proto_get_factory(log_pipe_get_config((LogPipe *)self),LPT_CLIENT,"stream-newline");
