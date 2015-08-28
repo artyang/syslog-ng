@@ -298,6 +298,7 @@ afprogram_dd_reopen(AFProgramDestDriver *self)
                   evt_tag_str("cmdline", self->cmdline->str),
                   evt_tag_int("child_pid", self->pid),
                   NULL);
+      child_manager_unregister(self->pid);
       kill(self->pid, SIGTERM);
       self->pid = -1;
     }
