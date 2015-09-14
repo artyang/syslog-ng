@@ -44,6 +44,12 @@ static inline void
 afprogram_reload_info_free(AFProgramReloadInfo * const reload_info)
 {
   child_manager_unregister(reload_info->pid);
+
+  if (reload_info->pid != -1)
+    {
+      kill(reload_info->pid, SIGTERM);
+    }
+
   reload_info->pid = -1;
   log_pipe_unref(reload_info->writer);
   g_free(reload_info);
