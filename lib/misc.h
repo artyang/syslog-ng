@@ -178,3 +178,5 @@ gchar *get_pid_string();
 #endif
 
 gboolean f_is_file_regular(gint fd);
+
+gboolean pwrite_s(gint fd, const void *buf, size_t count, off_t offset);

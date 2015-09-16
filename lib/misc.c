@@ -1010,3 +1010,23 @@ f_is_file_regular(gint fd)
 
   return FALSE;
 }
+
+gboolean
+pwrite_s(gint fd, const void *buf, size_t count, off_t offset)
+{
+  ssize_t written = pwrite(fd, buf, count, offset);
+  gboolean result = TRUE;
+  if (written != count)
+    {
+      if (written != -1)
+        {
+          msg_error("Short written",
+                    evt_tag_int("Number of bytes want to write", count),
+                    evt_tag_int("Number of bytes written", written),
+                    NULL);
+          errno = ENOSPC;
+        }
+      result = FALSE;
+    }
+  return result;
+}
