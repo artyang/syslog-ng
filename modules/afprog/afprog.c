@@ -282,12 +282,23 @@ afprogram_sd_new(gchar *cmdline)
 static void afprogram_dd_exit(pid_t pid, int status, gpointer s);
 
 static gchar *
-afprogram_dd_format_persist_name(AFProgramDestDriver *self)
+afprogram_dd_format_queue_persist_name(AFProgramDestDriver *self)
 {
   static gchar persist_name[256];
 
   g_snprintf(persist_name, sizeof(persist_name),
              "afprogram_dd_qname(%s,%s)", self->cmdline->str, self->super.super.id);
+
+  return persist_name;
+}
+
+static gchar *
+afprogram_dd_format_persist_name(AFProgramDestDriver *self)
+{
+  static gchar persist_name[256];
+
+  g_snprintf(persist_name, sizeof(persist_name),
+             "afprogram_dd_name(%s,%s)", self->cmdline->str, self->super.super.id);
 
   return persist_name;
 }
@@ -412,7 +423,7 @@ afprogram_dd_init(LogPipe *s)
     self->writer = log_writer_new(LW_FORMAT_FILE);
 
   log_writer_set_options((LogWriter *) self->writer, s, &self->writer_options, 0, SCS_PROGRAM, self->super.super.id, self->cmdline->str, NULL);
-  log_writer_set_queue(self->writer, log_dest_driver_acquire_queue(&self->super, afprogram_dd_format_persist_name(self)));
+  log_writer_set_queue(self->writer, log_dest_driver_acquire_queue(&self->super, afprogram_dd_format_queue_persist_name(self)));
 
   if (!log_pipe_init(self->writer, NULL))
     {
