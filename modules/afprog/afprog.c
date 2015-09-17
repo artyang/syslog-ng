@@ -393,10 +393,33 @@ afprogram_dd_init(LogPipe *s)
   return restore_successful ? TRUE : afprogram_dd_reopen(self);
 }
 
+static inline void
+afprogram_dd_store_reload_info(AFProgramDestDriver * const self, GlobalConfig * const cfg)
+{
+  AFProgramReloadInfo * const reload_info = g_new0(AFProgramReloadInfo, 1);
+
+  if (self->keep_alive)
+    {
+      reload_info->writer = self->writer;
+    }
+
+  reload_info->pid = self->pid;
+
+  cfg_persist_config_add(cfg, afprogram_dd_format_persist_name(self), reload_info, afprogram_reload_info_free, FALSE);
+
+  self->writer = NULL;
+}
+
 static gboolean
 afprogram_dd_deinit(LogPipe *s)
 {
-  AFProgramDestDriver *self = (AFProgramDestDriver *) s;
+  AFProgramDestDriver * self = (AFProgramDestDriver *)s;
+  GlobalConfig *        cfg  = log_pipe_get_config(&self->super.super.super);
+
+  if (self->writer)
+    {
+      log_pipe_deinit(self->writer);
+    }
 
   if (self->pid != -1)
     {
@@ -409,9 +432,10 @@ afprogram_dd_deinit(LogPipe *s)
       self->pid = -1;
     }
 
+  afprogram_dd_store_reload_info(self, cfg);
+
   if (self->writer)
     {
-      log_pipe_deinit(self->writer);
       log_pipe_unref(self->writer);
       self->writer = NULL;
     }
