@@ -424,12 +424,16 @@ afprogram_dd_deinit(LogPipe *s)
   if (self->pid != -1)
     {
       child_manager_unregister(self->pid);
-      msg_verbose("Sending destination program a TERM signal",
-                  evt_tag_str("cmdline", self->cmdline->str),
-                  evt_tag_int("child_pid", self->pid),
-                  NULL);
-      killpg(getpgid(self->pid),SIGTERM);
-      self->pid = -1;
+
+      if (!self->keep_alive)
+        {
+          msg_verbose("Sending destination program a TERM signal",
+                      evt_tag_str("cmdline", self->cmdline->str),
+                      evt_tag_int("child_pid", self->pid),
+                      NULL);
+          killpg(getpgid(self->pid), SIGTERM);
+          self->pid = -1;
+        }
     }
 
   afprogram_dd_store_reload_info(self, cfg);
