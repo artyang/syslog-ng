@@ -297,7 +297,7 @@ afprogram_dd_close_program(AFProgramDestDriver * const self)
                   evt_tag_int("child_pid", self->pid),
                   NULL);
       child_manager_unregister(self->pid);
-      kill(self->pid, SIGTERM);
+      killpg(getpgid(self->pid), SIGTERM);
       self->pid = -1;
     }
 
