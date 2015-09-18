@@ -34,6 +34,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <signal.h>
 
 typedef struct _PersistFileHeader
 {
@@ -195,6 +196,22 @@ persist_state_get_allocated_size(PersistState *self, PersistEntryHandle handle)
 }
 
 static gboolean
+persist_state_increase_file_size(PersistState *self, guint32 new_size)
+{
+  ssize_t length = new_size - self->current_size;
+  gchar *pad_buffer = g_new0(gchar, length);
+  gboolean result = pwrite_s(self->fd, pad_buffer, length, self->current_size);
+  if (!result)
+    {
+      msg_error("Can't grow the persist file", evt_tag_int("old_size", self->current_size), evt_tag_int("new_size", new_size), evt_tag_errno("error", errno), NULL);
+    }
+  g_free(pad_buffer);
+  return result;
+}
+
+
+
+static gboolean
 persist_state_grow_store(PersistState *self, guint32 new_size)
 {
   int pgsize = getpagesize();
@@ -212,12 +229,9 @@ persist_state_grow_store(PersistState *self, guint32 new_size)
 
   if (new_size > self->current_size)
     {
-      gchar zero = 0;
+      if (!persist_state_increase_file_size(self, new_size))
+        goto exception;
 
-      if (lseek(self->fd, new_size - 1, SEEK_SET) < 0)
-        goto exit;
-      if (write(self->fd, &zero, 1) != 1)
-        goto exit;
       if (self->current_map)
         munmap(self->current_map, self->current_size);
       self->current_size = new_size;
@@ -225,13 +239,13 @@ persist_state_grow_store(PersistState *self, guint32 new_size)
       if (self->current_map == MAP_FAILED)
         {
           self->current_map = NULL;
-          goto exit;
+          goto exception;
         }
       self->header = (PersistFileHeader *) self->current_map;
       memcpy(&self->header->magic, "SLP4", 4);
     }
   result = TRUE;
-exit:
+exception:
   g_mutex_unlock(self->mapped_lock);
   return result;
 }
@@ -283,6 +297,7 @@ persist_state_commit_store(PersistState *self)
                 NULL);
       return FALSE;
     }
+
   result &= persist_state_grow_store(self, temp_size);
 #endif
   return result;
@@ -304,7 +319,10 @@ persist_state_alloc_value(PersistState *self, guint32 orig_size, gboolean in_use
   if (self->current_ofs + size + sizeof(PersistValueHeader) > self->current_size)
     {
       if (!persist_state_grow_store(self, self->current_size + sizeof(PersistValueHeader) + size))
-        return 0;
+        {
+          kill(getpid(), SIGQUIT);
+          g_assert_not_reached();
+        }
     }
 
   result = self->current_ofs + sizeof(PersistValueHeader);
