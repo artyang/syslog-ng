@@ -230,7 +230,7 @@ persist_state_grow_store(PersistState *self, guint32 new_size)
   if (new_size > self->current_size)
     {
       if (!persist_state_increase_file_size(self, new_size))
-        goto exception;
+        goto exit;
 
       if (self->current_map)
         munmap(self->current_map, self->current_size);
@@ -239,13 +239,13 @@ persist_state_grow_store(PersistState *self, guint32 new_size)
       if (self->current_map == MAP_FAILED)
         {
           self->current_map = NULL;
-          goto exception;
+          goto exit;
         }
       self->header = (PersistFileHeader *) self->current_map;
       memcpy(&self->header->magic, "SLP4", 4);
     }
   result = TRUE;
-exception:
+exit:
   g_mutex_unlock(self->mapped_lock);
   return result;
 }
