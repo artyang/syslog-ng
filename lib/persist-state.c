@@ -200,7 +200,7 @@ persist_state_increase_file_size(PersistState *self, guint32 new_size)
 {
   ssize_t length = new_size - self->current_size;
   gchar *pad_buffer = g_new0(gchar, length);
-  gboolean result = pwrite_s(self->fd, pad_buffer, length, self->current_size);
+  gboolean result = pwrite_strict(self->fd, pad_buffer, length, self->current_size);
   if (!result)
     {
       msg_error("Can't grow the persist file", evt_tag_int("old_size", self->current_size), evt_tag_int("new_size", new_size), evt_tag_errno("error", errno), NULL);
