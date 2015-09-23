@@ -45,6 +45,7 @@ typedef struct _AFProgramDestDriver
   GString *cmdline;
   LogPipe *writer;
   pid_t pid;
+  gboolean keep_alive;
   LogWriterOptions writer_options;
   LogProtoOptions proto_options;
   LogProtoFactory *proto_factory;

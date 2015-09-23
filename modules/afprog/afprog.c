@@ -34,6 +34,27 @@
 #include <unistd.h>
 #include <signal.h>
 
+typedef struct _AFProgramReloadInfo
+{
+  LogWriter * writer;
+  int pid;
+} AFProgramReloadInfo;
+
+static inline void
+afprogram_reload_info_free(AFProgramReloadInfo * const reload_info)
+{
+  child_manager_unregister(reload_info->pid);
+
+  if (reload_info->pid != -1)
+    {
+      kill(reload_info->pid, SIGTERM);
+    }
+
+  reload_info->pid = -1;
+  log_pipe_unref(reload_info->writer);
+  g_free(reload_info);
+}
+
 static gboolean
 afprogram_popen(const gchar *cmdline, GIOCondition cond, pid_t *pid, gint *fd)
 {
@@ -261,7 +282,7 @@ afprogram_sd_new(gchar *cmdline)
 static void afprogram_dd_exit(pid_t pid, int status, gpointer s);
 
 static gchar *
-afprogram_dd_format_persist_name(AFProgramDestDriver *self)
+afprogram_dd_format_queue_persist_name(AFProgramDestDriver *self)
 {
   static gchar persist_name[256];
 
@@ -271,11 +292,20 @@ afprogram_dd_format_persist_name(AFProgramDestDriver *self)
   return persist_name;
 }
 
-static gboolean
-afprogram_dd_reopen(AFProgramDestDriver *self)
+static gchar *
+afprogram_dd_format_persist_name(AFProgramDestDriver *self)
 {
-  int fd;
-  LogProto *proto = NULL;
+  static gchar persist_name[256];
+
+  g_snprintf(persist_name, sizeof(persist_name),
+             "afprogram_dd_name(%s,%s)", self->cmdline->str, self->super.super.id);
+
+  return persist_name;
+}
+
+static inline void
+afprogram_dd_close_program(AFProgramDestDriver * const self)
+{
 
   if (self->pid != -1)
     {
@@ -283,20 +313,47 @@ afprogram_dd_reopen(AFProgramDestDriver *self)
                   evt_tag_str("cmdline", self->cmdline->str),
                   evt_tag_int("child_pid", self->pid),
                   NULL);
-      kill(self->pid, SIGTERM);
+      child_manager_unregister(self->pid);
+      killpg(getpgid(self->pid), SIGTERM);
       self->pid = -1;
     }
+}
 
-  msg_verbose("Starting destination program",
-              evt_tag_str("cmdline", self->cmdline->str),
-              NULL);
+static inline gboolean
+afprogram_dd_open_program(AFProgramDestDriver * const self, int * const fd)
+{
+  if (self->pid == -1)
+    {
+      msg_verbose("Starting destination program",
+                  evt_tag_str("cmdline", self->cmdline->str),
+                  NULL);
 
-  if (!afprogram_popen(self->cmdline->str, G_IO_OUT, &self->pid, &fd))
-    return FALSE;
+      if (!afprogram_popen(self->cmdline->str, G_IO_OUT, &self->pid, fd))
+        {
+          return FALSE;
+        }
 
-  child_manager_register(self->pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify) log_pipe_unref);
+      g_fd_set_nonblock(*fd, TRUE);
+    }
 
-  g_fd_set_nonblock(fd, TRUE);
+  child_manager_register(self->pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify)log_pipe_unref);
+
+  return TRUE;
+}
+
+static gboolean
+afprogram_dd_reopen(AFProgramDestDriver *self)
+{
+  int fd;
+  LogProto *proto = NULL;
+
+  afprogram_dd_close_program(self);
+
+  if (!afprogram_dd_open_program(self, &fd))
+    {
+      return FALSE;
+    }
+
   if (!self->proto_factory)
     {
       self->proto_factory = log_proto_get_factory(log_pipe_get_config((LogPipe *)self),LPT_CLIENT,"stream-newline");
@@ -333,6 +390,23 @@ afprogram_dd_exit(pid_t pid, int status, gpointer s)
 }
 
 static gboolean
+afprogram_dd_restore_reload_info(AFProgramDestDriver * const self, GlobalConfig * const cfg)
+{
+  AFProgramReloadInfo * const restored_info = (AFProgramReloadInfo *)cfg_persist_config_fetch(cfg, afprogram_dd_format_persist_name(self));
+
+  if (restored_info)
+    {
+      self->pid    = restored_info->pid;
+      self->writer = restored_info->writer;
+
+      child_manager_register(self->pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify)log_pipe_unref);
+      g_free(restored_info);
+    }
+
+  return !!(self->writer);
+}
+
+static gboolean
 afprogram_dd_init(LogPipe *s)
 {
   AFProgramDestDriver *self = (AFProgramDestDriver *) s;
@@ -343,11 +417,13 @@ afprogram_dd_init(LogPipe *s)
 
   log_writer_options_init(&self->writer_options, cfg, 0);
 
+  const gboolean restore_successful = afprogram_dd_restore_reload_info(self, cfg);
+
   if (!self->writer)
     self->writer = log_writer_new(LW_FORMAT_FILE);
 
   log_writer_set_options((LogWriter *) self->writer, s, &self->writer_options, 0, SCS_PROGRAM, self->super.super.id, self->cmdline->str, NULL);
-  log_writer_set_queue(self->writer, log_dest_driver_acquire_queue(&self->super, afprogram_dd_format_persist_name(self)));
+  log_writer_set_queue(self->writer, log_dest_driver_acquire_queue(&self->super, afprogram_dd_format_queue_persist_name(self)));
 
   if (!log_pipe_init(self->writer, NULL))
     {
@@ -356,28 +432,53 @@ afprogram_dd_init(LogPipe *s)
     }
   log_pipe_append(&self->super.super.super, self->writer);
 
-  return afprogram_dd_reopen(self);
+  return restore_successful ? TRUE : afprogram_dd_reopen(self);
+}
+
+static inline void
+afprogram_dd_store_reload_info(AFProgramDestDriver * const self, GlobalConfig * const cfg)
+{
+  AFProgramReloadInfo * const reload_info = g_new0(AFProgramReloadInfo, 1);
+
+  if (self->keep_alive)
+    {
+      reload_info->writer = self->writer;
+    }
+
+  reload_info->pid = self->pid;
+
+  cfg_persist_config_add(cfg, afprogram_dd_format_persist_name(self), reload_info, afprogram_reload_info_free, FALSE);
+
+  self->writer = NULL;
 }
 
 static gboolean
 afprogram_dd_deinit(LogPipe *s)
 {
-  AFProgramDestDriver *self = (AFProgramDestDriver *) s;
-
-  if (self->pid != -1)
-    {
-      child_manager_unregister(self->pid);
-      msg_verbose("Sending destination program a TERM signal",
-                  evt_tag_str("cmdline", self->cmdline->str),
-                  evt_tag_int("child_pid", self->pid),
-                  NULL);
-      killpg(getpgid(self->pid),SIGTERM);
-      self->pid = -1;
-    }
+  AFProgramDestDriver * self = (AFProgramDestDriver *)s;
+  GlobalConfig *        cfg  = log_pipe_get_config(&self->super.super.super);
 
   if (self->writer)
     {
       log_pipe_deinit(self->writer);
+    }
+
+  if (self->pid != -1)
+    {
+      if (!self->keep_alive)
+        {
+          afprogram_dd_close_program(self);
+        }
+      else
+        {
+          child_manager_unregister(self->pid);
+        }
+    }
+
+  afprogram_dd_store_reload_info(self, cfg);
+
+  if (self->writer)
+    {
       log_pipe_unref(self->writer);
       self->writer = NULL;
     }
