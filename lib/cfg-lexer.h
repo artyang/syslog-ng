@@ -191,6 +191,7 @@ const gchar *cfg_lexer_lookup_context_name_by_type(gint id);
 gboolean cfg_args_validate(CfgArgs *self, CfgArgs *defs, const gchar *context);
 void cfg_args_set(CfgArgs *self, const gchar *name, const gchar *value);
 const gchar *cfg_args_get(CfgArgs *self, const gchar *name);
+void cfg_args_foreach(CfgArgs *self, GHFunc func, gpointer user_data);
 CfgArgs *cfg_args_new(void);
 void cfg_args_free(CfgArgs *self);
 
