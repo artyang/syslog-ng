@@ -105,12 +105,12 @@ void
 test_lexer_block()
 {
   TestParser *parser = test_parser_new(TEST_BLOCK, strlen(TEST_BLOCK));
-  _cfg_lexer_force_block_state(parser->lexer->state);
+  cfg_lexer_start_block_state(parser->lexer, "{}");
   assert_parser_block(parser, "'hello world' \"test value\" {other_block} other\text");
   test_parser_free(parser);
 
   parser = test_parser_new(TEST_BAD_BLOCK, strlen(TEST_BAD_BLOCK));
-  _cfg_lexer_force_block_state(parser->lexer->state);
+  cfg_lexer_start_block_state(parser->lexer, "{}");
   assert_parser_block_bad(parser);
   test_parser_free(parser);
 }
