@@ -131,6 +131,7 @@ struct _CfgLexer
   CfgIncludeLevel include_stack[MAX_INCLUDE_DEPTH];
   GList *context_stack;
   gint include_depth;
+  gchar block_boundary[2];
   gint brace_count;
   gint tokenize_eol;
   GList *token_blocks;
@@ -150,7 +151,7 @@ cfg_lexer_subst_args(CfgArgs *globals, CfgArgs *defs, CfgArgs *args, gchar *cptr
 /* pattern buffer */
 void cfg_lexer_unput_token(CfgLexer *self, YYSTYPE *yylval);
 
-void _cfg_lexer_force_block_state(gpointer state);
+void cfg_lexer_start_block_state(CfgLexer *self, gchar block_boundary[2]);
 
 void cfg_lexer_append_string(CfgLexer *self, int length, char *str);
 void cfg_lexer_append_char(CfgLexer *self, char c);
@@ -190,6 +191,7 @@ const gchar *cfg_lexer_lookup_context_name_by_type(gint id);
 gboolean cfg_args_validate(CfgArgs *self, CfgArgs *defs, const gchar *context);
 void cfg_args_set(CfgArgs *self, const gchar *name, const gchar *value);
 const gchar *cfg_args_get(CfgArgs *self, const gchar *name);
+void cfg_args_foreach(CfgArgs *self, GHFunc func, gpointer user_data);
 CfgArgs *cfg_args_new(void);
 void cfg_args_free(CfgArgs *self);
 
