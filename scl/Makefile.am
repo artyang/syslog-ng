@@ -1,4 +1,4 @@
-SCL_SUBDIRS = system pacct syslogconf snmp sql
+SCL_SUBDIRS = system pacct syslogconf snmp sql java-dests
 SCL_CONFIGS = scl.conf modules.conf syslog-ng.conf
 EXTRA_DIST = $(SCL_CONFIGS) $(SCL_SUBDIRS)
 
