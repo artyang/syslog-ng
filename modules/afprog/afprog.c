@@ -47,7 +47,7 @@ afprogram_reload_info_free(AFProgramReloadInfo * const reload_info)
 
   if (reload_info->pid != -1)
     {
-      kill(reload_info->pid, SIGTERM);
+      killpg(getpgid(reload_info->pid), SIGTERM);
     }
 
   reload_info->pid = -1;
