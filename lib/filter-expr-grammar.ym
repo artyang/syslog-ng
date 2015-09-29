@@ -36,6 +36,7 @@
 #include "filter-in-list.h"
 #include "plugin.h"
 #include "cfg-grammar.h"
+#include "filter-netmask6.h"
 
 FilterRE *last_re_filter;
 

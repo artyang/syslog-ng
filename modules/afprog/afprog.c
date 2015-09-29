@@ -36,7 +36,7 @@
 
 typedef struct _AFProgramReloadInfo
 {
-  LogWriter * writer;
+  LogPipe * writer;
   int pid;
 } AFProgramReloadInfo;
 
@@ -447,7 +447,7 @@ afprogram_dd_store_reload_info(AFProgramDestDriver * const self, GlobalConfig * 
 
   reload_info->pid = self->pid;
 
-  cfg_persist_config_add(cfg, afprogram_dd_format_persist_name(self), reload_info, afprogram_reload_info_free, FALSE);
+  cfg_persist_config_add(cfg, afprogram_dd_format_persist_name(self), reload_info, (GDestroyNotify)afprogram_reload_info_free, FALSE);
 
   self->writer = NULL;
 }
