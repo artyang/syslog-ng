@@ -59,7 +59,8 @@ check_PROGRAMS =			\
 	test_mainloop \
 	test_hostid \
 	test_uniqid \
-	test_log_message
+	test_log_message \
+	test_hashtree
 
 if IS_HPUX
 check_PROGRAMS += test_zone
@@ -152,5 +153,6 @@ test_mainloop_SOURCES = test_mainloop.c
 test_hostid_SOURCES = test_hostid.c
 test_uniqid_SOURCES = test_uniqid.c
 test_log_message_SOURCES = test_log_message.c
+test_hashtree_SOURCES = test_hashtree.c
 
 TESTS = $(check_PROGRAMS)
