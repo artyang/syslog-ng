@@ -310,6 +310,12 @@ _check_watermark(PersistState *self)
   return (self->current_ofs + PERSIST_FILE_WATERMARK < self->current_size);
 }
 
+static inline gboolean
+_check_free_space(PersistState *self, guint32 size)
+{
+  return (size + sizeof(PersistValueHeader) +  self->current_ofs) <= self->current_size;
+}
+
 /* "value" layer that handles memory block allocation in the file, without working with keys */
 
 static PersistEntryHandle
@@ -327,7 +333,7 @@ persist_state_alloc_value(PersistState *self, guint32 orig_size, gboolean in_use
    * The pre-allocated size should be enough (min PERSIST_FILE_WATERMARK)
    * if not we should assert here
    */
-  g_assert((size + sizeof(PersistValueHeader) +  self->current_ofs) <= self->current_size);
+  g_assert(_check_free_space(self, size));
 
   result = self->current_ofs + sizeof(PersistValueHeader);
 
