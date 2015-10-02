@@ -61,6 +61,7 @@ typedef struct _PersistFileHeader
 
 #define PERSIST_FILE_INITIAL_SIZE 16384
 #define PERSIST_STATE_KEY_BLOCK_SIZE 4096
+#define PERSIST_FILE_WATERMARK 4096
 
 /*
  * The syslog-ng persistent state is a set of name-value pairs,
@@ -303,6 +304,12 @@ persist_state_commit_store(PersistState *self)
   return result;
 }
 
+static gboolean
+_check_watermark(PersistState *self)
+{
+  return (self->current_ofs + PERSIST_FILE_WATERMARK < self->current_size);
+}
+
 /* "value" layer that handles memory block allocation in the file, without working with keys */
 
 static PersistEntryHandle
@@ -316,14 +323,11 @@ persist_state_alloc_value(PersistState *self, guint32 orig_size, gboolean in_use
   if ((size & 0x7))
     size = ((size >> 3) + 1) << 3;
 
-  if (self->current_ofs + size + sizeof(PersistValueHeader) > self->current_size)
-    {
-      if (!persist_state_grow_store(self, self->current_size + sizeof(PersistValueHeader) + size))
-        {
-          kill(getpid(), SIGQUIT);
-          g_assert_not_reached();
-        }
-    }
+  /*
+   * The pre-allocated size should be enough (min PERSIST_FILE_WATERMARK)
+   * if not we should assert here
+   */
+  g_assert((size + sizeof(PersistValueHeader) +  self->current_ofs) <= self->current_size);
 
   result = self->current_ofs + sizeof(PersistValueHeader);
 
@@ -335,6 +339,12 @@ persist_state_alloc_value(PersistState *self, guint32 orig_size, gboolean in_use
   persist_state_unmap_entry(self, self->current_ofs);
 
   self->current_ofs += size + sizeof(PersistValueHeader);
+
+  if (!_check_watermark(self) && !persist_state_grow_store(self, self->current_size + PERSIST_FILE_INITIAL_SIZE))
+    {
+      main_loop_terminate();
+    }
+
   return result;
 }
 
