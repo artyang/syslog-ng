@@ -118,7 +118,8 @@ pkginclude_HEADERS = 		\
   service-management.h \
   $(stats_headers) \
   pathutils.h \
-  $(template_headers)
+  $(template_headers) \
+	hashtree.h
 
 if !IS_WINDOWS
 pkginclude_HEADERS += gprocess.h
@@ -224,7 +225,8 @@ libsyslog_ng_la_SOURCES = \
 	$(libsyslog_ng_crypto_la_SOURCES) \
 	pathutils.c \
   $(stats_sources) \
-  $(template_sources)
+  $(template_sources) \
+	hashtree.c
 
 if !IS_WINDOWS
 libsyslog_ng_la_SOURCES += gprocess.c \
