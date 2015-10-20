@@ -210,7 +210,20 @@ persist_state_increase_file_size(PersistState *self, guint32 new_size)
   return result;
 }
 
+static gboolean
+persist_state_map_file(PersistState *self)
+{
+  self->current_map = mmap(NULL, self->current_size, PROT_READ | PROT_WRITE, MAP_SHARED, self->fd, 0);
+  if (self->current_map == MAP_FAILED)
+    {
+      self->current_map = NULL;
+      return FALSE;
+    }
 
+  self->header = (PersistFileHeader *) self->current_map;
+  memcpy(&self->header->magic, "SLP4", 4);
+  return TRUE;
+}
 
 static gboolean
 persist_state_grow_store(PersistState *self, guint32 new_size)
@@ -235,15 +248,9 @@ persist_state_grow_store(PersistState *self, guint32 new_size)
 
       if (self->current_map)
         munmap(self->current_map, self->current_size);
+
       self->current_size = new_size;
-      self->current_map = mmap(NULL, self->current_size, PROT_READ | PROT_WRITE, MAP_SHARED, self->fd, 0);
-      if (self->current_map == MAP_FAILED)
-        {
-          self->current_map = NULL;
-          goto exit;
-        }
-      self->header = (PersistFileHeader *) self->current_map;
-      memcpy(&self->header->magic, "SLP4", 4);
+      persist_state_map_file(self);
     }
   result = TRUE;
 exit:
@@ -291,7 +298,7 @@ persist_state_commit_store(PersistState *self)
   self->fd = open(self->commited_filename, O_RDWR, 0600);
   if (self->fd < 0)
     {
-      msg_error("Error creating persistent state file",
+      msg_error("Error opening persistent state file",
                 evt_tag_str("filename", self->commited_filename),
                 evt_tag_errno("error", errno),
                 evt_tag_id(MSG_CANT_CREATE_PERSIST_FILE),
@@ -299,7 +306,9 @@ persist_state_commit_store(PersistState *self)
       return FALSE;
     }
 
-  result &= persist_state_grow_store(self, temp_size);
+  self->current_size = temp_size;
+  result &= persist_state_map_file(self);
+
 #endif
   return result;
 }
