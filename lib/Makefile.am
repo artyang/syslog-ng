@@ -119,7 +119,11 @@ pkginclude_HEADERS = 		\
   $(stats_headers) \
   pathutils.h \
   $(template_headers) \
-	hashtree.h
+	hashtree.h \
+	hds.h \
+	property.h \
+	property_container.h \
+	nv_property_container.h
 
 if !IS_WINDOWS
 pkginclude_HEADERS += gprocess.h
@@ -226,7 +230,9 @@ libsyslog_ng_la_SOURCES = \
 	pathutils.c \
   $(stats_sources) \
   $(template_sources) \
-	hashtree.c
+	hashtree.c \
+	hds.c \
+	nv_property_container.c
 
 if !IS_WINDOWS
 libsyslog_ng_la_SOURCES += gprocess.c \
