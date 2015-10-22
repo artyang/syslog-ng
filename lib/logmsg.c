@@ -1101,8 +1101,7 @@ log_msg_new_empty(void)
   return self;
 }
 
-
-void
+static void
 log_msg_clone_ack(LogMessage *msg, AckType ack_type)
 {
   LogPathOptions path_options = LOG_PATH_OPTIONS_INIT;
@@ -1150,7 +1149,7 @@ log_msg_clone_cow(LogMessage *msg, const LogPathOptions *path_options)
     }
   else
     {
-      self->ack_func = (LMAckFunc) log_msg_clone_ack;
+      self->ack_func = log_msg_clone_ack;
     }
 
   self->flags &= ~LF_STATE_MASK;

@@ -852,7 +852,7 @@ log_writer_queue(LogPipe *s, LogMessage *lm, const LogPathOptions *path_options,
 
 
   if (!path_options->flow_control_requested &&
-      (self->suspended || !(self->flags & LW_SOFT_FLOW_CONTROL)))
+      ((self->proto == NULL || self->suspended) || !(self->flags & LW_SOFT_FLOW_CONTROL)))
     {
       /* NOTE: this code ACKs the message back if there's a write error in
        * order not to hang the client in case of a disk full */
