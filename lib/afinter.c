@@ -292,9 +292,7 @@ afinter_source_init(LogPipe *s)
   current_internal_source = self;
   g_static_mutex_unlock(&internal_msg_lock);
 
-  stats_lock();
   stats_register_counter(0, SCS_INTERNAL | SCS_SOURCE, self->owner->super.super.id, NULL, SC_TYPE_DROPPED, &self->dropped_messages);
-  stats_unlock();
 
   return TRUE;
 }
@@ -315,9 +313,7 @@ afinter_source_deinit(LogPipe *s)
   iv_event_unregister(&self->schedule_wakeup);
 
   afinter_source_stop_watches(self);
-  stats_lock();
   stats_unregister_counter(SCS_INTERNAL | SCS_SOURCE, self->owner->super.super.id, NULL, SC_TYPE_DROPPED, &self->dropped_messages);
-  stats_unlock();
   return log_source_deinit(s);
 }
 

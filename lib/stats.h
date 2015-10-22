@@ -28,6 +28,8 @@
 #include "syslog-ng.h"
 #include "cfg.h"
 #include "mainloop.h"
+#include "property_container.h"
+#include "hds.h"
 
 GHashTable *counter_hash;
 
@@ -82,11 +84,13 @@ enum
 
 typedef struct _StatsCounterItem
 {
+  Property super;
   gint value;
 } StatsCounterItem;
 
 typedef struct _StatsCounter
 {
+  PropertyContainer super;
   StatsCounterItem counters[SC_TYPE_MAX];
   guint16 ref_cnt;
   guint16 source;
@@ -97,8 +101,6 @@ typedef struct _StatsCounter
 } StatsCounter;
 
 extern gint current_stats_level;
-extern GStaticMutex stats_mutex;
-extern gboolean stats_locked;
 
 void stats_generate_log(void);
 gchar *stats_generate_csv(void);
@@ -122,20 +124,6 @@ static inline gboolean
 stats_check_level(gint level)
 {
   return (current_stats_level >= level);
-}
-
-static inline void
-stats_lock(void)
-{
-  g_static_mutex_lock(&stats_mutex);
-  stats_locked = TRUE;
-}
-
-static inline void
-stats_unlock(void)
-{
-  stats_locked = FALSE;
-  g_static_mutex_unlock(&stats_mutex);
 }
 
 static inline void

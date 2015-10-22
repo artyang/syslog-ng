@@ -51,12 +51,10 @@ log_source_group_init(LogPipe *s)
                     evt_tag_str("id", p->id),
                     NULL);
           goto deinit_all;
-	}
+        }
       log_pipe_append(&p->super, s);
     }
-  stats_lock();
   stats_register_counter(0, SCS_SOURCE | SCS_GROUP, self->name, NULL, SC_TYPE_PROCESSED, &self->processed_messages);
-  stats_unlock();
   return TRUE;
   
  deinit_all:
@@ -83,9 +81,7 @@ log_source_group_deinit(LogPipe *s)
           success = FALSE;
 	      }
     }
-  stats_lock();
   stats_unregister_counter(SCS_SOURCE | SCS_GROUP, self->name, NULL, SC_TYPE_PROCESSED, &self->processed_messages);
-  stats_unlock();
   return success;
 }
 

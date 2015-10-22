@@ -146,4 +146,5 @@ main(int arc, gchar **argv)
   test_query_keys();
   test_query_nodes();
   hds_destroy();
+  return 0;
 }

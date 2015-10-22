@@ -170,9 +170,7 @@ test_stats()
   StatsCounterItem *counter = NULL;
 
   stats_init();
-  stats_lock();
   stats_register_counter(0, SCS_CENTER, "id", "received", SC_TYPE_PROCESSED, &counter);
-  stats_unlock();
 
   assert_true(control_client_connect(control_client),"Can't connect to the control server");
 
