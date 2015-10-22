@@ -1179,6 +1179,7 @@ log_reader_new(LogProto *proto)
   self->pollable_state = -1;
   self->wait_for_prefix = FALSE;
   self->flush = FALSE;
+  self->force_read = FALSE;
 
   log_reader_set_proto(self, proto);
 
