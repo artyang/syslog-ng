@@ -2,6 +2,7 @@
 #include "testutils.h"
 
 #include "control.c"
+#include "hds.h"
 
 void
 test_log()
@@ -67,9 +68,7 @@ test_stats()
   StatsCounterItem *counter = NULL;
 
   stats_init();
-  stats_lock();
   stats_register_counter(0, SCS_CENTER, "id", "received", SC_TYPE_PROCESSED, &counter);
-  stats_unlock();
 
   g_string_assign(command,"STATS");
 
@@ -78,6 +77,7 @@ test_stats()
   g_string_free(reply, TRUE);
 
   stats_destroy();
+  hds_destroy();
   g_string_free(command, TRUE);
   return;
 }
@@ -90,10 +90,8 @@ test_reset_stats()
   StatsCounterItem *counter = NULL;
 
   stats_init();
-  stats_lock();
   stats_register_counter(0, SCS_CENTER, "id", "received", SC_TYPE_PROCESSED, &counter);
   stats_counter_set(counter, 666);
-  stats_unlock();
 
   g_string_assign(command, "RESET_STATS");
   reply = control_connection_reset_stats(command);
@@ -106,6 +104,7 @@ test_reset_stats()
   g_string_free(reply, TRUE);
 
   stats_destroy();
+  hds_destroy();
   g_string_free(command, TRUE);
   return;
 }

@@ -83,9 +83,9 @@ log_tags_get_by_name(const gchar *name)
           log_tags_list[id].name = g_strdup(name);
           log_tags_list[id].counter = NULL;
 
-          stats_lock();
+
           stats_register_counter(3, SCS_TAG, name, NULL, SC_TYPE_PROCESSED, &log_tags_list[id].counter);
-          stats_unlock();
+
           g_hash_table_insert(log_tags_hash, log_tags_list[id].name, GUINT_TO_POINTER(log_tags_list[id].id + 1));
         }
       else
@@ -174,13 +174,11 @@ log_tags_deinit(void)
 
   g_hash_table_destroy(log_tags_hash);
 
-  stats_lock();
   for (i = 0; i < log_tags_num; i++)
     {
       stats_unregister_counter(SCS_TAG, log_tags_list[i].name, NULL, SC_TYPE_PROCESSED, &log_tags_list[i].counter);
       g_free(log_tags_list[i].name);
     }
-  stats_unlock();
 
   log_tags_num = 0;
   g_free(log_tags_list);

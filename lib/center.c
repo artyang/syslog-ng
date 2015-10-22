@@ -541,10 +541,9 @@ log_center_reinit(LogCenter *self, GlobalConfig *cfg)
           return FALSE;
         }
     }
-  stats_lock();
+
   stats_register_counter(0, SCS_CENTER, NULL, "received", SC_TYPE_PROCESSED, &self->received_messages);
   stats_register_counter(0, SCS_CENTER, NULL, "queued", SC_TYPE_PROCESSED, &self->queued_messages);
-  stats_unlock();
   
   self->state = LC_STATE_WORKING;
   return TRUE;
@@ -584,10 +583,8 @@ log_center_deinit(LogCenter *self)
         success = FALSE;
     }
   
-  stats_lock();
   stats_unregister_counter(SCS_CENTER, NULL, "received", SC_TYPE_PROCESSED, &self->received_messages);
   stats_unregister_counter(SCS_CENTER, NULL, "queued", SC_TYPE_PROCESSED, &self->queued_messages);
-  stats_unlock();
   return success;
 }
 

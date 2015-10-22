@@ -21,6 +21,7 @@
  */
 
 #include "stats.h"
+#include "hds.h"
 
 static void
 _reset_counters(gpointer key, gpointer value, gpointer user_data)
@@ -40,8 +41,8 @@ _reset_counters(gpointer key, gpointer value, gpointer user_data)
 void
 stats_reset_counters(GHashTable *counter_hash)
 {
-  stats_lock();
+  hds_lock();
   g_hash_table_foreach(counter_hash, _reset_counters, NULL);
-  stats_unlock();
+  hds_unlock();
 }
 

@@ -41,6 +41,7 @@
 #include "scratch-buffers.h"
 #include "mainloop-call.h"
 #include "service-management.h"
+#include "hds.h"
 
 #include <iv.h>
 #include <iv_work.h>
@@ -126,6 +127,7 @@ app_startup(void)
   iv_set_fatal_msg_handler(app_fatal);
   iv_init();
   g_thread_init(NULL);
+  hds_init();
   afinter_global_init();
   child_manager_init();
   alarm_init();
@@ -167,6 +169,7 @@ app_shutdown(void)
   g_list_foreach(application_hooks, (GFunc) g_free, NULL);
   g_list_free(application_hooks);
   msg_deinit();
+  hds_destroy();
   iv_deinit();
 #ifdef _WIN32
   WSACleanup();

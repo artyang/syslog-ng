@@ -130,9 +130,7 @@ log_src_driver_init_method(LogPipe *s)
   if (!log_driver_init_method(s))
     return FALSE;
 
-  stats_lock();
   stats_register_counter(0, SCS_CENTER, NULL, "received", SC_TYPE_PROCESSED, &self->received_global_messages);
-  stats_unlock();
 
   return TRUE;
 }
@@ -145,9 +143,7 @@ log_src_driver_deinit_method(LogPipe *s)
   if (!log_driver_deinit_method(s))
     return FALSE;
 
-  stats_lock();
   stats_unregister_counter(SCS_CENTER, NULL, "received", SC_TYPE_PROCESSED, &self->received_global_messages);
-  stats_unlock();
   return TRUE;
 }
 
@@ -256,9 +252,7 @@ log_dest_driver_init_method(LogPipe *s)
   if (!log_driver_init_method(s))
     return FALSE;
 
-  stats_lock();
   stats_register_counter(0, SCS_CENTER, NULL, "queued", SC_TYPE_PROCESSED, &self->queued_global_messages);
-  stats_unlock();
 
   return TRUE;
 }
@@ -277,9 +271,7 @@ log_dest_driver_deinit_method(LogPipe *s)
     }
   g_assert(self->queues == NULL);
 
-  stats_lock();
   stats_unregister_counter(SCS_CENTER, NULL, "queued", SC_TYPE_PROCESSED, &self->queued_global_messages);
-  stats_unlock();
 
   if (!log_driver_deinit_method(s))
     return FALSE;
