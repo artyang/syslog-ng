@@ -125,6 +125,7 @@ parse_log_message(gchar *raw_message_str, gint parse_flags, gchar *bad_hostname_
     }
 
   simulate_log_readers_effect_on_timezone_offset(message);
+  g_sockaddr_unref(addr);
   return message;
 }
 

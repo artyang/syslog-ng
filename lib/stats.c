@@ -185,14 +185,14 @@ __add_child_name(GString *string, const gchar *name)
 }
 
 static gchar *
-__build_hds_path(StatsCounter *sc)
+__build_hds_path(gint source, const gchar *id, const gchar *instance)
 {
   GString *result = g_string_sized_new(256);
 
-  __add_child_name(result, (sc->source & SCS_SOURCE ? "source" : (sc->source & SCS_DESTINATION ? "destination" : "")));
-  __add_child_name(result, ((sc->source & SCS_SOURCE_MASK) == SCS_GROUP) ? "" : source_names[sc->source & SCS_SOURCE_MASK]);
-  __add_child_name(result, sc->id);
-  __add_child_name(result, sc->instance);
+  __add_child_name(result, (source & SCS_SOURCE ? "source" : (source & SCS_DESTINATION ? "destination" : "")));
+  __add_child_name(result, ((source & SCS_SOURCE_MASK) == SCS_GROUP) ? "" : source_names[source & SCS_SOURCE_MASK]);
+  __add_child_name(result, id);
+  __add_child_name(result, instance);
   __add_child_name(result, "stats");
 
   return g_string_free(result, FALSE);
@@ -280,13 +280,27 @@ stats_counter_new(gpointer owner)
   return &self->super;
 }
 
+static StatsCounter*
+__create_stats_counter(gint source, const gchar *id, const gchar *instance)
+{
+  gchar *hds_name;
+  HDSHandle handle;
+  StatsCounter *new_sc;
+
+  hds_name = __build_hds_path(source, id, instance);
+  handle = hds_register_handle(hds_name);
+  new_sc = (StatsCounter *)hds_acquire_property_container(handle, stats_counter_new);
+
+  g_free(hds_name);
+
+  return new_sc;
+}
+
 static StatsCounter *
 stats_add_counter(gint stats_level, gint source, const gchar *id, const gchar *instance, gboolean *new)
 {
   StatsCounter key;
   StatsCounter *sc;
-  gchar *hds_name;
-  HDSHandle handle;
 
   if (!stats_check_level(stats_level))
     return NULL;
@@ -294,12 +308,10 @@ stats_add_counter(gint stats_level, gint source, const gchar *id, const gchar *i
   stats_counter_init_instance(&key, source, id, instance);
 
   sc = g_hash_table_lookup(counter_hash, &key);
-  hds_name = __build_hds_path(&key);
-  handle = hds_register_handle(hds_name);
 
   if (!sc)
     {
-      sc = (StatsCounter *)hds_acquire_property_container(handle, stats_counter_new);
+      sc = __create_stats_counter(source, id ? id : "", instance ? instance : "");
       stats_counter_init_instance(sc, source, g_strdup(id ? id : ""), g_strdup(instance ? instance : ""));
       g_hash_table_insert(counter_hash, sc, sc);
       *new = TRUE;
@@ -314,7 +326,6 @@ stats_add_counter(gint stats_level, gint source, const gchar *id, const gchar *i
 
       sc->ref_cnt++;
     }
-  g_free(hds_name);
   return sc;
 }
 
