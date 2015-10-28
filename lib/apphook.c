@@ -181,6 +181,7 @@ app_thread_start(void)
 {
   scratch_buffers_init();
   dns_cache_tls_init();
+  hds_thread_init();
   main_loop_call_thread_init();
 }
 
@@ -189,5 +190,6 @@ app_thread_stop(void)
 {
   dns_cache_tls_deinit();
   scratch_buffers_free();
+  hds_thread_deinit();
   main_loop_call_thread_deinit();
 }

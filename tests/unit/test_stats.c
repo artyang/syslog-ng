@@ -201,13 +201,13 @@ test_hds_extension()
 
   stats_register_counter(1, SCS_TCP | SCS_SOURCE, "s_tcp#0", "127.0.0.1", SC_TYPE_PROCESSED, &static_counter);
   stats_counter_init_instance(&test_key, SCS_TCP | SCS_SOURCE, "s_tcp#0", "127.0.0.1");
-  gchar *key_hds = __build_hds_path(SCS_TCP | SCS_SOURCE, "s_tcp#0", "127.0.0.1");
+  const gchar *key_hds = __build_hds_path(SCS_TCP | SCS_SOURCE, "s_tcp#0", "127.0.0.1");
   handle = hds_get_handle(key_hds);
   assert_not_null(handle, NULL);
   sc_hds = (StatsCounter *)hds_acquire_property_container(handle, NULL);
   assert_not_null(sc_hds, NULL);
   assert_gpointer(&sc_hds->counters[SC_TYPE_PROCESSED], static_counter, NULL);
-  g_free(key_hds);
+
   clean_test();
 }
 

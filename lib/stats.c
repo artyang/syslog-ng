@@ -184,10 +184,12 @@ __add_child_name(GString *string, const gchar *name)
   g_string_append(string, name);
 }
 
-static gchar *
+static const gchar *
 __build_hds_path(gint source, const gchar *id, const gchar *instance)
 {
-  GString *result = g_string_sized_new(256);
+  GString *result = hds_get_tls_buffer();
+
+  g_string_truncate(result, 0);
 
   __add_child_name(result, (source & SCS_SOURCE ? "source" : (source & SCS_DESTINATION ? "destination" : "")));
   __add_child_name(result, ((source & SCS_SOURCE_MASK) == SCS_GROUP) ? "" : source_names[source & SCS_SOURCE_MASK]);
@@ -195,7 +197,7 @@ __build_hds_path(gint source, const gchar *id, const gchar *instance)
   __add_child_name(result, instance);
   __add_child_name(result, "stats");
 
-  return g_string_free(result, FALSE);
+  return result->str;
 }
 
 static const gchar *
@@ -283,15 +285,13 @@ stats_counter_new(gpointer owner)
 static StatsCounter*
 __create_stats_counter(gint source, const gchar *id, const gchar *instance)
 {
-  gchar *hds_name;
+  const gchar *hds_name;
   HDSHandle handle;
   StatsCounter *new_sc;
 
   hds_name = __build_hds_path(source, id, instance);
   handle = hds_register_handle(hds_name);
   new_sc = (StatsCounter *)hds_acquire_property_container(handle, stats_counter_new);
-
-  g_free(hds_name);
 
   return new_sc;
 }

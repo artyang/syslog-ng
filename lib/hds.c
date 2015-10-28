@@ -26,8 +26,34 @@
 #include "hashtree.h"
 #include "property_container.h"
 #include "nv_property_container.h"
+#include "tls-support.h"
 
 #define ROOT_NAME "syslog-ng"
+
+TLS_BLOCK_START
+{
+  GString *buffer;
+}
+TLS_BLOCK_END;
+
+#define buffer __tls_deref(buffer)
+
+void
+hds_thread_init()
+{
+  buffer = g_string_sized_new(4096);
+}
+
+void hds_thread_deinit()
+{
+  g_string_free(buffer, TRUE);
+}
+
+GString *
+hds_get_tls_buffer()
+{
+  return buffer;
+}
 
 typedef struct _HDS HDS;
 
@@ -64,11 +90,15 @@ hds_free(HDS *self)
 void hds_init()
 {
   if (global_hds == NULL)
-    global_hds = hds_new();
+    {
+      global_hds = hds_new();
+      hds_thread_init();
+    }
 }
 
 void hds_destroy()
 {
+  hds_thread_deinit();
   if (global_hds)
     {
       hds_free(global_hds);

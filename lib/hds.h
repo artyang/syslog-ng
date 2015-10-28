@@ -53,5 +53,10 @@ gpointer hds_query_properties(const gchar *pattern, PROP_MATCH on_match, gpointe
 void hds_lock();
 void hds_unlock();
 
+void hds_thread_init();
+void hds_thread_deinit();
+
+GString *hds_get_tls_buffer();
+
 
 #endif
