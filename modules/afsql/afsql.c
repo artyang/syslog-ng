@@ -1308,8 +1308,10 @@ afsql_dd_init(LogPipe *s)
                 NULL);
       return FALSE;
     }
+  stats_lock();
   stats_register_counter(0, SCS_SQL | SCS_DESTINATION, self->super.super.id, afsql_dd_format_stats_instance(self), SC_TYPE_STORED, &self->stored_messages);
   stats_register_counter(0, SCS_SQL | SCS_DESTINATION, self->super.super.id, afsql_dd_format_stats_instance(self), SC_TYPE_DROPPED, &self->dropped_messages);
+  stats_unlock();
 
   self->seq_num = GPOINTER_TO_INT(cfg_persist_config_fetch(cfg, afsql_dd_format_persist_sequence_number(self)));
   if (!self->seq_num)
@@ -1432,8 +1434,10 @@ afsql_dd_init(LogPipe *s)
 
  error:
 
+  stats_lock();
   stats_unregister_counter(SCS_SQL | SCS_DESTINATION, self->super.super.id, afsql_dd_format_stats_instance(self), SC_TYPE_STORED, &self->stored_messages);
   stats_unregister_counter(SCS_SQL | SCS_DESTINATION, self->super.super.id, afsql_dd_format_stats_instance(self), SC_TYPE_DROPPED, &self->dropped_messages);
+  stats_unlock();
 
   return FALSE;
 }
@@ -1449,8 +1453,10 @@ afsql_dd_deinit(LogPipe *s)
   log_queue_set_counters(self->queue, NULL, NULL);
   cfg_persist_config_add(log_pipe_get_config(s), afsql_dd_format_persist_sequence_number(self), GINT_TO_POINTER(self->seq_num), NULL, FALSE);
 
+  stats_lock();
   stats_unregister_counter(SCS_SQL | SCS_DESTINATION, self->super.super.id, afsql_dd_format_stats_instance(self), SC_TYPE_STORED, &self->stored_messages);
   stats_unregister_counter(SCS_SQL | SCS_DESTINATION, self->super.super.id, afsql_dd_format_stats_instance(self), SC_TYPE_DROPPED, &self->dropped_messages);
+  stats_unlock();
   if (!log_dest_driver_deinit_method(s))
     return FALSE;
 

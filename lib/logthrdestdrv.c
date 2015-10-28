@@ -339,6 +339,7 @@ log_threaded_dest_driver_start(LogPipe *s)
       self->retries.max = MAX_RETRIES_OF_FAILED_INSERT_DEFAULT;
     }
 
+  stats_lock();
   stats_register_counter(0, self->stats_source | SCS_DESTINATION, self->super.super.id,
                          self->format.stats_instance(self),
                          SC_TYPE_STORED, &self->stored_messages);
@@ -348,6 +349,7 @@ log_threaded_dest_driver_start(LogPipe *s)
   stats_register_counter(0, self->stats_source | SCS_DESTINATION, self->super.super.id,
                          self->format.stats_instance(self),
                          SC_TYPE_PROCESSED, &self->processed_messages);
+  stats_unlock();
 
   log_queue_set_counters(self->queue, self->stored_messages,
                          self->dropped_messages);
@@ -374,6 +376,7 @@ log_threaded_dest_driver_deinit_method(LogPipe *s)
                          log_threaded_dest_driver_format_seqnum_for_persist(self),
                          GINT_TO_POINTER(self->seq_num), NULL, FALSE);
 
+  stats_lock();
   stats_unregister_counter(self->stats_source | SCS_DESTINATION, self->super.super.id,
                            self->format.stats_instance(self),
                            SC_TYPE_STORED, &self->stored_messages);
@@ -383,6 +386,7 @@ log_threaded_dest_driver_deinit_method(LogPipe *s)
   stats_unregister_counter(self->stats_source | SCS_DESTINATION, self->super.super.id,
                            self->format.stats_instance(self),
                            SC_TYPE_PROCESSED, &self->processed_messages);
+  stats_unlock();
 
   if (!log_dest_driver_deinit_method(s))
     return FALSE;

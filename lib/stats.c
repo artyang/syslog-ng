@@ -353,8 +353,6 @@ stats_register_counter(gint stats_level, gint source, const gchar *id, const gch
 
   g_assert(type < SC_TYPE_MAX);
   
-  hds_lock();
-
   *counter = NULL;
   sc = stats_add_counter(stats_level, source, id, instance, &new);
   if (!sc)
@@ -363,7 +361,7 @@ stats_register_counter(gint stats_level, gint source, const gchar *id, const gch
   *counter = &sc->counters[type];
   sc->live_mask |= 1 << type;
 exit:
-  hds_unlock();
+  return;
 }
 
 StatsCounter *
@@ -374,7 +372,6 @@ stats_register_dynamic_counter(gint stats_level, gint source, const gchar *id, c
 
   g_assert(type < SC_TYPE_MAX);
   
-  hds_lock();
   *counter = NULL;
   *new = FALSE;
   sc = stats_add_counter(stats_level, source, id, instance, &local_new);
@@ -390,7 +387,6 @@ stats_register_dynamic_counter(gint stats_level, gint source, const gchar *id, c
   *counter = &sc->counters[type];
   sc->live_mask |= 1 << type;
 exit:
-  hds_unlock();
   return sc;
 }
 
@@ -435,12 +431,10 @@ stats_register_associated_counter(StatsCounter *sc, StatsCounterType type, Stats
   if (!sc)
     return;
 
-  hds_lock();
   g_assert(sc->dynamic);
 
   *counter = &sc->counters[type];
   sc->live_mask |= 1 << type;
-  hds_unlock();
 }
 
 void
@@ -454,15 +448,12 @@ stats_unregister_counter(gint source, const gchar *id, const gchar *instance, St
 
   stats_counter_init_instance(&key, source, id, instance);
 
-  hds_lock();
-
   sc = g_hash_table_lookup(counter_hash, &key);
 
   g_assert(sc && (sc->live_mask & (1 << type)) && &sc->counters[type] == (*counter));
   
   *counter = NULL;
   sc->ref_cnt--;
-  hds_unlock();
 }
 
 void
@@ -470,10 +461,8 @@ stats_unregister_dynamic_counter(StatsCounter *sc, StatsCounterType type, StatsC
 {
   if (!sc)
     return;
-  hds_lock();
   g_assert(sc && (sc->live_mask & (1 << type)) && &sc->counters[type] == (*counter));
   sc->ref_cnt--;
-  hds_unlock();
 }
 
 static gboolean
@@ -678,9 +667,7 @@ stats_generate_csv(void)
 void
 stats_set_stats_level(gint stats_level)
 {
-  hds_lock();
   current_stats_level = stats_level;
-  hds_unlock();
   return;
 }
 
@@ -689,7 +676,7 @@ stats_reinit(GlobalConfig *cfg)
 {
   gint i;
   gchar name[11] = "";
-
+  stats_lock();
   if (stats_check_level(3))
     {
       /* we need these counters, register them */
@@ -722,6 +709,7 @@ stats_reinit(GlobalConfig *cfg)
         }
       stats_unregister_counter(SCS_FACILITY | SCS_SOURCE, NULL, "other", SC_TYPE_PROCESSED, &facility_counters[FACILITY_MAX - 1]);
     }
+  stats_unlock();
 }
 
 typedef struct _GlobalStatsProperty {

@@ -128,6 +128,18 @@ stats_check_level(gint level)
 }
 
 static inline void
+stats_lock()
+{
+  hds_lock();
+}
+
+static inline void
+stats_unlock()
+{
+  hds_unlock();
+}
+
+static inline void
 stats_counter_add(StatsCounterItem *counter, gint add)
 {
   if (counter)

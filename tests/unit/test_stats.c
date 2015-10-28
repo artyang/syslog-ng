@@ -39,7 +39,6 @@ static inline void
 clean_test()
 {
   stats_destroy();
-  hds_destroy();
 }
 
 void

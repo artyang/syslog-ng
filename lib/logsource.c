@@ -204,8 +204,10 @@ log_source_init(LogPipe *s)
 {
   LogSource *self = (LogSource *) s;
 
+  stats_lock();
   stats_register_counter(self->stats_level, self->stats_source | SCS_SOURCE, self->stats_id, self->stats_instance, SC_TYPE_PROCESSED, &self->recvd_messages);
   stats_register_counter(self->stats_level, self->stats_source | SCS_SOURCE, self->stats_id, self->stats_instance, SC_TYPE_STAMP, &self->last_message_seen);
+  stats_unlock();
 
   return TRUE;
 }
@@ -215,8 +217,10 @@ log_source_deinit(LogPipe *s)
 {
   LogSource *self = (LogSource *) s;
   
+  stats_lock();
   stats_unregister_counter(self->stats_source | SCS_SOURCE, self->stats_id, self->stats_instance, SC_TYPE_PROCESSED, &self->recvd_messages);
   stats_unregister_counter(self->stats_source | SCS_SOURCE, self->stats_id, self->stats_instance, SC_TYPE_STAMP, &self->last_message_seen);
+  stats_unlock();
 
   return TRUE;
 }
@@ -297,6 +301,7 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
   /* stats counters */
   if (stats_check_level(2))
     {
+      stats_lock();
 
       handle = stats_register_dynamic_counter(2, SCS_HOST | SCS_SOURCE, NULL, log_msg_get_value(msg, LM_V_HOST, NULL), SC_TYPE_PROCESSED, &processed_counter, &new);
       stats_register_associated_counter(handle, SC_TYPE_STAMP, &stamp);
@@ -314,6 +319,7 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
           stats_instant_inc_dynamic_counter(3, SCS_SENDER | SCS_SOURCE, self->options->group_name, log_msg_get_value(msg, LM_V_HOST_FROM, NULL), msg->timestamps[LM_TS_RECVD].tv_sec);
         }
 
+      stats_unlock();
     }
   stats_counter_inc_pri(msg->pri);
 
