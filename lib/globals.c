@@ -58,6 +58,7 @@ INITIALIZER(init_paths)
         *pIdx = '\0';
       }
   SetEnvironmentVariable("SYSLOGNG_PREFIX", currDirectory);
+  _putenv("G_SLICE=always-malloc");
 #endif
   path_prefix = get_reloc_string(PATH_PREFIX);
   path_datadir = get_reloc_string(PATH_DATADIR);

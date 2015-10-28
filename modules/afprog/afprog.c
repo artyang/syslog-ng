@@ -309,12 +309,15 @@ afprogram_dd_close_program(AFProgramDestDriver * const self)
 
   if (self->pid != -1)
     {
+      pid_t pgid;
       msg_verbose("Sending destination program a TERM signal",
                   evt_tag_str("cmdline", self->cmdline->str),
                   evt_tag_int("child_pid", self->pid),
                   NULL);
       child_manager_unregister(self->pid);
-      killpg(getpgid(self->pid), SIGTERM);
+      pgid = getpgid(self->pid);
+      if (pgid != -1)
+        killpg(pgid, SIGTERM);
       self->pid = -1;
     }
 }
