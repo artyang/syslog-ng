@@ -49,12 +49,23 @@ test_register_node()
   g_free(name);
 
   name = hds_handle_get_fqdn(handle);
-  assert_string(name, "syslog-ng.dst.java.1", NULL);
+  assert_string(name, "dst.java.1", NULL);
   g_free(name);
 
   hds_unregister_handle(sub_handle);
   sub_handle = hds_get_handle("dst.java");
   assert_null(sub_handle, NULL);
+}
+
+void
+_append_prop_key_value(PropertyContainer *self, const gchar *name, Property *prop, gpointer user_data)
+{
+  GString *concat = (GString *) user_data;
+  const gchar *value = property_to_string(prop);
+  if (value)
+    g_string_append_printf(concat, "%s='%s'\n", name, value);
+  else
+    g_string_append_printf(concat, "%s=null\n", name);
 }
 
 void
@@ -70,11 +81,21 @@ test_property_handling()
 
   get_value = property_container_get_property(container, "test_value.dropped");
   assert_gpointer(test_prop, get_value, NULL);
-  assert_string("1234", property_to_string(get_value), NULL);
+  assert_string("1234", property_to_string(get_value), "property_container_get_property() mismatch");
 
+  GString *concat = g_string_new("");
+  property_container_foreach(container, _append_prop_key_value, concat);
+  assert_string("test_value.dropped='1234'\n", concat->str, "property_container_foreach() mismatch");
+  g_string_free(concat, TRUE);
+
+  assert_null(hds_get_value(NULL), NULL);
+  assert_null(hds_get_value(""), NULL);
+  assert_null(hds_get_value("syslog-ng"), NULL);
+  assert_null(hds_get_value("dst"), NULL);
   assert_null(hds_get_value("dst.java"), NULL);
   assert_null(hds_get_value("dst.java.1"), NULL);
   assert_null(hds_get_value("dst.java.1.false_test"), NULL);
+  assert_null(hds_get_value("dst.java.1.test_value"), NULL);
   assert_string("1234", hds_get_value("dst.java.1.test_value.dropped"), NULL);
 
   PropertyContainer *props = hds_acquire_property_container(handle, nv_property_container_new);
@@ -88,53 +109,33 @@ test_property_handling()
   assert_null(get_value, NULL);
 }
 
-void
-test_query_keys()
+static void
+_property_collector(Property *prop, const gchar *fqdn, gpointer user_data)
 {
-  GList *result = NULL;
-  GList *iterator = NULL;
-
-  hds_register_handle("dst.java.1");
-  hds_register_handle("dst.python.something");
-  hds_register_handle("dst.java.something");
-
-  result = hds_query_keys("dst.java.*", result);
-  assert_not_null(result, NULL);
-  assert_guint32(g_list_length(result), 2, NULL);
-
-  iterator = result;
-  while(iterator)
-    {
-      gchar *name = iterator->data;
-      assert_false(strcmp(name, "syslog-ng.dst.python.something") == 0, NULL);
-      assert_nstring(name, strlen("syslog-ng.dst.java"), "syslog-ng.dst.java", strlen("syslog-ng.dst.java"), NULL);
-      iterator = iterator->next;
-    }
-  g_list_free_full(result, g_free);
+  GString *result = (GString *) user_data;
+  const gchar *value = property_to_string(prop);
+  g_string_append_printf(result, "%s=%s\n", fqdn, value);
 }
 
 void
-test_query_nodes()
+test_query_properties()
 {
-  GList *result = NULL;
-  GList *iterator = NULL;
-  HDSHandle java_1 = hds_register_handle("dst.java.1");
-  HDSHandle python_1  = hds_register_handle("dst.python.something");
-  HDSHandle java_2 = hds_register_handle("dst.java.something");
+  GString *props;
+  HDSHandle handle = hds_register_handle("dst.java.1");
+  TestProperty *test_prop = test_property_new();
+  test_prop->value = 42;
+  PropertyContainer *container = hds_acquire_property_container(handle, nv_property_container_new);
+  property_container_add_property(container, "test_value.dropped", &test_prop->super);
 
-  result = hds_query_handles("dst.java.*", result);
-  iterator = result;
-  while(iterator)
-    {
-      HDSHandle handle = iterator->data;
-      assert_true(handle != python_1, NULL);
-      assert_true(handle == java_1 || handle == java_2, NULL);
-      iterator = iterator->next;
-    }
-  assert_not_null(result, NULL);
-  assert_guint32(g_list_length(result), 2, NULL);
+  props = hds_query_properties("*", _property_collector, g_string_new(""));
+  assert_string(props->str, "dst.java.1.test_value.dropped=42\n", "query result mismatch");
+  g_string_free(props, TRUE);
 
-  g_list_free(result);
+  props = hds_query_properties("dst.java.1.test_value.dropped", _property_collector, g_string_new(""));
+  assert_string(props->str, "dst.java.1.test_value.dropped=42\n", "query result mismatch");
+  g_string_free(props, TRUE);
+
+  hds_unregister_handle(handle);
 }
 
 int
@@ -143,8 +144,7 @@ main(int arc, gchar **argv)
   hds_init();
   test_register_node();
   test_property_handling();
-  test_query_keys();
-  test_query_nodes();
+  test_query_properties();
   hds_destroy();
   return 0;
 }

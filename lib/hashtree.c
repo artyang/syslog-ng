@@ -540,15 +540,20 @@ hnode_get_height(HNode *node)
 gchar *
 hnode_get_fqdn(HNode *node)
 {
-  GString *fqdn = g_string_new(node->key);
-  HNode *parent = node->parent;
-  while (parent)
+  GString *fqdn = g_string_new("");
+  HNode *parent = node;
+  if (!parent->parent)
+    return g_string_free(fqdn, FALSE);
+
+  do
     {
-      fqdn = g_string_prepend_c(fqdn, '.');
       fqdn = g_string_prepend(fqdn, parent->key);
       parent = parent->parent;
+      if (!parent->parent)
+        return g_string_free(fqdn, FALSE);
+      fqdn = g_string_prepend_c(fqdn, '.');
     }
-  return g_string_free(fqdn, FALSE);
+  while (TRUE);
 }
 
 static void

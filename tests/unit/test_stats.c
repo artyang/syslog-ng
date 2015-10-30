@@ -219,25 +219,25 @@ test_hds_key()
   StatsCounter *sc_processed = stats_register_dynamic_counter(1, SCS_TCP | SCS_SOURCE, "s_tcp#0", "127.0.0.1", SC_TYPE_PROCESSED, &counter, &new);
   HDSHandle handle = sc_processed->super.owner;
   gchar *key_hds = hds_handle_get_fqdn(handle);
-  assert_string(key_hds, "syslog-ng.source.tcp.s_tcp#0.127.0.0.1.stats", NULL);
+  assert_string(key_hds, "source.tcp.s_tcp#0.127.0.0.1.stats", NULL);
   g_free(key_hds);
 
   sc_processed = stats_register_dynamic_counter(1, SCS_JAVA | SCS_SOURCE, NULL, NULL, SC_TYPE_PROCESSED, &counter, &new);
   handle = sc_processed->super.owner;
   key_hds = hds_handle_get_fqdn(handle);
-  assert_string(key_hds, "syslog-ng.source.java.stats", NULL);
+  assert_string(key_hds, "source.java.stats", NULL);
   g_free(key_hds);
 
   sc_processed = stats_register_dynamic_counter(1, SCS_GROUP | SCS_SOURCE, "s_java", NULL, SC_TYPE_PROCESSED, &counter, &new);
   handle = sc_processed->super.owner;
   key_hds = hds_handle_get_fqdn(handle);
-  assert_string(key_hds, "syslog-ng.source.s_java.stats", NULL);
+  assert_string(key_hds, "source.s_java.stats", NULL);
   g_free(key_hds);
 
   sc_processed = stats_register_dynamic_counter(1, SCS_GROUP | SCS_DESTINATION, "d_something", NULL, SC_TYPE_PROCESSED, &counter, &new);
   handle = sc_processed->super.owner;
   key_hds = hds_handle_get_fqdn(handle);
-  assert_string(key_hds, "syslog-ng.destination.d_something.stats", NULL);
+  assert_string(key_hds, "destination.d_something.stats", NULL);
   g_free(key_hds);
   clean_test();
 }
