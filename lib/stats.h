@@ -86,6 +86,7 @@ typedef struct _StatsCounterItem
 {
   Property super;
   gint value;
+  GString *value_str;
 } StatsCounterItem;
 
 typedef struct _StatsCounter

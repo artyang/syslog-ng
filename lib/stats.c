@@ -163,7 +163,13 @@ static void
 stats_counter_free(PropertyContainer *s)
 { 
   StatsCounter *sc = (StatsCounter *) s;
-  
+  gint i;
+
+  for (i = 0; i < SC_TYPE_MAX; i++)
+    {
+      if (sc->counters[i].super.free_fn)
+        sc->counters[i].super.free_fn(&sc->counters[i].super);
+    }
   g_free(sc->id);
   g_free(sc->instance);
 }
@@ -192,13 +198,44 @@ __build_hds_path(StatsCounter *sc)
   return g_string_free(result, FALSE);
 }
 
+static const gchar *
+_stats_counter_item_to_string (Property *prop)
+{
+  StatsCounterItem *self = (StatsCounterItem *) prop;
+  if (!self->value_str)
+    self->value_str = g_string_sized_new(64);
+
+  g_string_printf(self->value_str, "%d", self->value);
+  return self->value_str->str;
+}
+
+static void
+_stats_counter_item_free (Property *prop)
+{
+  StatsCounterItem *self = (StatsCounterItem *) prop;
+  if (self->value_str)
+    g_string_free(self->value_str, TRUE);
+}
+
+static void
+stats_counter_item_init_instance (StatsCounterItem *item)
+{
+  item->super.to_string = _stats_counter_item_to_string;
+  item->super.free_fn = _stats_counter_item_free;
+}
+
 static void
 stats_counter_init_instance(StatsCounter *key, gint source, const gchar *id, const gchar *instance)
 {
+  gint i;
   key->source = source;
   key->id = id ? (gchar *)id : "";
   key->instance = instance ? (gchar *)instance : "";
   key->ref_cnt = 1;
+  for (i = 0; i < SC_TYPE_MAX; i++)
+    {
+      stats_counter_item_init_instance (&key->counters[i]);
+    }
 }
 
 static inline gboolean
