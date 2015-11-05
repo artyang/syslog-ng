@@ -24,8 +24,15 @@ EXTRA_DIST = README init.d.solaris init.d.HP-UX init.d.RedHat init.d.SuSE 	\
 	solaris-packaging/syslog-ng.method \
 	freebsd-packaging/syslog-ng.rc.d \
 	freebsd-packaging/syslog-ng.conf.example \
-	selinux/syslog_ng.fc \
-	selinux/syslog_ng.te \
+	selinux/src/root_safe/syslog_ng.el5.fc.in \
+	selinux/src/root_safe/syslog_ng.el6.fc.in \
+	selinux/src/root_safe/syslog_ng.el7.fc.in \
+	selinux/src/root_unsafe/syslog_ng.el5.fc.in \
+	selinux/src/root_unsafe/syslog_ng.el6.fc.in \
+	selinux/src/root_unsafe/syslog_ng.el7.fc.in \
+	selinux/src/syslog_ng.el5.te.in \
+	selinux/src/syslog_ng.el6.0to4.te.in \
+	selinux/src/syslog_ng.el67.te.in \
 	selinux/syslog_ng.sh \
 	selinux/README \
 	apparmor/opt.syslog-ng.sbin.syslog-ng \
