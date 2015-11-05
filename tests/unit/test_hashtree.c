@@ -209,6 +209,25 @@ test_htree_join(void)
   htree_free(root);
 }
 
+void
+test_htree_fqdn(void)
+{
+  const gchar *path_got;
+
+  HNode *root = htree_new("com.google.gmail", ".");
+  path_got = hnode_get_fqdn (root);
+  assert_string(path_got, "", "invalid path");
+  g_free(path_got);
+
+  gchar *remaining = NULL;
+  HNode *leaf = htree_find_longest_match(root, "google.gmail", &remaining);
+  assert_true(leaf != NULL, "htree_find_longest_match() failed");
+  path_got = hnode_get_fqdn (leaf);
+  assert_string(path_got, "google.gmail", "invalid path");
+  g_free(path_got);
+
+  htree_free(root);
+}
 
 int main(int argc, char **argv)
 {
@@ -222,6 +241,7 @@ int main(int argc, char **argv)
   HTREE_TESTCASE(test_htree_get_height);
   HTREE_TESTCASE(test_htree_unlink);
   HTREE_TESTCASE(test_htree_join);
+  HTREE_TESTCASE(test_htree_fqdn);
 
   return 0;
 }

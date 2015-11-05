@@ -29,6 +29,7 @@
 #include "property_container.h"
 
 typedef gpointer HDSHandle;
+typedef void (*PROP_MATCH)(Property *prop, const gchar *fqdn, gpointer user_data);
 
 void hds_init();
 void hds_destroy();
@@ -47,8 +48,7 @@ gchar *hds_handle_get_name(HDSHandle handle);
 PropertyContainer *hds_acquire_property_container(HDSHandle handle,  PROPERTY_CONTAINER_CONSTRUCTOR constructor);
 PropertyContainer *hds_get_property_container(HDSHandle handle);
 
-GList* hds_query_keys(const gchar *pattern, GList *list);
-GList* hds_query_handles(const gchar *pattern, GList *list);
+gpointer hds_query_properties(const gchar *pattern, PROP_MATCH on_match, gpointer user_data);
 
 void hds_lock();
 void hds_unlock();

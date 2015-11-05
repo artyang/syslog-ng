@@ -123,7 +123,8 @@ pkginclude_HEADERS = 		\
 	hds.h \
 	property.h \
 	property_container.h \
-	nv_property_container.h
+	nv_property_container.h \
+	query-commands.h
 
 if !IS_WINDOWS
 pkginclude_HEADERS += gprocess.h
@@ -232,7 +233,8 @@ libsyslog_ng_la_SOURCES = \
   $(template_sources) \
 	hashtree.c \
 	hds.c \
-	nv_property_container.c
+	nv_property_container.c \
+	query-commands.c
 
 if !IS_WINDOWS
 libsyslog_ng_la_SOURCES += gprocess.c \

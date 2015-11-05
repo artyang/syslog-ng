@@ -1556,6 +1556,7 @@ AC_OUTPUT(dist.conf
 	        libtest/Makefile
           syslog-ng/Makefile
           syslog-ng-ctl/Makefile
+          syslog-ng-query/Makefile
           persist-tool/Makefile
           tools/Makefile
           modules/Makefile

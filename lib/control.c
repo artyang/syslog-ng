@@ -24,6 +24,7 @@
 
 #include "control.h"
 #include "control_server.h"
+#include "query-commands.h"
 #include "gsocket.h"
 #include "messages.h"
 #include "stats.h"
@@ -50,6 +51,8 @@ control_register_command(const gchar *command_name, const gchar *description, Co
 static GString *
 control_connection_send_stats(GString *command)
 {
+  msg_info("control_connection_message_log", evt_tag_str("command", command->str), NULL);
+
   gchar *stats = stats_generate_csv();
   GString *result = g_string_new(stats);
   g_free(stats);
@@ -67,6 +70,7 @@ control_connection_reset_stats(GString *command)
 static GString *
 control_connection_message_log(GString *command)
 {
+  msg_info("control_connection_message_log", evt_tag_str("command", command->str), NULL);
   gchar **cmds = g_strsplit(command->str, " ", 3);
   gboolean on;
   int *type = NULL;
@@ -148,10 +152,17 @@ register_default_commands()
     }
 }
 
-void 
+static void
+register_query_commands()
+{
+  control_register_command("QUERY", NULL, process_query_command);
+}
+
+void
 control_init(const gchar *control_name)
 {
   register_default_commands();
+  register_query_commands();
   control_server = control_server_new(control_name, command_list);
   control_server_start(control_server);
 }

@@ -141,7 +141,7 @@ hds_get_value(const gchar *path)
   gchar *remain = NULL;
   const gchar *result = NULL;
   HNode *node = htree_find_longest_match(global_hds->root, path, &remain);
-  if (remain != NULL)
+  if ((node != NULL) && (remain != NULL))
     {
       result = property_to_string(property_container_get_property(hnode_get_value(node), remain));
     }
@@ -149,37 +149,46 @@ hds_get_value(const gchar *path)
   return result;
 }
 
-typedef GList *(*ON_MATCH)(HNode *node, const gchar *fqdn, GList **list);
-
-static GList *
-__on_match_collect_name(HNode *node, const gchar *fqdn, GList **list)
+typedef struct _PropCollector
 {
-  *list = g_list_append(*list, g_strdup(fqdn));
-  return *list;
-}
-
-static GList *
-__on_match_collect_node(HNode *node, const gchar *fqdn, GList **list)
-{
-  *list = g_list_append(*list, node);
-  return *list;
-}
-
+  PROP_MATCH on_match;
+  gpointer user_data;
+  gchar *prefix;
+  gchar *pattern;
+} _PropCollector;
 
 static void
-__matching_pattern(HNode *node, gpointer args)
+__collect_properties (PropertyContainer *self, const gchar *name, Property *prop,
+          gpointer container_data)
+{
+  _PropCollector *data = (_PropCollector *) container_data;
+  GString *fqdn = g_string_new("");
+  if ((data->prefix) && (*data->prefix != '\0'))
+    g_string_printf(fqdn, "%s.%s", data->prefix, name);
+  else
+    g_string_printf(fqdn, "%s", name);
+  if ((data->pattern == NULL) || g_pattern_match_simple(data->pattern, fqdn->str))
+    {
+      data->on_match(prop, fqdn->str, data->user_data);
+    }
+  g_string_free(fqdn, TRUE);
+}
+
+static void
+__matching_pattern_properties(HNode *node, gpointer args)
 {
   gpointer *data = (gpointer *)args;
-  const gchar *pattern = data[0];
-  GList **list = data[1];
-  ON_MATCH on_match = data[2];
-  gchar *key_name = hnode_get_fqdn(node);
+  gchar *pattern = data[0];
+  PROP_MATCH on_match = data[1];
+  gpointer user_data = data[2];
+  gchar *prefix = hnode_get_fqdn(node);
 
-  if (g_pattern_match_simple(pattern, key_name))
-    {
-      *list = on_match(node, key_name, list);
-    }
-  g_free(key_name);
+  PropertyContainer *container = hds_get_property_container (node);
+  _PropCollector container_data = {on_match, user_data, prefix, pattern};
+  property_container_foreach (container,
+                              (PROPERTIES_CALLBACK) __collect_properties,
+                              (gpointer) &container_data);
+  g_free(prefix);
 }
 
 gchar *
@@ -193,28 +202,18 @@ gchar *hds_handle_get_name(HDSHandle handle)
   return g_strdup(hnode_get_key(handle));
 }
 
-static GList *
-__hds_query_nodes(const gchar *pattern, GList **list, ON_MATCH on_match)
+gpointer
+hds_query_properties(const gchar *pattern, PROP_MATCH on_match, gpointer user_data)
 {
   gchar *remain = NULL;
-  gchar *path = g_strdup_printf("%s.%s", hnode_get_key(global_hds->root), pattern);
-  HNode *node = htree_find_longest_match(global_hds->root, path, &remain);
-  gpointer args[] = {(gpointer)remain, list, on_match};
+  HNode *node = htree_find_longest_match(global_hds->root, pattern, &remain);
+  gpointer args[] = {(gpointer)pattern, on_match, user_data};
 
-  htree_foreach(node ? node : global_hds->root, __matching_pattern, args);
+  if ((remain == NULL) || (*remain == '\0'))
+    args[0] = NULL;
+
+  htree_foreach(node ? node : global_hds->root, __matching_pattern_properties, args);
 
   g_free(remain);
-  g_free(path);
-  return *list;
-}
-
-GList*
-hds_query_keys(const gchar *pattern, GList *list)
-{
-  return __hds_query_nodes(pattern, &list, __on_match_collect_name);
-}
-
-GList* hds_query_handles(const gchar *pattern, GList *list)
-{
-  return __hds_query_nodes(pattern, &list, __on_match_collect_node);
+  return user_data;
 }
