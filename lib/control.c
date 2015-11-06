@@ -51,7 +51,7 @@ control_register_command(const gchar *command_name, const gchar *description, Co
 static GString *
 control_connection_send_stats(GString *command)
 {
-  msg_info("control_connection_message_log", evt_tag_str("command", command->str), NULL);
+  msg_debug("control_connection_send_stats", evt_tag_str("command", command->str), NULL);
 
   gchar *stats = stats_generate_csv();
   GString *result = g_string_new(stats);
@@ -70,7 +70,7 @@ control_connection_reset_stats(GString *command)
 static GString *
 control_connection_message_log(GString *command)
 {
-  msg_info("control_connection_message_log", evt_tag_str("command", command->str), NULL);
+  msg_debug("control_connection_message_log", evt_tag_str("command", command->str), NULL);
   gchar **cmds = g_strsplit(command->str, " ", 3);
   gboolean on;
   int *type = NULL;
