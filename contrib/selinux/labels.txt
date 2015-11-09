@@ -4,10 +4,12 @@ FILE CONTEXTS:
   /opt/syslog-ng:                                                         usr_t
   /opt/syslog-ng/bin:                                                     bin_t
   /opt/syslog-ng/etc:                                                     etc_t
+  /opt/syslog-ng/etc/syslog-ng.conf*                                      syslog_conf_t
   /opt/syslog-ng/include:                                                 usr_t
   /opt/syslog-ng/lib:                                                     lib_t
   /opt/syslog-ng/libexec:                                                 bin_t
   /opt/syslog-ng/libexec/syslog-ng:                                       syslogd_exec_t
+  /opt/syslog-ng/libexec/syslog-ng-wrapper.sh                             syslogd_exec_t
   /opt/syslog-ng/sbin:                                                    usr_t
   /opt/syslog-ng/share:                                                   usr_t
   /opt/syslog-ng/share/man:                                               man_t
@@ -33,3 +35,13 @@ PROCESS LABEL (RHEL6):
 
   when syslog-ng was started manually (/opt/syslog-ng/sbin/syslog-ng -Fevd)
     unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+    
+PROCESS LABEL (RHEL5):
+  when syslog-ng was started by init during boot:
+    system_u:system_r:syslogd_t:s0
+
+  when syslog-ng was started by init, but manually (service syslog-ng start)
+    root:system_r:syslogd_t:s0
+
+  when syslog-ng was started manually (/opt/syslog-ng/sbin/syslog-ng -Fevd)
+    root:system_r:unconfined_t:s0-s0:c0.c1023

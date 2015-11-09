@@ -6,8 +6,9 @@ SELINUX SUPPORT FOR SYSLOG-NG
 
   SELinux support was added in syslog-ng 5.2 on the following platforms:
 
-    Red Hat Enterprise Linux 6.5+ (*)
-    Red Hat Enterprise Linux 7 (7.0, 7.1)
+    Red Hat Enterprise Linux/CentOS 5
+    Red Hat Enterprise Linux/CentOS 6
+    Red Hat Enterprise Linux/CentOS 7
 
   The installation steps may differ on these operating systems, so you will find
   RHEL version specific information, too. Root permission is needed to run most
@@ -17,8 +18,8 @@ SELINUX SUPPORT FOR SYSLOG-NG
   load SELinux policy modules:
 
     policycoreutils
-    policycoreutils-devel
     policycoreutils-python
+    policycoreutils-devel (only available on RHEL/CentOS 7)
 
   If they are not installed on your system, you can install them by the
   following command:
@@ -44,36 +45,20 @@ UNINSTALL
 
   The module will be active, until you remove it. Then you have to restart syslog-ng.
 
-    semodule --remove=syslog_ng
+    ./syslog_ng.sh --remove
 
   For information about restarting syslog-ng, please read the RESTARTING SYSLOG-NG
   section.
 
 RESTARTING SYSLOG-NG
 
-  You can restart syslog-ng on RHEL6 by:
+  You can restart syslog-ng on RHEL5 and RHEL6 by:
 
     service syslog-ng restart
 
   On RHEL7 you have to run:
 
     systemctl restart syslog-ng
-
-RHEL6 SPECIFIC INFORMATION
-
-  You have to update the following packages on RHEL 6.5 to be able to run syslog-ng:
-
-    selinux-policy-3.7.19-231.el6.noarch          -> 3.7.19-260.el6.noarch
-    selinux-policy-targeted-3.7.19-231.el6.noarch -> 3.7.19-260.el6.noarch
-
-  These packages are available in the Red Hat repositories and installed by
-  default on RHEL 6.6. You can update them with the following command:
-
-    yum update selinux-policy
-  
-  Syslog-ng running not in the syslogd_t domain creates files with wrong types. You should run
-  syslog_ng.sh to restore the right context, then you will be able to run syslog-ng
-  again.
 
 ADDITIONAL INFORMATION
 
