@@ -282,7 +282,7 @@ _raise_read_permissions(FileMonitor *self)
   if (self->privileged)
     raise_syslog_privileged_read_permissions();
   else
-    raise_syslog_read_permissions();
+    raise_read_permissions();
 }
 
 /**

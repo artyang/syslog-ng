@@ -56,7 +56,7 @@ _raise_syslog_read_caps(OpenFileProperties *props)
     }
   else
     {
-      raise_syslog_read_permissions();
+      raise_read_permissions();
     }
 }
 
@@ -67,7 +67,7 @@ _create_directory(gchar *name, OpenFileProperties *props)
 
   cap_t act_caps = g_process_cap_save();
 
-  _raise_syslog_read_caps(props);
+  raise_mkdir_permissions();
 
   res = create_containing_directory(name,
                                     props->dir_access.uid,
@@ -94,12 +94,20 @@ affile_set_fd_permission(OpenFileProperties *props, int fd)
 int affile_open_fd(const gchar *name, OpenFileProperties *props)
 {
   int fd;
+  cap_t act_caps = g_process_cap_save();
+
+  if ((props->flags & O_RDWR) || (props->flags & O_WRONLY))
+    raise_read_write_permissions();
+  else
+    _raise_syslog_read_caps(props);
+
   fd = open(name, props->flags, props->file_access.mode < 0 ? 0600 : props->file_access.mode);
   if (props->is_pipe && fd < 0 && errno == ENOENT)
     {
       if (mkfifo(name, 0666) >= 0)
         fd = open(name, props->flags, 0666);
     }
+  g_process_cap_restore(act_caps);
   return fd;
 }
 
@@ -107,6 +115,10 @@ static void
 affile_check_file_type(const gchar *name, OpenFileProperties *props)
 {
   struct stat st;
+  cap_t act_caps;
+
+  act_caps = g_process_cap_save();
+  raise_read_permissions();
   if (stat(name, &st) >= 0)
     {
       if (props->is_pipe && !S_ISFIFO(st.st_mode))
@@ -122,6 +134,7 @@ affile_check_file_type(const gchar *name, OpenFileProperties *props)
                       NULL);
         }
     }
+  g_process_cap_restore(act_caps);
 }
 
 static int

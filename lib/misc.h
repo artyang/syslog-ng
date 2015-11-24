@@ -154,7 +154,19 @@ raise_syslog_privileged_read_permissions()
 }
 
 static inline void
-raise_syslog_read_permissions()
+raise_read_permissions()
+{
+  g_process_cap_raise(CAP_DAC_READ_SEARCH);
+}
+
+static inline void
+raise_read_write_permissions()
+{
+  g_process_cap_raise(CAP_DAC_OVERRIDE);
+}
+
+static inline void
+raise_mkdir_permissions()
 {
   g_process_cap_raise(CAP_DAC_OVERRIDE);
 }
