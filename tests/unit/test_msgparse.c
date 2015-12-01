@@ -224,7 +224,7 @@ test_log_messages_can_be_parsed()
       0, 0, 0,  // timestamp (sec/usec/zone)
       "", //host
       "syslog-ng", //app
-      "Error processing log message: <5>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [timeQuality isSynced=\"0\"][1234567890123456789012345678901234 i=\"long_33\"] An application event log entry...", // msg
+      "Error processing log message (at position 117): <5>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [timeQuality isSynced=\"0\"][1234567890123456789012345678901234 i=\"long_33\"] An application event log entry...", // msg
       "", // sd str,
       0, // processid
       0, // msgid,
@@ -237,7 +237,7 @@ test_log_messages_can_be_parsed()
            0, 0, 0,    // timestamp (sec/usec/zone)
            "",        // host
            "syslog-ng", //app
-           "Error processing log message: <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"\"ok\"] An application event log entry...", // msg
+           "Error processing log message (at position 67): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"\"ok\"] An application event log entry...", // msg
            "", //sd_str
            0,//processid
            0,//msgid
@@ -649,7 +649,7 @@ test_log_messages_can_be_parsed()
            0, 0, 0,    // timestamp (sec/usec/zone)
            "",        // host
            "syslog-ng", //app
-           "Error processing log message: <7>1 2006-10-29T01:59:59.156Z mymachine.example.com evntslog - ID47 [ exampleSDID@0 iut=\"3\" eventSource=\"Application\" eventID=\"1011\"][examplePriority@0 class=\"high\"] \xEF\xBB\xBF" "An application event log entry...", // msg
+           "Error processing log message (at position 69): <7>1 2006-10-29T01:59:59.156Z mymachine.example.com evntslog - ID47 [ exampleSDID@0 iut=\"3\" eventSource=\"Application\" eventID=\"1011\"][examplePriority@0 class=\"high\"] \xEF\xBB\xBF" "An application event log entry...", // msg
            "",
            NULL,//processid
            NULL,//msgid
@@ -743,7 +743,7 @@ test_log_messages_can_be_parsed()
            0, 0, 0,    // timestamp (sec/usec/zone)
            "",         // host
            "syslog-ng", //app
-           "Error processing log message: <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa i=\"long_33\"] An application event log entry...", // msg
+           "Error processing log message (at position 93): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa i=\"long_33\"] An application event log entry...", // msg
            "", //sd_str
            0,//processid
            0,//msgid
@@ -774,7 +774,7 @@ test_log_messages_can_be_parsed()
            0, 0, 0,    // timestamp (sec/usec/zone)
            "",        // host
            "syslog-ng", //app
-           "Error processing log message: <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=\"long_33\"] An application event log entry...", // msg
+           "Error processing log message (at position 95): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=\"long_33\"] An application event log entry...", // msg
            "", //sd_str
            0,//processid
            0,//msgid
@@ -813,7 +813,7 @@ test_log_messages_can_be_parsed()
            0, 0, 0,    // timestamp (sec/usec/zone)
            "", //host
            "syslog-ng", //app
-           "Error processing log message: <132>1 2006-10-29T01:59:59.156+01:00 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa evntslog - - [a i=\"ok\"] An application event log entry...",        // msg
+           "Error processing log message (at position 37): <132>1 2006-10-29T01:59:59.156+01:00 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa evntslog - - [a i=\"ok\"] An application event log entry...",        // msg
            "", //sd_str
            0,//processid
            0,//msgid
@@ -866,7 +866,7 @@ testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok
            0, 0, 0,    // timestamp (sec/usec/zone)
            "",        // host
            "syslog-ng", //app
-           "Error processing log message: <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok\"] An application event log entry...", // msg
+           "Error processing log message (at position 66): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok\"] An application event log entry...", // msg
            "", //sd_str
            0,//processid
            0,//msgid
