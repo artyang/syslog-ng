@@ -331,7 +331,12 @@ log_reader_io_follow_file(gpointer s)
 
   if (self->follow_filename)
     {
-      if (stat(self->follow_filename, &followed_st) != -1)
+      cap_t act_caps = g_process_cap_save();
+      raise_read_permissions();
+      int success = stat(self->follow_filename, &followed_st);
+      g_process_cap_restore(act_caps);
+
+      if (success != -1)
         {
          gboolean has_eof_moved = FALSE;
 #ifdef _WIN32

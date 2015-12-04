@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <iv.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 
 #if ENABLE_MONITOR_INOTIFY
 # ifdef HAVE_SYS_INOTIFY_H
@@ -251,6 +252,21 @@ file_monitor_set_poll_freq(FileMonitor *self, gint poll_freq)
 }
 
 /**
+ *  Problem: g_file_test(filename, G_FILE_TEST_EXISTS) invokes access(),
+ *  that would check against real UID, not the effective UID.
+ */
+static gboolean
+file_monitor_is_exist_non_dir (const gchar *filename)
+{
+  struct stat st;
+
+  if (stat (filename, &st) < 0)
+    return FALSE;
+
+  return S_ISREG (st.st_mode) && !S_ISDIR (st.st_mode);
+}
+
+/**
  * file_monitor_chk_file:
  *
  * This function checks if the given filename matches the filters.
@@ -261,9 +277,9 @@ file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *f
   gboolean ret = FALSE;
   gchar *path = g_build_filename(source->base_dir, filename, NULL);
 
-  if (g_file_test(path, G_FILE_TEST_EXISTS) &&
-      g_pattern_match_string(monitor->compiled_pattern, filename) &&
-      monitor->file_callback != NULL)
+  if (g_pattern_match_string(monitor->compiled_pattern, filename) &&
+      monitor->file_callback != NULL &&
+      file_monitor_is_exist_non_dir(path))
     {
       /* FIXME: resolve symlink */
       /* callback to affile */
