@@ -21,6 +21,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <pcre.h>
+#include <errno.h>
 
 static const gchar* spurious_paths[] = {"../", "/..", NULL};
 
@@ -78,17 +79,23 @@ _create_directory(gchar *name, OpenFileProperties *props)
   return res;
 }
 
-static inline void
+static inline gint
 affile_set_fd_permission(OpenFileProperties *props, int fd)
 {
-  if (fd != -1)
-    {
-      g_fd_set_cloexec(fd, TRUE);
-      grant_file_permissions_fd(fd,
-                                props->file_access.uid,
-                                props->file_access.gid,
-                                props->file_access.mode);
-    }
+  gint err;
+
+  if (!g_fd_set_cloexec (fd, TRUE))
+    return -1;
+
+  err = grant_file_permissions_fd(fd,
+                                  props->file_access.uid,
+                                  props->file_access.gid,
+                                  props->file_access.mode);
+  int old_errno = errno;
+  if (err < 0)
+      msg_warning("Failed to set file permissions", NULL);
+  errno = old_errno;
+  return err;
 }
 
 int affile_open_fd(const gchar *name, OpenFileProperties *props)
@@ -151,8 +158,14 @@ affile_open_file(gchar *name, OpenFileProperties *props)
   affile_check_file_type(name, props);
 
   fd = affile_open_fd(name, props);
+  if (fd < 0)
+    return -1;
 
-  affile_set_fd_permission(props, fd);
+  if (affile_set_fd_permission(props, fd) < 0)
+    msg_warning("Failed to set file permissions",
+                evt_tag_str ("path", name),
+                evt_tag_int ("fd", fd),
+                NULL);
 
   msg_trace("affile_open_file",
             evt_tag_str("path", name),

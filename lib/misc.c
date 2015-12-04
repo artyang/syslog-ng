@@ -49,6 +49,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <glib/gstdio.h> /*g_mkdir*/
+#include <errno.h>
 
 GString *
 g_string_assign_len(GString *s, const gchar *val, gint len)
@@ -453,22 +454,28 @@ utf8_to_wide(const gchar *str)
 #endif /* _WIN32 */
 
 
-void
+gint
 grant_file_permissions(gchar *name, gint dir_uid, gint dir_gid, gint dir_mode)
 {
   cap_t saved_caps = g_process_cap_save();
   raise_file_permissions();
-  set_permissions(name, dir_uid, dir_gid, dir_mode);
+  gint result = set_permissions(name, dir_uid, dir_gid, dir_mode);
+  int old_errno = errno;
   g_process_cap_restore(saved_caps);
+  errno = old_errno;
+  return result;
 }
 
-void
+gint
 grant_file_permissions_fd(gint fd, gint dir_uid, gint dir_gid, gint dir_mode)
 {
   cap_t saved_caps = g_process_cap_save();
   raise_file_permissions();
-  set_permissions_fd(fd, dir_uid, dir_gid, dir_mode);
+  gint result = set_permissions_fd(fd, dir_uid, dir_gid, dir_mode);
+  int old_errno = errno;
   g_process_cap_restore(saved_caps);
+  errno = old_errno;
+  return result;
 }
 
 /**
@@ -526,7 +533,8 @@ create_containing_directory(gchar *name, gint dir_uid, gint dir_gid, gint dir_mo
         {
           if (g_mkdir(name, dir_mode < 0 ? 0700 : (mode_t) dir_mode) == -1)
             return FALSE;
-          grant_file_permissions(name, dir_uid, dir_gid, dir_mode);
+          if (grant_file_permissions(name, dir_uid, dir_gid, dir_mode) < 0)
+            msg_warning("Failed to set file permissions", NULL);
         }
       *p = G_DIR_SEPARATOR;
       p = strchr(p + 1, G_DIR_SEPARATOR);

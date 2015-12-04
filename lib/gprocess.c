@@ -883,7 +883,10 @@ g_process_change_caps(void)
         {
           if (cap_set_proc(cap) == -1)
             {
-              g_process_message("Error setting capabilities, capability management disabled; error='%s'", g_strerror(errno));
+              g_process_message("Error setting capabilities (%s),"
+                  " capability management disabled; error='%s'",
+                  process_opts.caps,
+                  g_strerror(errno));
               process_opts.caps = NULL;
 
             }
