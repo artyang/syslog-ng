@@ -1801,8 +1801,10 @@ _pattern_db_process(PatternDB *self, PDBLookupParams *lookup, GArray *dbg_list)
       pdb_message_apply(&rule->msg, context, msg, buffer);
       if (self->emit)
         {
+          g_static_rw_lock_writer_unlock(&self->lock);
           self->emit(msg, FALSE, self->emit_data);
           pdb_rule_run_actions(rule, self, RAT_MATCH, context, msg, buffer);
+          g_static_rw_lock_writer_lock(&self->lock);
         }
       pdb_rule_unref(rule);
       g_static_rw_lock_writer_unlock(&self->lock);
