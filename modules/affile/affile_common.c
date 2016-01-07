@@ -329,6 +329,28 @@ affile_sd_reset_file_state(PersistState *state, const gchar *old_persist_name)
   g_free(new_persist_name);
 }
 
+static void
+affile_sd_reopen_file(LogPipe *s)
+{
+  gint fd;
+  LogTransport *transport;
+  LogProto *proto;
+  AFFileSourceDriver *self = (AFFileSourceDriver *) s;
+  LogProtoServerOptions *options = (LogProtoServerOptions *)&self->proto_options;
+  GlobalConfig *cfg = log_pipe_get_config(s);
+
+  affile_sd_open_file(self, self->filename->str, &fd);
+
+  transport = log_transport_plain_new(fd, 0);
+  transport->timeout = 10;
+
+  proto = affile_sd_construct_proto(self, transport);
+
+  affile_sd_recover_state(s, cfg, proto);
+
+  log_reader_reopen(self->reader, proto, s, &self->reader_options, 1, SCS_FILE, self->super.super.id, self->filename->str, FALSE, (LogProtoOptions *)options);
+}
+
 /* NOTE: runs in the main thread */
 void
 affile_sd_notify(LogPipe *s, LogPipe *sender, gint notify_code, gpointer user_data)
@@ -341,6 +363,14 @@ affile_sd_notify(LogPipe *s, LogPipe *sender, gint notify_code, gpointer user_da
 
   switch (notify_code)
     {
+    case NC_READ_ERROR:
+      {
+        msg_verbose("Follow-mode file source reading failed, try to reopen file",
+                    evt_tag_str("filename", self->filename->str),
+                    NULL);
+        affile_sd_reopen_file(s);
+        break;
+      }
     case NC_FILE_MOVED:
       {
         msg_verbose("Follow-mode file source moved, tracking of the new file is started",
