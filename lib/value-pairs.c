@@ -915,6 +915,33 @@ vp_cmdline_parse_rekey_finish (gpointer data)
   args[3] = NULL;
 }
 
+static void
+vp_cmdline_start_key(gpointer data, const gchar *key)
+{
+  gpointer *args = (gpointer *) data;
+
+  vp_cmdline_parse_rekey_finish (data);
+  args[3] = g_strdup(key);
+}
+
+static ValuePairsTransformSet *
+vp_cmdline_rekey_verify (const gchar *key, ValuePairsTransformSet *vpts,
+                         gpointer data)
+{
+  gpointer *args = (gpointer *)data;
+
+  if (!vpts)
+    {
+      if (!key)
+        return NULL;
+      vpts = value_pairs_transform_set_new (key);
+      vp_cmdline_parse_rekey_finish (data);
+      args[2] = vpts;
+      return vpts;
+    }
+  return vpts;
+}
+
 /* parse a value-pair specification from a command-line like environment */
 static gboolean
 vp_cmdline_parse_scope(const gchar *option_name, const gchar *value,
@@ -953,15 +980,6 @@ vp_cmdline_parse_exclude(const gchar *option_name, const gchar *value,
   vp_cmdline_parse_rekey_finish (data);
   value_pairs_add_glob_pattern(vp, value, FALSE);
   return TRUE;
-}
-
-static void
-vp_cmdline_start_key(gpointer data, const gchar *key)
-{
-  gpointer *args = (gpointer *) data;
-
-  vp_cmdline_parse_rekey_finish (data);
-  args[3] = g_strdup(key);
 }
 
 static gboolean
@@ -1046,24 +1064,6 @@ vp_cmdline_parse_pair (const gchar *option_name, const gchar *value,
   g_strfreev(kv);
 
   return res;
-}
-
-static ValuePairsTransformSet *
-vp_cmdline_rekey_verify (gchar *key, ValuePairsTransformSet *vpts,
-                         gpointer data)
-{
-  gpointer *args = (gpointer *)data;
-
-  if (!vpts)
-    {
-      if (!key)
-        return NULL;
-      vpts = value_pairs_transform_set_new (key);
-      vp_cmdline_parse_rekey_finish (data);
-      args[2] = vpts;
-      return vpts;
-    }
-  return vpts;
 }
 
 
