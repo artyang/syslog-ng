@@ -54,11 +54,11 @@ tf_format_welf_foreach(const gchar *name, TypeHint type, const gchar *value, gpo
   g_string_append(result, name);
   g_string_append_c(result, '=');
   if (strchr(value, ' ') == NULL)
-    append_unsafe_utf8_as_escaped_binary(result, value, NULL);
+    append_unsafe_utf8_as_escaped_binary(result, value, -1, NULL);
   else
     {
       g_string_append_c(result, '"');
-      append_unsafe_utf8_as_escaped_binary(result, value, "\"");
+      append_unsafe_utf8_as_escaped_binary(result, value, -1, "\"");
       g_string_append_c(result, '"');
     }
 
