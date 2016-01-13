@@ -31,6 +31,7 @@ endif
 
 EXTRA_DIST = \
         elastic/build.gradle \
+        elastic-v2/build.gradle \
         kafka/build.gradle	\
         common/build.gradle  \
         hdfs/build.gradle    \
@@ -74,5 +75,17 @@ EXTRA_DIST = \
         common/src/test/java/org/syslog_ng/options/test/TestIntegerOptionDecorator.java \
         common/src/test/java/org/syslog_ng/logging/test/MockLogDestination.java \
         hdfs/src/main/java/org/syslog_ng/hdfs/HdfsDestination.java \
-        dummy/src/main/java/org/syslog_ng/DummyTextDestination.java 
+        dummy/src/main/java/org/syslog_ng/DummyTextDestination.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESMessageProcessor.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/DummyProcessor.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESBulkMessageProcessor.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESMessageProcessorFactory.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESSingleMessageProcessor.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/ElasticSearchDestinationV2.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESTransportClient.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESClient.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESNodeClient.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/UnknownESClientModeException.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESClientFactory.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/ElasticSearchOptions.java
 
