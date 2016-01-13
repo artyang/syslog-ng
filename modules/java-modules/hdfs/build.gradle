@@ -4,10 +4,10 @@ apply plugin: 'eclipse'
 project.buildDir = syslogBuildDir+'/hdfs/gradle'
 
 repositories {
-    maven {
-       url "http://build.syslog-ng.balabit:8080/repository/syslog-ng-pe/"
+maven {
+       url "http://archiva.syslog-ng.balabit:8080/repository/internal"
        credentials {
-                        username "syslog-ng"
+                        username "testbot"
                         password "titkos12"
        }
     }
@@ -18,7 +18,9 @@ repositories {
 }
 
 dependencies {
-    compile "org.syslog-ng:hdfs-destination-deps:5.3";
+    compile 'org.apache.hadoop:hadoop-hdfs:2.7.1'
+    compile 'org.apache.hadoop:hadoop-common:2.7.1'
     compile name: 'syslog-ng-common'
     compile name: 'syslog-ng-core'
+    compile 'log4j:log4j:1.2.17'
 }
