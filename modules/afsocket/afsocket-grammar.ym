@@ -212,7 +212,7 @@ source_afunix_dgram_params
 }
 	| string
 	  {
-	    last_driver = *instance = afunix_sd_new($1,AFSOCKET_LOCAL | AFSOCKET_DGRAM);
+	    last_driver = *instance = afunix_sd_new($1, AFSOCKET_LOCAL | AFSOCKET_DGRAM);
 	    free($1);
             afsocket_sd_set_transport(last_driver,"dgram");
 	    last_reader_options = &((AFSocketSourceDriver *) last_driver)->reader_options;
@@ -267,6 +267,7 @@ source_afunix_option
 	| KW_PERM '(' LL_NUMBER ')'		{ afunix_sd_set_perm(last_driver, $3); }
 	| KW_PERM '(' ')'		        { afunix_sd_set_perm(last_driver, -2); }
 	| KW_OPTIONAL '(' yesno ')'		{ last_driver->optional = $3; }
+	| KW_CREATE_DIRS '(' yesno ')'		{ afunix_sd_set_create_dirs(last_driver, $3); }
 	| source_afsocket_stream_params		{}
 	| source_reader_option			{}
 	| socket_option				{}

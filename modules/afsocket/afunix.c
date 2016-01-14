@@ -65,6 +65,12 @@ afunix_sd_set_perm(LogDriver *s, gint perm)
   self->perm = perm & 0777;
 }
 
+void afunix_sd_set_create_dirs(LogDriver *s, gboolean create_dirs)
+{
+  AFUnixSourceDriver *self = (AFUnixSourceDriver*) s;
+  self->create_dirs = create_dirs;
+}
+
 #if ENABLE_SYSTEMD
 static gboolean
 afunix_sd_acquire_named_socket(AFSocketSourceDriver *s, gint *result_fd,
@@ -202,6 +208,13 @@ afunix_sd_apply_transport(AFSocketSourceDriver *s)
     {
       return FALSE;
     }
+
+  if (self->create_dirs > 0)
+    {
+      if (!create_containing_directory(self->filename, self->owner, self->group, -1))
+        return FALSE;
+    }
+
   if (!self->super.bind_addr)
     self->super.bind_addr = g_sockaddr_unix_new(self->filename);
   return TRUE;
@@ -211,6 +224,10 @@ static gboolean
 afunix_sd_init(LogPipe *s)
 {
   AFUnixSourceDriver *self = (AFUnixSourceDriver *) s;
+  GlobalConfig *cfg = log_pipe_get_config(s);
+
+  if (self->create_dirs == -1)
+    self->create_dirs = cfg->create_dirs;
 
   if (afsocket_sd_init(s))
     {
@@ -263,6 +280,9 @@ afunix_sd_new(gchar *filename, guint32 flags)
   self->owner = -1;
   self->group = -1;
   self->perm = 0666;
+
+  self->create_dirs = -1;
+
   return &self->super.super.super;
 }
 

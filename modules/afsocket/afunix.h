@@ -35,12 +35,14 @@ typedef struct _AFUnixSourceDriver
   gint owner;
   gint group;
   gint perm;
+  gint create_dirs;
   SocketOptions sock_options;
 } AFUnixSourceDriver;
 
 void afunix_sd_set_uid(LogDriver *self, gchar *owner);
 void afunix_sd_set_gid(LogDriver *self, gchar *group);
 void afunix_sd_set_perm(LogDriver *self, gint perm);
+void afunix_sd_set_create_dirs(LogDriver *self, gboolean create_dirs);
 
 LogDriver *afunix_sd_new(gchar *filename, guint32 flags);
 
