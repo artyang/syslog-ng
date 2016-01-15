@@ -25,6 +25,7 @@
 #include "mainloop-call.h"
 #include "tls-support.h"
 #include "apphook.h"
+#include "messages.h"
 
 #include <iv.h>
 
@@ -171,6 +172,11 @@ main_loop_worker_thread_start(void *cookie)
     }
 
   _allocate_thread_id();
+
+  msg_debug("Starting worker thread",
+            evt_tag_int("thread identifier", main_loop_worker_id),
+            NULL);
+
   INIT_IV_LIST_HEAD(&batch_callbacks);
   app_thread_start();
 }
@@ -179,6 +185,10 @@ main_loop_worker_thread_start(void *cookie)
 void
 main_loop_worker_thread_stop(void)
 {
+  msg_debug("Stopping worker thread",
+            evt_tag_int("thread identifier", main_loop_worker_id),
+            NULL);
+
   app_thread_stop();
   _release_thread_id();
 }
