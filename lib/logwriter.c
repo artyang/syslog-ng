@@ -1189,7 +1189,8 @@ log_writer_write_message(LogWriter *self, LogMessage *msg, LogPathOptions *path_
   if (!(msg->flags & LF_INTERNAL))
     {
       msg_debug("Outgoing message",
-            evt_tag_str("message",self->line_buffer->str),
+            evt_tag_str("destination", self->stats_id),
+            evt_tag_str("message", self->line_buffer->str),
             NULL);
     }
 

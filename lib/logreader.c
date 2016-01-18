@@ -747,7 +747,8 @@ log_reader_handle_line(LogReader *self, const guchar *line, gint length, GSockAd
       --length;
     }
 
-  msg_debug("Incoming log entry", 
+  msg_debug("Incoming log entry",
+            evt_tag_str("source", self->super.stats_id),
             evt_tag_printf("line", "%.*s", length, line),
             NULL);
   /* use the current time to get the time zone offset */
