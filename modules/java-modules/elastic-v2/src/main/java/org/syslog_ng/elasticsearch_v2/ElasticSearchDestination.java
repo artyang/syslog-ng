@@ -117,7 +117,7 @@ public class ElasticSearchDestination extends StructuredLogDestination {
 
 	@Override
 	protected String getNameByUniqOptions() {
-		return String.format("ElasticSearch,%s,%s", client.getClusterName(), options.getIndex().getValue());
+		return String.format("ElasticSearch_v2,%s,%s", client.getClusterName(), options.getIndex().getValue());
 	}
 
 	@Override
