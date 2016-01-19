@@ -55,8 +55,20 @@ afprogram_reload_info_free(AFProgramReloadInfo * const reload_info)
   g_free(reload_info);
 }
 
+static inline void
+_exec_program_with_clean_environment(const gchar *cmdline)
+{
+  execle("/bin/sh", "/bin/sh", "-c", cmdline, NULL, NULL);
+}
+
+static inline void
+_exec_program(const gchar *cmdline)
+{
+  execl("/bin/sh", "/bin/sh", "-c", cmdline, NULL);
+}
+
 static gboolean
-afprogram_popen(const gchar *cmdline, GIOCondition cond, pid_t *pid, gint *fd)
+afprogram_popen(const gchar *cmdline, GIOCondition cond, pid_t *pid, gint *fd, gboolean inherit_environment)
 {
   int msg_pipe[2];
   
@@ -110,7 +122,12 @@ afprogram_popen(const gchar *cmdline, GIOCondition cond, pid_t *pid, gint *fd)
       close(devnull);
       close(msg_pipe[0]);
       close(msg_pipe[1]);
-      execl("/bin/sh", "/bin/sh", "-c", cmdline, NULL);
+
+      if (inherit_environment)
+        _exec_program(cmdline);
+      else
+        _exec_program_with_clean_environment(cmdline);
+
       _exit(127);
     }
   if (cond == G_IO_IN)
@@ -164,7 +181,7 @@ afprogram_sd_init(LogPipe *s)
               evt_tag_str("cmdline", self->process_info.cmdline->str),
               NULL); 
  
-  if (!afprogram_popen(self->process_info.cmdline->str, G_IO_IN, &self->process_info.pid, &fd))
+  if (!afprogram_popen(self->process_info.cmdline->str, G_IO_IN, &self->process_info.pid, &fd, self->process_info.inherit_environment))
     return FALSE;
 
   /* parent */
@@ -272,6 +289,7 @@ afprogram_sd_new(gchar *cmdline)
   self->super.super.super.free_fn = afprogram_sd_free;
   self->super.super.super.notify = afprogram_sd_notify;
   self->process_info.cmdline = g_string_new(cmdline);
+  afprogram_set_inherit_environment(&self->process_info, TRUE);
   log_reader_options_defaults(&self->reader_options);
   self->reader_options.parse_options.flags |= LP_LOCAL;
   return &self->super.super;
@@ -331,7 +349,7 @@ afprogram_dd_open_program(AFProgramDestDriver * const self, int * const fd)
                   evt_tag_str("cmdline", self->process_info.cmdline->str),
                   NULL);
 
-      if (!afprogram_popen(self->process_info.cmdline->str, G_IO_OUT, &self->process_info.pid, fd))
+      if (!afprogram_popen(self->process_info.cmdline->str, G_IO_OUT, &self->process_info.pid, fd, self->process_info.inherit_environment))
         {
           return FALSE;
         }
@@ -528,6 +546,13 @@ afprogram_dd_new(gchar *cmdline)
   self->super.super.super.notify = afprogram_dd_notify;
   self->process_info.cmdline = g_string_new(cmdline);
   self->process_info.pid = -1;
+  afprogram_set_inherit_environment(&self->process_info, TRUE);
   log_writer_options_defaults(&self->writer_options);
   return &self->super.super;
+}
+
+void
+afprogram_set_inherit_environment(AFProgramProcessInfo *self, gboolean inherit_environment)
+{
+  self->inherit_environment = inherit_environment;
 }
