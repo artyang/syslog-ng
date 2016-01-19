@@ -34,7 +34,6 @@ tf_cef_prepare(LogTemplateFunction *self, LogTemplate *parent,
                 GError **error)
 {
   ValuePairs *vp;
-  ValuePairsTransformSet *vpts;
 
   vp = value_pairs_new_from_cmdline (parent->cfg, argc, argv, error);
   if (!vp)
