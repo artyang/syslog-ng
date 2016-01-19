@@ -1,1 +1,1 @@
-include 'dummy', 'common', 'hdfs', 'elastic', 'kafka'
+include 'dummy', 'common', 'hdfs', 'elastic', 'kafka', 'elastic-v2'
