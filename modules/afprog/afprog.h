@@ -28,12 +28,17 @@
 #include "logwriter.h"
 #include "logreader.h"
 
+typedef struct _AFProgramProcessInfo
+{
+  pid_t pid;
+  GString *cmdline;
+} AFProgramProcessInfo;
+
 typedef struct _AFProgramSourceDriver
 {
   LogSrcDriver super;
-  GString *cmdline;
+  AFProgramProcessInfo process_info;
   LogPipe *reader;
-  pid_t pid;
   LogReaderOptions reader_options;
   LogProtoOptions proto_options;
   LogProtoFactory *proto_factory;
@@ -42,9 +47,8 @@ typedef struct _AFProgramSourceDriver
 typedef struct _AFProgramDestDriver
 {
   LogDestDriver super;
-  GString *cmdline;
+  AFProgramProcessInfo process_info;
   LogPipe *writer;
-  pid_t pid;
   gboolean keep_alive;
   LogWriterOptions writer_options;
   LogProtoOptions proto_options;

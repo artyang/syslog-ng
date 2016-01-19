@@ -134,16 +134,16 @@ afprogram_sd_exit(pid_t pid, int status, gpointer s)
 {
   AFProgramSourceDriver *self = (AFProgramSourceDriver *) s;
 
-  /* Note: self->pid being -1 means that deinit was called, thus we don't
-   * need to restart the command. self->pid might change due to EPIPE
+  /* Note: self->process_info.pid being -1 means that deinit was called, thus we don't
+   * need to restart the command. self->process_info.pid might change due to EPIPE
    * handling restarting the command before this handler is run. */
-  if (self->pid != -1 && self->pid == pid)
+  if (self->process_info.pid != -1 && self->process_info.pid == pid)
     {
       msg_verbose("Child program exited, restarting",
-                  evt_tag_str("cmdline", self->cmdline->str),
+                  evt_tag_str("cmdline", self->process_info.cmdline->str),
                   evt_tag_int("status", status),
                   NULL);
-      self->pid = -1;
+      self->process_info.pid = -1;
     }
 }
 
@@ -161,14 +161,14 @@ afprogram_sd_init(LogPipe *s)
     log_reader_options_init(&self->reader_options, cfg, self->super.super.group);
   
   msg_verbose("Starting source program",
-              evt_tag_str("cmdline", self->cmdline->str),
+              evt_tag_str("cmdline", self->process_info.cmdline->str),
               NULL); 
  
-  if (!afprogram_popen(self->cmdline->str, G_IO_IN, &self->pid, &fd))
+  if (!afprogram_popen(self->process_info.cmdline->str, G_IO_IN, &self->process_info.pid, &fd))
     return FALSE;
 
   /* parent */
-  child_manager_register(self->pid, afprogram_sd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify) log_pipe_unref);
+  child_manager_register(self->process_info.pid, afprogram_sd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify) log_pipe_unref);
   
   g_fd_set_nonblock(fd, TRUE);
   g_fd_set_cloexec(fd, TRUE);
@@ -194,7 +194,7 @@ afprogram_sd_init(LogPipe *s)
           return FALSE;
         }
       self->reader = log_reader_new(proto);
-      log_reader_set_options(self->reader, s, &self->reader_options, 0, SCS_PROGRAM, self->super.super.id, self->cmdline->str, NULL);
+      log_reader_set_options(self->reader, s, &self->reader_options, 0, SCS_PROGRAM, self->super.super.id, self->process_info.cmdline->str, NULL);
     }
   log_pipe_append(self->reader, &self->super.super.super);
   if (!log_pipe_init(self->reader, cfg))
@@ -215,14 +215,14 @@ afprogram_sd_deinit(LogPipe *s)
 {
   AFProgramSourceDriver *self = (AFProgramSourceDriver *) s;
 
-  if (self->pid != -1)
+  if (self->process_info.pid != -1)
     {
       msg_verbose("Sending source program a TERM signal",
-                  evt_tag_str("cmdline", self->cmdline->str),
-                  evt_tag_int("child_pid", self->pid),
+                  evt_tag_str("cmdline", self->process_info.cmdline->str),
+                  evt_tag_int("child_pid", self->process_info.pid),
                   NULL);
-      kill(self->pid, SIGTERM);
-      self->pid = -1;
+      kill(self->process_info.pid, SIGTERM);
+      self->process_info.pid = -1;
     }
 
   if (self->reader)
@@ -244,7 +244,7 @@ afprogram_sd_free(LogPipe *s)
   AFProgramSourceDriver *self = (AFProgramSourceDriver *) s;
   
   log_reader_options_destroy(&self->reader_options);
-  g_string_free(self->cmdline, TRUE);
+  g_string_free(self->process_info.cmdline, TRUE);
   log_src_driver_free(s);
 }
 
@@ -271,7 +271,7 @@ afprogram_sd_new(gchar *cmdline)
   self->super.super.super.deinit = afprogram_sd_deinit;
   self->super.super.super.free_fn = afprogram_sd_free;
   self->super.super.super.notify = afprogram_sd_notify;
-  self->cmdline = g_string_new(cmdline);
+  self->process_info.cmdline = g_string_new(cmdline);
   log_reader_options_defaults(&self->reader_options);
   self->reader_options.parse_options.flags |= LP_LOCAL;
   return &self->super.super;
@@ -287,7 +287,7 @@ afprogram_dd_format_queue_persist_name(AFProgramDestDriver *self)
   static gchar persist_name[256];
 
   g_snprintf(persist_name, sizeof(persist_name),
-             "afprogram_dd_qname(%s,%s)", self->cmdline->str, self->super.super.id);
+             "afprogram_dd_qname(%s,%s)", self->process_info.cmdline->str, self->super.super.id);
 
   return persist_name;
 }
@@ -298,7 +298,7 @@ afprogram_dd_format_persist_name(AFProgramDestDriver *self)
   static gchar persist_name[256];
 
   g_snprintf(persist_name, sizeof(persist_name),
-             "afprogram_dd_name(%s,%s)", self->cmdline->str, self->super.super.id);
+             "afprogram_dd_name(%s,%s)", self->process_info.cmdline->str, self->super.super.id);
 
   return persist_name;
 }
@@ -307,31 +307,31 @@ static inline void
 afprogram_dd_close_program(AFProgramDestDriver * const self)
 {
 
-  if (self->pid != -1)
+  if (self->process_info.pid != -1)
     {
       pid_t pgid;
       msg_verbose("Sending destination program a TERM signal",
-                  evt_tag_str("cmdline", self->cmdline->str),
-                  evt_tag_int("child_pid", self->pid),
+                  evt_tag_str("cmdline", self->process_info.cmdline->str),
+                  evt_tag_int("child_pid", self->process_info.pid),
                   NULL);
-      child_manager_unregister(self->pid);
-      pgid = getpgid(self->pid);
+      child_manager_unregister(self->process_info.pid);
+      pgid = getpgid(self->process_info.pid);
       if (pgid != -1)
         killpg(pgid, SIGTERM);
-      self->pid = -1;
+      self->process_info.pid = -1;
     }
 }
 
 static inline gboolean
 afprogram_dd_open_program(AFProgramDestDriver * const self, int * const fd)
 {
-  if (self->pid == -1)
+  if (self->process_info.pid == -1)
     {
       msg_verbose("Starting destination program",
-                  evt_tag_str("cmdline", self->cmdline->str),
+                  evt_tag_str("cmdline", self->process_info.cmdline->str),
                   NULL);
 
-      if (!afprogram_popen(self->cmdline->str, G_IO_OUT, &self->pid, fd))
+      if (!afprogram_popen(self->process_info.cmdline->str, G_IO_OUT, &self->process_info.pid, fd))
         {
           return FALSE;
         }
@@ -339,7 +339,7 @@ afprogram_dd_open_program(AFProgramDestDriver * const self, int * const fd)
       g_fd_set_nonblock(*fd, TRUE);
     }
 
-  child_manager_register(self->pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify)log_pipe_unref);
+  child_manager_register(self->process_info.pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify)log_pipe_unref);
 
   return TRUE;
 }
@@ -378,16 +378,16 @@ afprogram_dd_exit(pid_t pid, int status, gpointer s)
 {
   AFProgramDestDriver *self = (AFProgramDestDriver *) s;
 
-  /* Note: self->pid being -1 means that deinit was called, thus we don't
-   * need to restart the command. self->pid might change due to EPIPE
+  /* Note: self->process_info.pid being -1 means that deinit was called, thus we don't
+   * need to restart the command. self->process_info.pid might change due to EPIPE
    * handling restarting the command before this handler is run. */
-  if (self->pid != -1 && self->pid == pid)
+  if (self->process_info.pid != -1 && self->process_info.pid == pid)
     {
       msg_verbose("Child program exited, restarting",
-                  evt_tag_str("cmdline", self->cmdline->str),
+                  evt_tag_str("cmdline", self->process_info.cmdline->str),
                   evt_tag_int("status", status),
                   NULL);
-      self->pid = -1;
+      self->process_info.pid = -1;
       afprogram_dd_reopen(self);
     }
 }
@@ -399,10 +399,10 @@ afprogram_dd_restore_reload_info(AFProgramDestDriver * const self, GlobalConfig 
 
   if (restored_info)
     {
-      self->pid    = restored_info->pid;
+      self->process_info.pid    = restored_info->pid;
       self->writer = restored_info->writer;
 
-      child_manager_register(self->pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify)log_pipe_unref);
+      child_manager_register(self->process_info.pid, afprogram_dd_exit, log_pipe_ref(&self->super.super.super), (GDestroyNotify)log_pipe_unref);
       g_free(restored_info);
     }
 
@@ -425,7 +425,7 @@ afprogram_dd_init(LogPipe *s)
   if (!self->writer)
     self->writer = log_writer_new(LW_FORMAT_FILE);
 
-  log_writer_set_options((LogWriter *) self->writer, s, &self->writer_options, 0, SCS_PROGRAM, self->super.super.id, self->cmdline->str, NULL);
+  log_writer_set_options((LogWriter *) self->writer, s, &self->writer_options, 0, SCS_PROGRAM, self->super.super.id, self->process_info.cmdline->str, NULL);
   log_writer_set_queue(self->writer, log_dest_driver_acquire_queue(&self->super, afprogram_dd_format_queue_persist_name(self)));
 
   if (!log_pipe_init(self->writer, NULL))
@@ -448,7 +448,7 @@ afprogram_dd_store_reload_info(AFProgramDestDriver * const self, GlobalConfig * 
       reload_info->writer = self->writer;
     }
 
-  reload_info->pid = self->pid;
+  reload_info->pid = self->process_info.pid;
 
   cfg_persist_config_add(cfg, afprogram_dd_format_persist_name(self), reload_info, (GDestroyNotify)afprogram_reload_info_free, FALSE);
 
@@ -466,7 +466,7 @@ afprogram_dd_deinit(LogPipe *s)
       log_pipe_deinit(self->writer);
     }
 
-  if (self->pid != -1)
+  if (self->process_info.pid != -1)
     {
       if (!self->keep_alive)
         {
@@ -474,7 +474,7 @@ afprogram_dd_deinit(LogPipe *s)
         }
       else
         {
-          child_manager_unregister(self->pid);
+          child_manager_unregister(self->process_info.pid);
         }
     }
 
@@ -497,7 +497,7 @@ afprogram_dd_free(LogPipe *s)
   AFProgramDestDriver *self = (AFProgramDestDriver *) s;
 
   log_pipe_unref(self->writer);  
-  g_string_free(self->cmdline, TRUE);
+  g_string_free(self->process_info.cmdline, TRUE);
   log_writer_options_destroy(&self->writer_options);
   log_dest_driver_free(s);
 }
@@ -526,8 +526,8 @@ afprogram_dd_new(gchar *cmdline)
   self->super.super.super.deinit = afprogram_dd_deinit;
   self->super.super.super.free_fn = afprogram_dd_free;
   self->super.super.super.notify = afprogram_dd_notify;
-  self->cmdline = g_string_new(cmdline);
-  self->pid = -1;
+  self->process_info.cmdline = g_string_new(cmdline);
+  self->process_info.pid = -1;
   log_writer_options_defaults(&self->writer_options);
   return &self->super.super;
 }
