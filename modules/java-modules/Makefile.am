@@ -81,7 +81,7 @@ EXTRA_DIST = \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESBulkMessageProcessor.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESMessageProcessorFactory.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESSingleMessageProcessor.java \
-        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/ElasticSearchDestinationV2.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/ElasticSearchDestination.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESTransportClient.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESClient.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESNodeClient.java \
