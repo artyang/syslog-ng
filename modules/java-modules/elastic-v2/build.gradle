@@ -20,6 +20,7 @@ maven {
 
 dependencies {
     compile 'org.elasticsearch:elasticsearch:2.1.1'
+    compile 'org.elasticsearch.plugin:shield:2.1.1'
     compile name: 'syslog-ng-common'
     compile name: 'syslog-ng-core'
     compile 'junit:junit:4.12'

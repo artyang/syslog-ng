@@ -83,6 +83,7 @@ EXTRA_DIST = \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/messageprocessor/ESSingleMessageProcessor.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/ElasticSearchDestination.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESTransportClient.java \
+        elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESTransportShieldClient.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESClient.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/ESNodeClient.java \
         elastic-v2/src/main/java/org/syslog_ng/elasticsearch_v2/client/UnknownESClientModeException.java \
