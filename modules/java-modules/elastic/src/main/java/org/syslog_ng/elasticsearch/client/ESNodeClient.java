@@ -25,13 +25,7 @@ package org.syslog_ng.elasticsearch.client;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.ImmutableSettings.Builder;
-import org.elasticsearch.common.settings.SettingsException;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.syslog_ng.elasticsearch.ElasticSearchOptions;
@@ -59,26 +53,11 @@ public class ESNodeClient extends ESClient {
 		return result;
 	}
 
-	private void loadConfigFile(String cfgFile, NodeBuilder nodeBuilder) {
-		if (cfgFile == null || cfgFile.isEmpty()) {
-			return;
-		}
-		try {
-			URL url = new File(cfgFile).toURI().toURL();
-			Builder builder = nodeBuilder().settings().loadFromUrl(url);
-			nodeBuilder = nodeBuilder.settings(builder);
-		} catch (MalformedURLException e) {
-			logger.warn("Bad filename format, filename = '" + cfgFile + "'");
-		} catch (SettingsException e) {
-			logger.warn("Can't load settings from file, file = '" + cfgFile + "', reason = '" + e.getMessage() + "'");
-		}
-	}
-
 	@Override
 	public Client createClient() {
 		NodeBuilder nodeBuilder = createNodeBuilder(options.getCluster());
 		nodeBuilder.settings().put("discovery.initial_state_timeout", "5s");
-		loadConfigFile(options.getConfigFile(), nodeBuilder);
+		loadConfigFile(options.getConfigFile(), nodeBuilder.settings());
 		node = nodeBuilder.node();
 	    return node.client();
 	}
