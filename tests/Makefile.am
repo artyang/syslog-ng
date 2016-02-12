@@ -15,6 +15,6 @@ check-copyright:
 CLEAN_HOOKS = clean-check-copyright
 
 clean-check-copyright:
-	rm $(top_builddir)/copyright-run.log $(top_builddir)/copyright-err.log
+	rm -f $(top_builddir)/copyright-run.log $(top_builddir)/copyright-err.log
 
 TESTS = collect-cov.sh check-copyright
