@@ -228,7 +228,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
                         NULL);
 
               hname = ip_addr;
-              if (use_dns_cache)
+              if (usedns && use_dns_cache)
                 dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, FALSE);
             }
           else
