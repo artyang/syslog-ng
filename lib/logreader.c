@@ -401,9 +401,8 @@ log_reader_check_file(gpointer s)
               self->last_msg_received = 0;
               log_reader_flush_buffer(self, FALSE);
             }
-          gboolean is_valid = TRUE;
           self->size = st.st_size;
-          log_pipe_notify(self->control, &self->super.super, NC_FILE_EOF, &is_valid);
+          log_pipe_notify(self->control, &self->super.super, NC_FILE_EOF, self);
         }
     }
   return;
