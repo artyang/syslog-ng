@@ -361,6 +361,8 @@ affile_sd_notify(LogPipe *s, LogPipe *sender, gint notify_code, gpointer user_da
   gchar *filename = NULL;
   gint fd;
 
+  g_assert((user_data == NULL) || (user_data == self->reader));
+
   switch (notify_code)
     {
     case NC_READ_ERROR:
