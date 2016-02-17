@@ -135,7 +135,14 @@ log_reader_work_perform(void *s)
 {
   LogReader *self = (LogReader *) s;
 
-  self->notify_code = log_reader_fetch_log(self);
+  if (self->super.super.flags & PIF_INITIALIZED)
+    {
+      self->notify_code = log_reader_fetch_log(self);
+    }
+  else
+    {
+      self->notify_code = 0;
+    }
 }
 
 static void
@@ -862,6 +869,8 @@ log_reader_fetch_log(LogReader *self)
   GSockAddr *sa;
   gint msg_count = 0;
   gboolean may_read = TRUE;
+
+  g_assert(self->super.super.flags & PIF_INITIALIZED);
 
 
   if (self->waiting_for_preemption)
