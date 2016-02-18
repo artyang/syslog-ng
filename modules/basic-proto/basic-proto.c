@@ -1167,6 +1167,7 @@ log_proto_buffered_server_apply_state(LogProto *s, StateHandler *state_handler)
       state->pending_buffer_end = 0;
       if (self->super.encoding)
         {
+          state->raw_buffer_leftover_size = 0;
           if (!log_proto_buffered_server_convert_from_raw(self, pending_raw_buffer, rc, state->raw_buffer_leftover_size))
             {
               msg_notice("Error re-converting buffer contents of the file to be continued, restarting from the beginning",
