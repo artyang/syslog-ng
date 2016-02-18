@@ -834,6 +834,27 @@ log_reader_process_handshake(LogReader *self)
   return 0;
 }
 
+static gint
+log_reader_preemption_process(LogReader *self, const gint msg_count)
+{
+  if (self->options->flags & LR_PREEMPT)
+    {
+      if (log_proto_is_preemptable(self->proto))
+        {
+          self->waiting_for_preemption = FALSE;
+          if (msg_count > 0)
+            {
+              return NC_FILE_SKIP;
+            }
+        }
+      else
+        {
+          self->waiting_for_preemption = TRUE;
+        }
+    }
+  return 0;
+}
+
 /* returns: notify_code (NC_XXXX) or 0 for success */
 gint
 log_reader_fetch_log(LogReader *self)
@@ -853,6 +874,11 @@ log_reader_fetch_log(LogReader *self)
   if (log_proto_handshake_in_progress(self->proto))
     {
       return log_reader_process_handshake(self);
+    }
+
+  if (!log_source_free_to_send(&self->super))
+    {
+      return log_reader_preemption_process(self, msg_count);
     }
 
   while (msg_count < self->options->fetch_limit && !main_loop_worker_job_quit())
@@ -907,22 +933,7 @@ log_reader_fetch_log(LogReader *self)
     }
   if (msg_count == self->options->fetch_limit)
     self->immediate_check = TRUE;
-  if (self->options->flags & LR_PREEMPT)
-    {
-      if (log_proto_is_preemptable(self->proto))
-        {
-          self->waiting_for_preemption = FALSE;
-          if (msg_count > 0)
-            {
-              return NC_FILE_SKIP;
-            }
-        }
-      else
-        {
-          self->waiting_for_preemption = TRUE;
-        }
-    }
-  return 0;
+  return log_reader_preemption_process(self, msg_count);
 }
 
 static gboolean
