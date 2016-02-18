@@ -45,6 +45,7 @@ extern struct _LogReaderOptions *last_reader_options;
 extern struct _LogWriterOptions *last_writer_options;
 extern struct _LogProtoOptions  *last_proto_options;
 extern struct _LogDriver *last_driver;
+extern struct _LogParser *last_parser;
 extern struct _LogTemplateOptions *last_template_options;
 extern struct _LogTemplate *last_template;
 extern struct _ValuePairs *last_value_pairs;
@@ -361,6 +362,7 @@ extern struct _ValuePairsTransformSet *last_vp_transset;
 #define YYMAXDEPTH 20000
 
 LogDriver *last_driver;
+LogParser *last_parser;
 LogSourceOptions *last_source_options;
 LogReaderOptions *last_reader_options;
 LogWriterOptions *last_writer_options;
