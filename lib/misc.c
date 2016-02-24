@@ -1038,3 +1038,16 @@ pwrite_strict(gint fd, const void *buf, size_t count, off_t offset)
     }
   return result;
 }
+
+gint 
+privileged_stat(const gchar *fname, struct stat *result)
+{
+  gint res;
+
+  cap_t act_caps = g_process_cap_save();
+  raise_read_permissions();
+  res = stat(fname, result);
+  g_process_cap_restore(act_caps);
+
+  return res;
+}

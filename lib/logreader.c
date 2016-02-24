@@ -331,10 +331,7 @@ log_reader_io_follow_file(gpointer s)
 
   if (self->follow_filename)
     {
-      cap_t act_caps = g_process_cap_save();
-      raise_read_permissions();
-      int success = stat(self->follow_filename, &followed_st);
-      g_process_cap_restore(act_caps);
+      gint success = privileged_stat(self->follow_filename, &followed_st);
 
       if (success != -1)
         {

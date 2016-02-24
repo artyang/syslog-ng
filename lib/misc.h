@@ -28,7 +28,7 @@
 #include "syslog-ng.h"
 #include "gsockaddr.h"
 #include "gprocess.h"
-
+#include <sys/stat.h>
 #include <sys/types.h>
 
 #ifdef G_OS_WIN32
@@ -100,6 +100,8 @@ gint set_permissions_fd(gint fd, gint uid, gint gid, gint mode);
 gint grant_file_permissions(gchar *name, gint dir_uid, gint dir_gid, gint dir_mode);
 gint grant_file_permissions_fd(gint fd, gint dir_uid, gint dir_gid, gint dir_mode);
 
+gint privileged_stat(const gchar *fname, struct stat *result);
+
 char *escape_windows_path(char *input);
 
 static inline void
@@ -168,7 +170,7 @@ raise_read_write_permissions()
 static inline void
 raise_mkdir_permissions()
 {
-  g_process_cap_raise(CAP_DAC_OVERRIDE);
+  raise_read_write_permissions();
 }
 
 gchar *utf8_escape_string(const gchar *str, gssize len);
