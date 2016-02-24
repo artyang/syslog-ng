@@ -256,11 +256,11 @@ file_monitor_set_poll_freq(FileMonitor *self, gint poll_freq)
  *  that would check against real UID, not the effective UID.
  */
 static gboolean
-file_monitor_is_exist_non_dir (const gchar *filename)
+_file_is_regular(const gchar *filename)
 {
   struct stat st;
 
-  if (stat (filename, &st) < 0)
+  if (stat(filename, &st) < 0)
     return FALSE;
 
   return S_ISREG (st.st_mode) && !S_ISDIR (st.st_mode);
@@ -279,7 +279,7 @@ file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *f
 
   if (g_pattern_match_string(monitor->compiled_pattern, filename) &&
       monitor->file_callback != NULL &&
-      file_monitor_is_exist_non_dir(path))
+      _file_is_regular(path))
     {
       /* FIXME: resolve symlink */
       /* callback to affile */
