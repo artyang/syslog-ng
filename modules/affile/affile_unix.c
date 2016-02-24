@@ -82,20 +82,13 @@ _create_directory(gchar *name, OpenFileProperties *props)
 static inline gint
 affile_set_fd_permission(OpenFileProperties *props, int fd)
 {
-  gint err;
-
   if (!g_fd_set_cloexec (fd, TRUE))
     return -1;
 
-  err = grant_file_permissions_fd(fd,
-                                  props->file_access.uid,
-                                  props->file_access.gid,
-                                  props->file_access.mode);
-  int old_errno = errno;
-  if (err < 0)
-      msg_warning("Failed to set file permissions", NULL);
-  errno = old_errno;
-  return err;
+  return grant_file_permissions_fd(fd,
+                                   props->file_access.uid,
+                                   props->file_access.gid,
+                                   props->file_access.mode);
 }
 
 int affile_open_fd(const gchar *name, OpenFileProperties *props)
