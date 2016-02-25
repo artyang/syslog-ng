@@ -260,6 +260,7 @@ log_pipe_deinit(LogPipe *s)
           return TRUE;
         }
       s->cfg = NULL;
+      s->flags &= ~PIF_INITIALIZED;
       return FALSE;
     }
   return TRUE;
