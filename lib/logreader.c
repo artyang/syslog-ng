@@ -121,6 +121,7 @@ struct _LogReader
   LogProto *pending_proto;
   gboolean force_read;
   gboolean is_regular;
+  gboolean pending_deinit;
 };
 
 static gboolean log_reader_start_watches(LogReader *self);
@@ -149,6 +150,13 @@ static void
 log_reader_work_finished(void *s)
 {
   LogReader *self = (LogReader *) s;
+
+  if (self->pending_deinit)
+    {
+      log_pipe_deinit(s);
+      self->pending_deinit = FALSE;
+      goto exit;
+    }
 
   if (self->pending_proto_present)
     {
@@ -181,13 +189,31 @@ log_reader_work_finished(void *s)
     {
       log_pipe_notify(self->control, &self->super.super, self->notify_code, self);
     }
+exit:
   log_pipe_unref(&self->super.super);
 }
 
-void log_reader_restart(LogPipe *s)
+void
+log_reader_restart(LogPipe *s)
 {
   LogReader *self = (LogReader *)s;
   log_reader_update_watches(self);
+}
+
+void
+log_reader_attempt_deinit(LogPipe *s)
+{
+  LogReader *self = (LogReader *)s;
+
+  main_loop_assert_main_thread();
+  if (self->io_job.working)
+    {
+      self->pending_deinit = TRUE;
+    }
+  else
+    {
+      log_pipe_deinit(s);
+    }
 }
 
 static void
@@ -1014,13 +1040,11 @@ log_reader_deinit(LogPipe *s)
   LogReader *self = (LogReader *) s;
   
   main_loop_assert_main_thread();
+  g_assert(!self->io_job.working);
 
   iv_event_unregister(&self->schedule_wakeup);
   log_reader_stop_watches(self);
-  if (!log_source_deinit(s))
-    return FALSE;
-
-  return TRUE;
+  return log_source_deinit(s);
 }
 
 static void

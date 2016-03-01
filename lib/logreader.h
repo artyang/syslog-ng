@@ -70,6 +70,7 @@ void log_reader_set_immediate_check(LogPipe *s);
 void log_reader_reopen(LogPipe *s, LogProto *proto, LogPipe *control, LogReaderOptions *options, gint stats_level, gint stats_source, const gchar *stats_id, const gchar *stats_instance, gboolean immediate_check, LogProtoOptions *proto_options);
 gint log_reader_fetch_log(LogReader *self);
 void log_reader_restart(LogPipe *s);
+void log_reader_attempt_deinit(LogPipe *s);
 
 LogPipe *log_reader_new(LogProto *proto);
 void log_reader_options_defaults(LogReaderOptions *options);
