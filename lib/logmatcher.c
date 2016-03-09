@@ -211,7 +211,7 @@ log_matcher_posix_re_free(LogMatcher *s)
 }
 
 LogMatcher *
-log_matcher_posix_re_new(const LogMatcherOptions *options)
+log_matcher_posix_re_new(GlobalConfig *cfg, const LogMatcherOptions *options)
 {
   LogMatcherPosixRe *self = g_new0(LogMatcherPosixRe, 1);
 
@@ -221,7 +221,7 @@ log_matcher_posix_re_new(const LogMatcherOptions *options)
   self->super.replace = log_matcher_posix_re_replace;
   self->super.free_fn = log_matcher_posix_re_free;
 
-  if (configuration && cfg_is_config_version_older(configuration, 0x0300))
+  if (cfg_is_config_version_older(cfg, 0x0300))
     {
       msg_warning_once("WARNING: filters do not store matches in macros by default from " VERSION_3_0 ", please update your configuration by using an explicit 'store-matches' flag to achieve that",
                        NULL);
@@ -380,7 +380,7 @@ log_matcher_string_free(LogMatcher *s)
 }
 
 LogMatcher *
-log_matcher_string_new(const LogMatcherOptions *options)
+log_matcher_string_new(GlobalConfig *cfg, const LogMatcherOptions *options)
 {
   LogMatcherString *self = g_new0(LogMatcherString, 1);
 
@@ -450,7 +450,7 @@ log_matcher_glob_free(LogMatcher *s)
 }
 
 LogMatcher *
-log_matcher_glob_new(const LogMatcherOptions *options)
+log_matcher_glob_new(GlobalConfig *cfg, const LogMatcherOptions *options)
 {
   LogMatcherGlob *self = g_new0(LogMatcherGlob, 1);
 
@@ -781,7 +781,7 @@ log_matcher_pcre_re_free(LogMatcher *s)
 }
 
 LogMatcher *
-log_matcher_pcre_re_new(const LogMatcherOptions *options)
+log_matcher_pcre_re_new(GlobalConfig *cfg, const LogMatcherOptions *options)
 {
   LogMatcherPcreRe *self = g_new0(LogMatcherPcreRe, 1);
 
@@ -791,7 +791,7 @@ log_matcher_pcre_re_new(const LogMatcherOptions *options)
   self->super.replace = log_matcher_pcre_re_replace;
   self->super.free_fn = log_matcher_pcre_re_free;
 
-  if (configuration && cfg_is_config_version_older(configuration, 0x0300))
+  if (cfg_is_config_version_older(cfg, 0x0300))
     {
       msg_warning_once("WARNING: filters do not store matches in macros by default from " VERSION_3_0 ", please update your configuration by using an explicit 'store-matches' flag to achieve that",
                        NULL);
@@ -802,7 +802,7 @@ log_matcher_pcre_re_new(const LogMatcherOptions *options)
   return &self->super;
 }
 
-typedef LogMatcher *(*LogMatcherConstructFunc)(const LogMatcherOptions *options);
+typedef LogMatcher *(*LogMatcherConstructFunc)(GlobalConfig *cfg, const LogMatcherOptions *options);
 
 struct {
   const gchar *name;
@@ -830,12 +830,12 @@ log_matcher_lookup_construct(const gchar *type)
 }
 
 LogMatcher *
-log_matcher_new(const LogMatcherOptions *options)
+log_matcher_new(GlobalConfig *cfg, const LogMatcherOptions *options)
 {
   LogMatcherConstructFunc construct;
 
   construct = log_matcher_lookup_construct(options->type);
-  return construct(options);
+  return construct(cfg, options);
 }
 
 LogMatcher *
