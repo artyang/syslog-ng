@@ -1813,8 +1813,8 @@ log_proto_buffered_server_fetch(LogProto *s, const guchar **msg, gsize *msg_len,
         }
       else
         {
-          state->pending_raw_buffer_size += rc;
           rc += state->raw_buffer_leftover_size;
+          state->pending_raw_buffer_size += rc;
           raw_buffer_leftover_size = state->raw_buffer_leftover_size;
           state->raw_buffer_leftover_size = 0;
 
