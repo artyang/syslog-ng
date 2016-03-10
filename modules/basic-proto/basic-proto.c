@@ -1202,6 +1202,7 @@ log_proto_buffered_server_apply_state(LogProto *s, StateHandler *state_handler)
 
       raw_stream_pos += raw_buffer_size;
       buffer_pos = state->pending_buffer_end = 0;
+      state->raw_buffer_leftover_size = 0;
       lseek(fd, raw_stream_pos, SEEK_SET);
     }
   goto exit;
