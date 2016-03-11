@@ -212,7 +212,6 @@ cfg_init(GlobalConfig *cfg)
 
   dns_caching_update_options(&cfg->dns_cache_options);
   hostname_reinit(cfg->custom_domain);
-  host_resolve_options_init(&cfg->host_resolve_options, cfg);
   log_template_options_init(&cfg->template_options, cfg);
   if (!cfg_init_modules(cfg))
     return FALSE;
