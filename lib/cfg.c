@@ -391,7 +391,7 @@ cfg_load_candidate_modules(GlobalConfig *self)
   if ((cfg_is_config_version_older(self, 0x0302) ||
       atoi(cfg_args_get(self->lexer->globals, "autoload-compiled-modules"))) && !self->plugin_context.candidate_plugins)
     {
-      plugin_load_candidate_modules(self);
+      plugin_load_candidate_modules(&self->plugin_context);
     }
 }
 
@@ -488,8 +488,8 @@ cfg_free(GlobalConfig *self)
   g_free(self->bad_hostname_re);
   dns_cache_options_destroy(&self->dns_cache_options);
   g_free(self->custom_domain);
-  plugin_free_plugins(self);
-  plugin_free_candidate_modules(self);
+  plugin_free_plugins(&self->plugin_context);
+  plugin_free_candidate_modules(&self->plugin_context);
   cfg_tree_free_instance(&self->tree);
   g_hash_table_unref(self->module_config);
   g_free(self);
