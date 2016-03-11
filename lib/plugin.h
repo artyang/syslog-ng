@@ -29,6 +29,7 @@
 
 typedef struct _Plugin Plugin;
 typedef struct _ModuleInfo ModuleInfo;
+typedef struct _PluginContext PluginContext;
 
 /* A plugin actually registered by a module. See PluginCandidate in
  * the implementation module, which encapsulates a demand-loadable
