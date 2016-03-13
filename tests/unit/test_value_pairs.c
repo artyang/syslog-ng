@@ -145,7 +145,7 @@ main(int argc, char *argv[])
   tzset();
 
   configuration = cfg_new(0x0302);
-  plugin_load_module("syslogformat", configuration, NULL);
+  cfg_load_module(configuration, "syslogformat");
   msg_format_options_defaults(&parse_options);
   msg_format_options_init(&parse_options, configuration);
   parse_options.flags |= LP_SYSLOG_PROTOCOL;

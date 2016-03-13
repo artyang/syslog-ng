@@ -301,9 +301,9 @@ main()
   tzset();
 
   configuration = cfg_new(0x308);
-  plugin_load_module("syslogformat", configuration, NULL);
-  plugin_load_module("disk-buffer", configuration, NULL);
-  plugin_load_module("builtin-serializer", configuration, NULL);
+  cfg_load_module(configuration, "syslogformat");
+  cfg_load_module(configuration, "disk-buffer");
+  cfg_load_module(configuration, "builtin-serializer");
   msg_format_options_defaults(&parse_options);
   msg_format_options_init(&parse_options, configuration);
 

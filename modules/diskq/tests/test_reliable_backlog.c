@@ -372,8 +372,8 @@ main(gint argc, gchar **argv)
   tzset();
 
   configuration = cfg_new(0x0308);
-  plugin_load_module("syslogformat", configuration, NULL);
-  plugin_load_module("disk-buffer", configuration, NULL);
+  cfg_load_module(configuration, "syslogformat");
+  cfg_load_module(configuration, "disk-buffer");
   msg_format_options_defaults(&parse_options);
   msg_format_options_init(&parse_options, configuration);
   set_mark_message_serialized_size();
