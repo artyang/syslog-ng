@@ -52,9 +52,9 @@ static Plugin affile_plugins[] =
 };
 
 gboolean
-affile_module_init(GlobalConfig *cfg, CfgArgs *args)
+affile_module_init(PluginContext *context, CfgArgs *args)
 {
-  plugin_register(cfg, affile_plugins, G_N_ELEMENTS(affile_plugins));
+  plugin_register(context, affile_plugins, G_N_ELEMENTS(affile_plugins));
   return TRUE;
 }
 

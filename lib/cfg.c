@@ -160,7 +160,7 @@ _invoke_module_deinit(gchar *key, ModuleConfig *mc, gpointer user_data)
 gboolean
 cfg_load_module(GlobalConfig *cfg, const gchar *module_name)
 {
-  return plugin_load_module(module_name, cfg, NULL);
+  return plugin_load_module(module_name, &cfg->plugin_context, NULL);
 }
 
 static gboolean
@@ -293,7 +293,7 @@ cfg_allow_config_dups(GlobalConfig *self)
 static void
 cfg_register_builtin_plugins(GlobalConfig *self)
 {
-  log_proto_register_builtin_plugins(self);
+  log_proto_register_builtin_plugins(&self->plugin_context);
 }
 
 GlobalConfig *
