@@ -139,7 +139,6 @@ void log_proto_client_free_method(LogProtoClient *s);
 #define DEFINE_LOG_PROTO_CLIENT(prefix) \
   static gpointer                                                       \
   prefix ## _client_plugin_construct(Plugin *self,                      \
-                  GlobalConfig *cfg,                                    \
                   gint plugin_type, const gchar *plugin_name)           \
   {                                                                     \
     static LogProtoClientFactory proto = {                              \

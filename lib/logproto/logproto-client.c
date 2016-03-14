@@ -81,7 +81,7 @@ log_proto_client_get_factory(GlobalConfig *cfg, const gchar *name)
   plugin = plugin_find(cfg, LL_CONTEXT_CLIENT_PROTO, name);
   if (plugin && plugin->construct)
     {
-      return plugin->construct(plugin, cfg, LL_CONTEXT_CLIENT_PROTO, name);
+      return plugin->construct(plugin, LL_CONTEXT_CLIENT_PROTO, name);
     }
   else
     {

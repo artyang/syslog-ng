@@ -145,7 +145,6 @@ void log_proto_server_free(LogProtoServer *s);
 #define DEFINE_LOG_PROTO_SERVER(prefix) \
   static gpointer                                                       \
   prefix ## _server_plugin_construct(Plugin *self,                      \
-                  GlobalConfig *cfg,                                    \
                   gint plugin_type, const gchar *plugin_name)           \
   {                                                                     \
     static LogProtoServerFactory proto = {                              \

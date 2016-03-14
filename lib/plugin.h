@@ -46,7 +46,7 @@ struct _Plugin
   gint type;
   const gchar *name;
   CfgParser *parser;
-  gpointer (*construct)(Plugin *self, GlobalConfig *cfg, gint plugin_type, const gchar *plugin_name);
+  gpointer (*construct)(Plugin *self, gint plugin_type, const gchar *plugin_name);
   void (*free_fn)(Plugin *s);
 };
 
