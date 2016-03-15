@@ -66,7 +66,7 @@ struct _ModuleInfo
   gint plugins_len;
   /* the higher the better */
   gint preference;
-;
+};
 
 typedef struct _PluginContext PluginContext;
 struct _PluginContext
