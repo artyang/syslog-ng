@@ -23,10 +23,7 @@
  */
 
 #include "plugin.h"
-#include "driver.h"
 #include "messages.h"
-#include "cfg-lexer.h"
-#include "plugin-types.h"
 #include "pathutils.h"
 #include "resolved-configurable-paths.h"
 
