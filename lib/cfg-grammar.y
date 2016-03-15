@@ -542,7 +542,7 @@ plugin_stmt
             p = cfg_find_plugin(configuration, context, $1);
             CHECK_ERROR(p, @1, "%s plugin %s not found", cfg_lexer_lookup_context_name_by_type(context), $1);
 
-            result = plugin_parse_config(p, configuration, &@1, NULL);
+            result = cfg_parse_plugin(configuration, p, &@1, NULL);
             free($1);
             if (!result)
               YYERROR;
@@ -581,7 +581,7 @@ source_plugin
             p = cfg_find_plugin(configuration, context, $1);
             CHECK_ERROR(p, @1, "%s plugin %s not found", cfg_lexer_lookup_context_name_by_type(context), $1);
 
-            last_driver = (LogDriver *) plugin_parse_config(p, configuration, &@1, NULL);
+            last_driver = (LogDriver *) cfg_parse_plugin(configuration, p, &@1, NULL);
             free($1);
             if (!last_driver)
               {
@@ -673,7 +673,7 @@ dest_plugin
             p = cfg_find_plugin(configuration, context, $1);
             CHECK_ERROR(p, @1, "%s plugin %s not found", cfg_lexer_lookup_context_name_by_type(context), $1);
 
-            last_driver = (LogDriver *) plugin_parse_config(p, configuration, &@1, NULL);
+;            last_driver = (LogDriver *) cfg_parse_plugin(configuration, p, &@1, NULL);
             free($1);
             if (!last_driver)
               {
@@ -1097,7 +1097,7 @@ dest_driver_option
             p = cfg_find_plugin(configuration, context, $1);
             CHECK_ERROR(p, @1, "%s plugin %s not found", cfg_lexer_lookup_context_name_by_type(context), $1);
 
-            value = plugin_parse_config(p, configuration, &@1, last_driver);
+            value = cfg_parse_plugin(configuration, p, &@1, last_driver);
 
             free($1);
             if (!value)

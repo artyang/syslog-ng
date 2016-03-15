@@ -183,40 +183,6 @@ plugin_construct(Plugin *self, gint plugin_type, const gchar *plugin_name)
   return NULL;
 }
 
-/* construct a plugin instance by parsing a configuration file */
-gpointer
-plugin_parse_config(Plugin *self, GlobalConfig *cfg, YYLTYPE *yylloc, gpointer arg)
-{
-  gpointer instance = NULL;
-
-  g_assert(self->construct == NULL);
-
-  /* make sure '_' and '-' are handled equally in plugin name */
-  CfgTokenBlock *block;
-  YYSTYPE token;
-
-  block = cfg_token_block_new();
-
-  memset(&token, 0, sizeof(token));
-  token.type = LL_TOKEN;
-  token.token = self->type;
-  cfg_token_block_add_and_consume_token(block, &token);
-  cfg_lexer_push_context(cfg->lexer, self->parser->context, self->parser->keywords, self->parser->name);
-  cfg_lexer_lookup_keyword(cfg->lexer, &token, yylloc, self->name);
-  cfg_lexer_pop_context(cfg->lexer);
-  cfg_token_block_add_and_consume_token(block, &token);
-
-  cfg_lexer_inject_token_block(cfg->lexer, block);
-
-  if (!cfg_parser_parse(self->parser, cfg->lexer, &instance, arg))
-    {
-      cfg_parser_cleanup(self->parser, instance);
-      instance = NULL;
-    }
-
-  return instance;
-}
-
 static ModuleInfo *
 plugin_get_module_info(GModule *mod)
 {
