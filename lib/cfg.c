@@ -158,9 +158,40 @@ _invoke_module_deinit(gchar *key, ModuleConfig *mc, gpointer user_data)
   module_config_deinit(mc, cfg);
 }
 
+static void
+_sync_plugin_module_path_with_global_define(GlobalConfig *self)
+{
+  const gchar *module_path;
+
+  /* Sync the @define module-path with the actual module search path as implemented by plugin.
+   *
+   * if @define module-path is not defined, we use whatever there's in
+   * PluginContext by default */
+  module_path = cfg_args_get(self->lexer->globals, "module-path");
+  if (module_path)
+    {
+      plugin_context_set_module_path(&self->plugin_context, module_path);
+    }
+}
+
+void
+cfg_load_candidate_modules(GlobalConfig *self)
+{
+  /* we enable autoload for pre-3.1 configs or when the user requested
+   * auto-load (the default) */
+
+  if ((cfg_is_config_version_older(self, 0x0302) ||
+      atoi(cfg_args_get(self->lexer->globals, "autoload-compiled-modules"))))
+    {
+      _sync_plugin_module_path_with_global_define(self);
+      plugin_load_candidate_modules(&self->plugin_context);
+    }
+}
+
 gboolean
 cfg_load_module(GlobalConfig *cfg, const gchar *module_name)
 {
+  _sync_plugin_module_path_with_global_define(cfg);
   return plugin_load_module(&cfg->plugin_context, module_name, NULL);
 }
 
@@ -428,18 +459,6 @@ cfg_run_parser(GlobalConfig *self, CfgLexer *lexer, CfgParser *parser, gpointer 
   return res;
 }
 
-void
-cfg_load_candidate_modules(GlobalConfig *self)
-{
-  /* we enable autoload for pre-3.1 configs or when the user requested
-   * auto-load (the default) */
-
-  if ((cfg_is_config_version_older(self, 0x0302) ||
-      atoi(cfg_args_get(self->lexer->globals, "autoload-compiled-modules"))))
-    {
-      plugin_load_candidate_modules(&self->plugin_context);
-    }
-}
 
 static void
 cfg_dump_processed_config(GString *preprocess_output, gchar *output_filename)
