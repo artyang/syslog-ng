@@ -676,21 +676,29 @@ cfg_lexer_find_generator(CfgLexer *self, gint context, const gchar *name)
 }
 
 gboolean
-cfg_lexer_register_block(CfgLexer *self, gint context, const gchar *name, CfgBlock *block)
+cfg_lexer_register_block_generator(CfgLexer *self, CfgBlockGenerator *gen)
 {
-  CfgBlockGenerator *gen;
-  gboolean res = FALSE;
+  gboolean res = TRUE;
+  CfgBlockGenerator *old_gen;
 
-  gen = cfg_lexer_find_generator(self, context, name);
-  if (gen)
+  old_gen = cfg_lexer_find_generator(self, gen->context, gen->name);
+  if (old_gen)
     {
-      self->generators = g_list_remove(self->generators, gen);
-      cfg_block_generator_free(gen);
+      self->generators = g_list_remove(self->generators, old_gen);
+      cfg_block_generator_free(old_gen);
+      res = FALSE;
     }
-
-  gen = cfg_block_generator_new(context, name, cfg_block_generate, block, (GDestroyNotify) cfg_block_free);
   self->generators = g_list_append(self->generators, gen);
   return res;
+}
+
+gboolean
+cfg_lexer_register_block(CfgLexer *self, gint context, const gchar *name, CfgBlock *block)
+{
+  return cfg_lexer_register_block_generator(self,
+                                            cfg_block_generator_new(context, name,
+                                                                    cfg_block_generate,
+                                                                    block, (GDestroyNotify) cfg_block_free));
 }
 
 static gboolean
