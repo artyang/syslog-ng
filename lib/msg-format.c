@@ -77,7 +77,7 @@ msg_format_options_init(MsgFormatOptions *options, GlobalConfig *cfg)
 
   p = cfg_find_plugin(cfg, LL_CONTEXT_FORMAT, options->format);
   if (p)
-    options->format_handler = plugin_construct(p, LL_CONTEXT_FORMAT, options->format);
+    options->format_handler = plugin_construct(p);
   options->initialized = TRUE;
 }
 
