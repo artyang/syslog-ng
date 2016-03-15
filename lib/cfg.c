@@ -433,7 +433,7 @@ cfg_load_candidate_modules(GlobalConfig *self)
    * auto-load (the default) */
 
   if ((cfg_is_config_version_older(self, 0x0302) ||
-      atoi(cfg_args_get(self->lexer->globals, "autoload-compiled-modules"))) && !self->plugin_context.candidate_plugins)
+      atoi(cfg_args_get(self->lexer->globals, "autoload-compiled-modules"))))
     {
       plugin_load_candidate_modules(&self->plugin_context);
     }
