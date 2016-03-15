@@ -75,6 +75,7 @@ struct _ModuleInfo
 /* instantiate a new plugin */
 Plugin *plugin_find(PluginContext *context, gint plugin_type, const gchar *plugin_name);
 gpointer plugin_construct(Plugin *self);
+gpointer plugin_construct_from_config(Plugin *self, CfgLexer *lexer, gpointer arg);
 
 /* plugin side API */
 

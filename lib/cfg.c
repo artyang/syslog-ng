@@ -175,10 +175,6 @@ cfg_find_plugin(GlobalConfig *cfg, gint plugin_type, const gchar *plugin_name)
 gpointer
 cfg_parse_plugin(GlobalConfig *cfg, Plugin *plugin, YYLTYPE *yylloc, gpointer arg)
 {
-  gpointer instance = NULL;
-
-  g_assert(plugin->construct == NULL);
-
   CfgTokenBlock *block;
   YYSTYPE token;
 
@@ -208,13 +204,7 @@ cfg_parse_plugin(GlobalConfig *cfg, Plugin *plugin, YYLTYPE *yylloc, gpointer ar
 
   cfg_lexer_inject_token_block(cfg->lexer, block);
 
-  if (!cfg_parser_parse(plugin->parser, cfg->lexer, &instance, arg))
-    {
-      cfg_parser_cleanup(plugin->parser, instance);
-      instance = NULL;
-    }
-
-  return instance;
+  return plugin_construct_from_config(plugin, cfg->lexer, arg);
 }
 
 static gboolean

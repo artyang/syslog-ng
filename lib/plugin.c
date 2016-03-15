@@ -180,6 +180,21 @@ plugin_construct(Plugin *self)
   return NULL;
 }
 
+gpointer
+plugin_construct_from_config(Plugin *self, CfgLexer *lexer, gpointer arg)
+{
+  gpointer instance = NULL;
+
+  g_assert(self->construct == NULL);
+  if (!cfg_parser_parse(self->parser, lexer, &instance, arg))
+    {
+      cfg_parser_cleanup(self->parser, instance);
+      instance = NULL;
+    }
+
+  return instance;
+}
+
 static ModuleInfo *
 plugin_get_module_info(GModule *mod)
 {
