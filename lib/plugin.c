@@ -82,6 +82,37 @@ plugin_candidate_free(PluginCandidate *self)
   g_free(self);
 }
 
+/* construct a plugin without having a configuration file to parse */
+gpointer
+plugin_construct(Plugin *self)
+{
+  g_assert(self->parser == NULL);
+  if (self->construct)
+    {
+      return self->construct(self, self->type, self->name);
+    }
+  return NULL;
+}
+
+gpointer
+plugin_construct_from_config(Plugin *self, CfgLexer *lexer, gpointer arg)
+{
+  gpointer instance = NULL;
+
+  g_assert(self->construct == NULL);
+  if (!cfg_parser_parse(self->parser, lexer, &instance, arg))
+    {
+      cfg_parser_cleanup(self->parser, instance);
+      instance = NULL;
+    }
+
+  return instance;
+}
+
+/*****************************************************************************
+ * Implementation of PluginContext
+ *****************************************************************************/
+
 static Plugin *
 plugin_find_in_list(GList *head, gint plugin_type, const gchar *plugin_name)
 {
@@ -168,32 +199,6 @@ plugin_find(PluginContext *context, gint plugin_type, const gchar *plugin_name)
   return NULL;
 }
 
-/* construct a plugin without having a configuration file to parse */
-gpointer
-plugin_construct(Plugin *self)
-{
-  g_assert(self->parser == NULL);
-  if (self->construct)
-    {
-      return self->construct(self, self->type, self->name);
-    }
-  return NULL;
-}
-
-gpointer
-plugin_construct_from_config(Plugin *self, CfgLexer *lexer, gpointer arg)
-{
-  gpointer instance = NULL;
-
-  g_assert(self->construct == NULL);
-  if (!cfg_parser_parse(self->parser, lexer, &instance, arg))
-    {
-      cfg_parser_cleanup(self->parser, instance);
-      instance = NULL;
-    }
-
-  return instance;
-}
 
 static ModuleInfo *
 plugin_get_module_info(GModule *mod)
