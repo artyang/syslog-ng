@@ -73,6 +73,7 @@ struct _PluginContext
 {
   GList *plugins;
   GList *candidate_plugins;
+  gchar *module_path;
 };
 
 
@@ -88,6 +89,7 @@ void plugin_list_modules(FILE *out, gboolean verbose);
 
 void plugin_load_candidate_modules(PluginContext *context);
 
+void plugin_context_set_module_path(PluginContext *context, const gchar *module_path);
 void plugin_context_init_instance(PluginContext *context);
 void plugin_context_deinit_instance(PluginContext *context);
 
