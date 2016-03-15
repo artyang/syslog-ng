@@ -676,7 +676,7 @@ cfg_lexer_find_generator(CfgLexer *self, gint context, const gchar *name)
 }
 
 gboolean
-cfg_lexer_register_block_generator(CfgLexer *self, gint context, const gchar *name, CfgBlockGeneratorFunc generator, gpointer generator_data, GDestroyNotify generator_data_free)
+cfg_lexer_register_block(CfgLexer *self, gint context, const gchar *name, CfgBlock *block)
 {
   CfgBlockGenerator *gen;
   gboolean res = FALSE;
@@ -688,7 +688,7 @@ cfg_lexer_register_block_generator(CfgLexer *self, gint context, const gchar *na
       cfg_block_generator_free(gen);
     }
 
-  gen = cfg_block_generator_new(context, name, generator, generator_data, generator_data_free);
+  gen = cfg_block_generator_new(context, name, cfg_block_generate, block, (GDestroyNotify) cfg_block_free);
   self->generators = g_list_append(self->generators, gen);
   return res;
 }
