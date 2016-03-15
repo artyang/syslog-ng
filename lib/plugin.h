@@ -80,7 +80,7 @@ gpointer plugin_construct_from_config(Plugin *self, CfgLexer *lexer, gpointer ar
 /* plugin side API */
 
 void plugin_register(PluginContext *context, Plugin *p, gint number);
-gboolean plugin_load_module(const gchar *module_name, PluginContext *context, CfgArgs *args);
+gboolean plugin_load_module(PluginContext *context, const gchar *module_name, CfgArgs *args);
 
 void plugin_list_modules(FILE *out, gboolean verbose);
 
