@@ -35,27 +35,6 @@
 #include <glob.h>
 #include <sys/stat.h>
 
-CfgBlockGenerator *
-cfg_block_generator_new(gint context, const gchar *name, CfgBlockGeneratorFunc generator, gpointer generator_data, GDestroyNotify generator_data_free)
-{
-  CfgBlockGenerator *self = g_new0(CfgBlockGenerator, 1);
-
-  self->context = context;
-  self->name = g_strdup(name);
-  self->generator = generator;
-  self->generator_data = generator_data;
-  self->generator_data_free = generator_data_free;
-  return self;
-}
-
-void
-cfg_block_generator_free(CfgBlockGenerator *self)
-{
-  if (self->generator_data_free && self->generator_data)
-    self->generator_data_free(self->generator_data);
-  g_free(self->name);
-  g_free(self);
-}
 
 /*
  * A token block is a series of tokens to be injected into the tokens
@@ -692,21 +671,6 @@ cfg_lexer_register_block_generator(CfgLexer *self, CfgBlockGenerator *gen)
   return res;
 }
 
-gboolean
-cfg_lexer_register_block(CfgLexer *self, gint context, const gchar *name, CfgBlock *block)
-{
-  return cfg_lexer_register_block_generator(self,
-                                            cfg_block_generator_new(context, name,
-                                                                    cfg_block_generate,
-                                                                    block, (GDestroyNotify) cfg_block_free));
-}
-
-static gboolean
-cfg_lexer_generate_block(CfgLexer *self, gint context, const gchar *name, CfgBlockGenerator *gen, CfgArgs *args)
-{
-  return gen->generator(self, context, name, args, gen->generator_data);
-}
-
 static YYSTYPE
 cfg_lexer_copy_token(const YYSTYPE *original)
 {
@@ -883,7 +847,7 @@ cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc)
           gboolean success;
 
           self->preprocess_suppress_tokens--;
-          success = cfg_lexer_generate_block(self, cfg_lexer_get_context_type(self), yylval->cptr, gen, args);
+          success = cfg_block_generator_generate(gen, self, args);
           cfg_args_unref(args);
           if (success)
             {
@@ -1129,6 +1093,43 @@ cfg_token_block_free(CfgTokenBlock *self)
   g_free(self);
 }
 
+
+GQuark
+cfg_lexer_error_quark(void)
+{
+  return g_quark_from_static_string("cfg-lexer-error-quark");
+}
+
+/* block generators */
+
+gboolean
+cfg_block_generator_generate(CfgBlockGenerator *self, CfgLexer *lexer, CfgArgs *args)
+{
+  return self->generate(self, lexer, args);
+}
+
+void
+cfg_block_generator_init_instance(CfgBlockGenerator *self, gint context, const gchar *name)
+{
+  self->context = context;
+  self->name = g_strdup(name);
+  self->free_fn = cfg_block_generator_free_instance;
+}
+
+void
+cfg_block_generator_free_instance(CfgBlockGenerator *self)
+{
+  g_free(self->name);
+}
+
+void
+cfg_block_generator_free(CfgBlockGenerator *self)
+{
+  if (self->free_fn)
+    self->free_fn(self);
+  g_free(self);
+}
+
 /* user defined blocks */
 
 /*
@@ -1145,6 +1146,7 @@ cfg_token_block_free(CfgTokenBlock *self)
  */
 struct _CfgBlock
 {
+  CfgBlockGenerator super;
   gchar *content;
   CfgArgs *arg_defs;
 };
@@ -1180,25 +1182,25 @@ _fill_varargs(CfgBlock *block, CfgArgs *args)
  * for the lexer.
  */
 gboolean
-cfg_block_generate(CfgLexer *lexer, gint context, const gchar *name, CfgArgs *args, gpointer user_data)
+cfg_block_generate(CfgBlockGenerator *s, CfgLexer *lexer, CfgArgs *args)
 {
-  CfgBlock *block = (CfgBlock *) user_data;
+  CfgBlock *self = (CfgBlock *) s;
   gchar *value;
   gchar buf[256];
   gsize length;
   GError *error = NULL;
   gboolean result;
 
-  g_snprintf(buf, sizeof(buf), "%s block %s", cfg_lexer_lookup_context_name_by_type(context), name);
-  _fill_varargs(block, args);
+  g_snprintf(buf, sizeof(buf), "%s block %s", cfg_lexer_lookup_context_name_by_type(self->super.context), self->super.name);
+  _fill_varargs(self, args);
 
-  value = cfg_lexer_subst_args(lexer->globals, block->arg_defs, args, block->content, -1, &length, &error);
+  value = cfg_lexer_subst_args(lexer->globals, self->arg_defs, args, self->content, -1, &length, &error);
 
   if (!value)
     {
       msg_warning("Syntax error while resolving backtick references in block",
-                  evt_tag_str("context", cfg_lexer_lookup_context_name_by_type(context)),
-                  evt_tag_str("block", name),
+                  evt_tag_str("context", cfg_lexer_lookup_context_name_by_type(self->super.context)),
+                  evt_tag_str("block", self->super.name),
                   evt_tag_str("error", error->message),
                   NULL);
       g_clear_error(&error);
@@ -1211,31 +1213,31 @@ cfg_block_generate(CfgLexer *lexer, gint context, const gchar *name, CfgArgs *ar
 }
 
 /*
- * Construct a user defined block.
- */
-CfgBlock *
-cfg_block_new(const gchar *content, CfgArgs *arg_defs)
-{
-  CfgBlock *self = g_new0(CfgBlock, 1);
-
-  self->content = g_strdup(content);
-  self->arg_defs = arg_defs;
-  return self;
-}
-
-/*
  * Free a user defined block.
  */
 void
-cfg_block_free(CfgBlock *self)
+cfg_block_free_instance(CfgBlockGenerator *s)
 {
+  CfgBlock *self = (CfgBlock *) s;
+
   g_free(self->content);
   cfg_args_unref(self->arg_defs);
-  g_free(self);
+  cfg_block_generator_free_instance(s);
 }
 
-GQuark
-cfg_lexer_error_quark(void)
+
+/*
+ * Construct a user defined block.
+ */
+CfgBlockGenerator *
+cfg_block_new(gint context, const gchar *name, const gchar *content, CfgArgs *arg_defs)
 {
-  return g_quark_from_static_string("cfg-lexer-error-quark");
+  CfgBlock *self = g_new0(CfgBlock, 1);
+
+  cfg_block_generator_init_instance(&self->super, context, name);
+  self->super.free_fn = cfg_block_free_instance;
+  self->super.generate = cfg_block_generate;
+  self->content = g_strdup(content);
+  self->arg_defs = arg_defs;
+  return &self->super;
 }
