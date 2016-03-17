@@ -83,6 +83,7 @@ Plugin *plugin_find(PluginContext *context, gint plugin_type, const gchar *plugi
 /* plugin side API */
 
 void plugin_register(PluginContext *context, Plugin *p, gint number);
+gboolean plugin_register_generator(PluginContext *context, CfgBlockGenerator *gen);
 gboolean plugin_load_module(PluginContext *context, const gchar *module_name, CfgArgs *args);
 
 void plugin_list_modules(FILE *out, gboolean verbose);

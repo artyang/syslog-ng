@@ -39,4 +39,6 @@
 
 #include "cfg-grammar.h"
 
+#define LL_CONTEXT_CONFGEN 0x100
+
 #endif

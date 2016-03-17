@@ -100,11 +100,11 @@ struct _CfgBlockGenerator
 {
   gint context;
   gchar *name;
-  gboolean (*generate)(CfgBlockGenerator *self, CfgLexer *lexer, CfgArgs *args);
+  gboolean (*generate)(CfgBlockGenerator *self, GlobalConfig *cfg, CfgLexer *lexer, CfgArgs *args);
   void (*free_fn)(CfgBlockGenerator *self);
 };
 
-gboolean cfg_block_generator_generate(CfgBlockGenerator *self, CfgLexer *lexer, CfgArgs *args);
+gboolean cfg_block_generator_generate(CfgBlockGenerator *self, GlobalConfig *cfg, CfgLexer *lexer, CfgArgs *args);
 void cfg_block_generator_init_instance(CfgBlockGenerator *self, gint context, const gchar *name);
 void cfg_block_generator_free_instance(CfgBlockGenerator *self);
 void cfg_block_generator_free(CfgBlockGenerator *self);
@@ -198,7 +198,6 @@ gint cfg_lexer_get_context_type(CfgLexer *self);
 
 /* token blocks */
 void cfg_lexer_inject_token_block(CfgLexer *self, CfgTokenBlock *block);
-gboolean cfg_lexer_register_block_generator(CfgLexer *self, CfgBlockGenerator *gen);
 
 int cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc);
 void cfg_lexer_free_token(YYSTYPE *token);

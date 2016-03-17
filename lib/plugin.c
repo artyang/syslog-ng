@@ -26,6 +26,7 @@
 #include "messages.h"
 #include "pathutils.h"
 #include "resolved-configurable-paths.h"
+#include "plugin-types.h"
 
 #include <gmodule.h>
 #include <string.h>
@@ -163,6 +164,40 @@ plugin_register(PluginContext *context, Plugin *p, gint number)
       context->plugins = g_list_prepend(context->plugins, &p[i]);
     }
 }
+
+void
+_generator_plugin_free(Plugin *s)
+{
+  g_free((gchar *) s->name);
+  g_free(s);
+}
+
+gboolean
+plugin_register_generator(PluginContext *context, CfgBlockGenerator *gen)
+{
+  gboolean res = TRUE;
+  CfgBlockGenerator *old_gen;
+  Plugin *plugin = g_new0(Plugin, 1);
+  
+  /* FIXME: define a common plugin_init_instance function */
+  plugin->type = gen->context | LL_CONTEXT_CONFGEN;
+  plugin->name = g_strdup(gen->name);
+  plugin->free_fn = _generator_plugin_free;
+
+#if 0
+  /* FIXME !!!!! */
+  old_gen = cfg_lexer_find_generator(self, gen->context, gen->name);
+  if (old_gen)
+    {
+      self->generators = g_list_remove(self->generators, old_gen);
+      cfg_block_generator_free(old_gen);
+      res = FALSE;
+    }
+#endif
+  plugin_register(context, plugin, 1);
+  return res;
+}
+
 
 Plugin *
 plugin_find(PluginContext *context, gint plugin_type, const gchar *plugin_name)
@@ -600,3 +635,5 @@ plugin_list_modules(FILE *out, gboolean verbose)
   if (!verbose)
     fprintf(out, "\n");
 }
+
+

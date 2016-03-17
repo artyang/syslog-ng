@@ -30,6 +30,7 @@
 #include "pragma-parser.h"
 #include "messages.h"
 #include "pathutils.h"
+#include "plugin-types.h"
 
 #include <string.h>
 #include <glob.h>
@@ -638,37 +639,20 @@ cfg_lexer_inject_token_block(CfgLexer *self, CfgTokenBlock *block)
 }
 
 static CfgBlockGenerator *
-cfg_lexer_find_generator(CfgLexer *self, gint context, const gchar *name)
+cfg_lexer_find_generator(CfgLexer *self, GlobalConfig *cfg, gint context, const gchar *name)
 {
   GList *l;
+  Plugin *p;
+  
+  p = plugin_find(&cfg->plugin_context, context | LL_CONTEXT_CONFGEN, name);
+  if (!p)
+    return NULL;
 
-  for (l = self->generators; l; l = l->next)
-    {
-      CfgBlockGenerator *gen = (CfgBlockGenerator *) l->data;
-
-      if ((gen->context == 0 || gen->context == context) && strcmp(gen->name, name) == 0)
-        {
-          return gen;
-        }
-    }
-  return NULL;
-}
-
-gboolean
-cfg_lexer_register_block_generator(CfgLexer *self, CfgBlockGenerator *gen)
-{
-  gboolean res = TRUE;
-  CfgBlockGenerator *old_gen;
-
-  old_gen = cfg_lexer_find_generator(self, gen->context, gen->name);
-  if (old_gen)
-    {
-      self->generators = g_list_remove(self->generators, old_gen);
-      cfg_block_generator_free(old_gen);
-      res = FALSE;
-    }
-  self->generators = g_list_append(self->generators, gen);
-  return res;
+  self->preprocess_suppress_tokens++;
+  
+  gen = plugin_construct_from_config(p, self, NULL);
+  self->preprocess_suppress_tokens--;
+  return gen;
 }
 
 static YYSTYPE
@@ -837,28 +821,13 @@ cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc)
       self->preprocess_suppress_tokens--;
       goto relex;
     }
-  else if (tok == LL_IDENTIFIER && (gen = cfg_lexer_find_generator(self, cfg_lexer_get_context_type(self), yylval->cptr)))
+  else if (tok == LL_IDENTIFIER && (gen = cfg_lexer_find_generator(configuration, cfg_lexer_get_context_type(self), yylval->cptr)))
     {
-      CfgArgs *args;
-
-      self->preprocess_suppress_tokens++;
-      if (cfg_parser_parse(&block_ref_parser, self, (gpointer *) &args, NULL))
-        {
-          gboolean success;
-
-          self->preprocess_suppress_tokens--;
-          success = cfg_block_generator_generate(gen, self, args);
-          cfg_args_unref(args);
-          if (success)
-            {
-              goto relex;
-            }
-        }
+      success = cfg_block_generator_generate(gen, configuration, self, args);
+      if (success)
+        goto relex;
       else
-        {
-          self->preprocess_suppress_tokens--;
-        }
-      return LL_ERROR;
+        return LL_ERROR;
     }
   else if (configuration->user_version == 0 && configuration->parsed_version != 0)
     {
@@ -1103,9 +1072,9 @@ cfg_lexer_error_quark(void)
 /* block generators */
 
 gboolean
-cfg_block_generator_generate(CfgBlockGenerator *self, CfgLexer *lexer, CfgArgs *args)
+cfg_block_generator_generate(CfgBlockGenerator *self, GlobalConfig *cfg, CfgLexer *lexer, CfgArgs *args)
 {
-  return self->generate(self, lexer, args);
+  return self->generate(self, cfg, lexer, args);
 }
 
 void
@@ -1182,7 +1151,7 @@ _fill_varargs(CfgBlock *block, CfgArgs *args)
  * for the lexer.
  */
 gboolean
-cfg_block_generate(CfgBlockGenerator *s, CfgLexer *lexer, CfgArgs *args)
+cfg_block_generate(CfgBlockGenerator *s, GlobalConfig *cfg, CfgLexer *lexer, CfgArgs *args)
 {
   CfgBlock *self = (CfgBlock *) s;
   gchar *value;
