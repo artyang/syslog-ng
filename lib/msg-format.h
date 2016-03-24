@@ -66,6 +66,7 @@ typedef struct _MsgFormatOptions
   gchar *recv_time_zone;
   TimeZoneInfo *recv_time_zone_info;
   regex_t *bad_hostname;
+  gsize sdata_param_value_max;
 } MsgFormatOptions;
 
 struct _MsgFormatHandler

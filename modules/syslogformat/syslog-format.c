@@ -742,7 +742,7 @@ sd_step_and_store(LogMessage *self, const guchar **data, gint *left)
  * in @self.values and dup the SD string. Parsing is affected by the bits set @flags argument.
  **/
 static gboolean
-log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, guint flags)
+log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, const MsgFormatOptions *options)
 {
   /*
    * STRUCTURED-DATA = NILVALUE / 1*SD-ELEMENT
@@ -768,7 +768,7 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, guint flag
   gchar sd_param_name[33];
 
   /* UTF-8 string */
-  const gsize sd_param_value_max_size = 65536;
+  const gsize sd_param_value_max_size = options->sdata_param_value_max + 1;
   gchar *sd_param_value = g_malloc(sd_param_value_max_size);
   gsize sd_param_value_len;
 
@@ -1147,7 +1147,7 @@ log_msg_parse_syslog_proto(MsgFormatOptions *parse_options, const guchar *data, 
     goto error;
 
   /* structured data part */
-  if (!log_msg_parse_sd(self, &src, &left, parse_options->flags))
+  if (!log_msg_parse_sd(self, &src, &left, parse_options))
     goto error;
 
   /* checking if there are remaining data in log message */
