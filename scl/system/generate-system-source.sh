@@ -1,6 +1,6 @@
 #!/bin/sh
 #############################################################################
-# Copyright (c) 2010 BalaBit IT Ltd, Budapest, Hungary
+# Copyright (c) 2010 Balabit
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License version 2 as published
