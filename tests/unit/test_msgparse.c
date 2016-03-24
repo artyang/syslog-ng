@@ -111,7 +111,6 @@ parse_log_message(gchar *raw_message_str, gint parse_flags, gchar *bad_hostname_
   regex_t bad_hostname;
 
   parse_options.flags = parse_flags;
-  parse_options.sdata_param_value_max = 255;
 
   if (bad_hostname_re)
     {
@@ -893,13 +892,15 @@ test_log_messages_sdata_limits(void)
            empty_sdata_pairs
            );
 
+
+  // too long sdata value gets truncated (255)
+  parse_options.sdata_param_value_max = 255;
   const gchar *expected_sd_pairs_test_5b[][2]=
   {
     {".SDATA.a.i", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
     {NULL, NULL}
   };
 
-  // too long sdata value gets truncated
   testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
            132,             // pri
            1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
@@ -911,6 +912,36 @@ test_log_messages_sdata_limits(void)
            "",//msgid
            expected_sd_pairs_test_5b
            );
+
+
+  // too long sdata value gets truncated (default sdata_param_value_max)
+  msg_format_options_defaults(&parse_options);
+  gchar *sdata_value = g_strnfill(parse_options.sdata_param_value_max + 1, 'a');
+  gchar *expected_sdata_value = g_strnfill(parse_options.sdata_param_value_max, 'a');
+  gchar *log_message = g_strconcat("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"",
+                        sdata_value, "\"] An application event log entry...", NULL);
+
+  const gchar *expected_sd_pairs_test_5c[][2]=
+  {
+    {".SDATA.a.i", expected_sdata_value},
+    {NULL, NULL}
+  };
+
+  testcase(log_message,  LP_SYSLOG_PROTOCOL, NULL,
+           132,             // pri
+           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
+           "mymachine",        // host
+           "evntslog", //app
+           "An application event log entry...", // msg
+           NULL,
+           "",//processid
+           "",//msgid
+           expected_sd_pairs_test_5c
+           );
+
+  g_free(sdata_value);
+  g_free(expected_sdata_value);
+  g_free(log_message);
 }
 
 void
