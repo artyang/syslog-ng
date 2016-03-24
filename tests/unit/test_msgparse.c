@@ -18,6 +18,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+const gchar *ignore_sdata_pairs[][2] = { { NULL, NULL } };
+const gchar *empty_sdata_pairs[][2] = { { NULL, NULL } };
+
 unsigned long
 absolute_value(signed long diff)
 {
@@ -214,11 +217,8 @@ testcase(gchar *msg,
 }
 
 void
-test_log_messages_can_be_parsed()
+test_log_messages_can_be_parsed(void)
 {
-  const gchar *ignore_sdata_pairs[][2] = { { NULL, NULL } };
-  const gchar *empty_sdata_pairs[][2] = { { NULL, NULL } };
-
  // failed to parse too long sd id
   testcase("<5>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [timeQuality isSynced=\"0\"][1234567890123456789012345678901234 i=\"long_33\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
       43,        //pri
@@ -751,131 +751,6 @@ test_log_messages_can_be_parsed()
            empty_sdata_pairs
            );
 
-   const gchar *expected_sd_pairs_test_5[][2]=
-     {
-       { ".SDATA.a.i", "]\"\\"},
-       {  NULL , NULL}
-    };
-
-   testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"\\]\\\"\\\\\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           132,             // pri
-           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
-           "mymachine",        // host
-           "evntslog", //app
-           "An application event log entry...", // msg
-           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"\\]\\\"\\\\\"]", //sd_str
-           "",//processid
-           "",//msgid
-           expected_sd_pairs_test_5
-           );
-
- // failed to parse to long sd name
-  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=\"long_33\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           43,             // pri
-           0, 0, 0,    // timestamp (sec/usec/zone)
-           "",        // host
-           "syslog-ng", //app
-           "Error processing log message (at position 95): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=\"long_33\"] An application event log entry...", // msg
-           "", //sd_str
-           0,//processid
-           0,//msgid
-           empty_sdata_pairs
-           );
-
-   const gchar *expected_sd_pairs_test_5b[][2]=
-     {
-       { ".SDATA.a.i", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
-       {  NULL , NULL}
-    };
-
-  // too long sdata value gets truncated
-
-  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           132,             // pri
-           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
-           "mymachine",        // host
-           "evntslog", //app
-           "An application event log entry...", // msg
-           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"]", //sd_str
-           "",//processid
-           "",//msgid
-           expected_sd_pairs_test_5b
-           );
-
-  const gchar *expected_sd_pairs_test_6[][2]=
-    {
-       { ".SDATA.a.i", "ok"},
-       {  NULL , NULL}
-    };
-
-// too long hostname
-   testcase("<132>1 2006-10-29T01:59:59.156+01:00 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa evntslog - - [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           43,        // pri
-           0, 0, 0,    // timestamp (sec/usec/zone)
-           "", //host
-           "syslog-ng", //app
-           "Error processing log message (at position 37): <132>1 2006-10-29T01:59:59.156+01:00 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa evntslog - - [a i=\"ok\"] An application event log entry...",        // msg
-           "", //sd_str
-           0,//processid
-           0,//msgid
-           empty_sdata_pairs
-           );
-
- // failed to parse to long appname
-  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - - [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           132,             // pri
-           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
-           "mymachine",        // host
-           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", //app
-           "An application event log entry...", // msg
-           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"ok\"]", //sd_str
-           0,//processid
-           0,//msgid
-           expected_sd_pairs_test_6
-           );
- // failed to parse to long procid
-
-  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           132,             // pri
-           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
-           "mymachine",        // host
-           "evntslog", //app
-           "An application event log entry...", // msg
-           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"ok\"]", //sd_str
-           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",//processid
-           0,//msgid
-           expected_sd_pairs_test_6
-           );
-
- // failed to parse to long msgid
-
-  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           132,     // pri
-           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
-           "mymachine",        // host
-           "evntslog", //app
-           "An application event log entry...", // msg
-           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"ok\"]", //sd_str
-           0,//processid
-           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",//msgid
-           expected_sd_pairs_test_6
-           );
-// unescaped ]
-
-testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
-           43,             // pri
-           0, 0, 0,    // timestamp (sec/usec/zone)
-           "",        // host
-           "syslog-ng", //app
-           "Error processing log message (at position 66): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok\"] An application event log entry...", // msg
-           "", //sd_str
-           0,//processid
-           0,//msgid
-           empty_sdata_pairs
-           );
-// unescaped '\'
-
-
   const gchar *expected_sd_pairs_test_7[][2]=
   {
     { ".SDATA.timeQuality.isSynced", "0"},
@@ -985,6 +860,136 @@ testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok
 }
 
 void
+test_log_messages_sdata_limits(void)
+{
+  const gchar *expected_sd_pairs_test_5[][2] =
+  {
+    {".SDATA.a.i", "]\"\\"},
+    {NULL, NULL}
+  };
+
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"\\]\\\"\\\\\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           132,             // pri
+           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
+           "mymachine",        // host
+           "evntslog", //app
+           "An application event log entry...", // msg
+           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"\\]\\\"\\\\\"]", //sd_str
+           "",//processid
+           "",//msgid
+           expected_sd_pairs_test_5
+           );
+
+  // failed to parse to long sd name
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=\"long_33\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           43,             // pri
+           0, 0, 0,    // timestamp (sec/usec/zone)
+           "",        // host
+           "syslog-ng", //app
+           "Error processing log message (at position 95): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa=\"long_33\"] An application event log entry...", // msg
+           "", //sd_str
+           0,//processid
+           0,//msgid
+           empty_sdata_pairs
+           );
+
+  const gchar *expected_sd_pairs_test_5b[][2]=
+  {
+    {".SDATA.a.i", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
+    {NULL, NULL}
+  };
+
+  // too long sdata value gets truncated
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           132,             // pri
+           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
+           "mymachine",        // host
+           "evntslog", //app
+           "An application event log entry...", // msg
+           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"]", //sd_str
+           "",//processid
+           "",//msgid
+           expected_sd_pairs_test_5b
+           );
+}
+
+void
+test_log_messages_part_limits(void)
+{
+  const gchar *expected_sd_pairs_test_6[][2]=
+  {
+    {".SDATA.a.i", "ok"},
+    { NULL, NULL}
+  };
+
+  // too long hostname
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa evntslog - - [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           43,        // pri
+           0, 0, 0,    // timestamp (sec/usec/zone)
+           "", //host
+           "syslog-ng", //app
+           "Error processing log message (at position 37): <132>1 2006-10-29T01:59:59.156+01:00 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa evntslog - - [a i=\"ok\"] An application event log entry...",        // msg
+           "", //sd_str
+           0,//processid
+           0,//msgid
+           empty_sdata_pairs
+           );
+
+  // failed to parse to long appname
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - - [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           132,             // pri
+           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
+           "mymachine",        // host
+           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", //app
+           "An application event log entry...", // msg
+           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"ok\"]", //sd_str
+           0,//processid
+           0,//msgid
+           expected_sd_pairs_test_6
+           );
+
+  // failed to parse to long procid
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa - [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           132,             // pri
+           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
+           "mymachine",        // host
+           "evntslog", //app
+           "An application event log entry...", // msg
+           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"ok\"]", //sd_str
+           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",//processid
+           0,//msgid
+           expected_sd_pairs_test_6
+           );
+
+  // failed to parse to long msgid
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa [a i=\"ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           132,     // pri
+           1162083599, 156000, 3600,    // timestamp (sec/usec/zone)
+           "mymachine",        // host
+           "evntslog", //app
+           "An application event log entry...", // msg
+           "[timeQuality isSynced=\"0\" tzKnown=\"1\"][a i=\"ok\"]", //sd_str
+           0,//processid
+           "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",//msgid
+           expected_sd_pairs_test_6
+           );
+
+  // unescaped ]
+  testcase("<132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok\"] An application event log entry...",  LP_SYSLOG_PROTOCOL, NULL,
+           43,             // pri
+           0, 0, 0,    // timestamp (sec/usec/zone)
+           "",        // host
+           "syslog-ng", //app
+           "Error processing log message (at position 66): <132>1 2006-10-29T01:59:59.156+01:00 mymachine evntslog - - [a i=\"]ok\"] An application event log entry...", // msg
+           "", //sd_str
+           0,//processid
+           0,//msgid
+           empty_sdata_pairs
+           );
+  // unescaped '\'
+}
+
+void
 test_determine_year_for_month(gint current_month, gint month, gint expected_year)
 {
   const gint base_year = 1900;
@@ -1010,6 +1015,8 @@ main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
   init_and_load_syslogformat_module();
 
   test_log_messages_can_be_parsed();
+  test_log_messages_sdata_limits();
+  test_log_messages_part_limits();
 
   // Current year is defined in test_determine_year_for_month() function
   test_determine_year_for_month(0, 0, 2013);
