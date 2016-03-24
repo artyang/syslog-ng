@@ -768,8 +768,10 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, guint flag
   gchar sd_param_name[33];
 
   /* UTF-8 string */
-  gchar sd_param_value[256];
+  const gsize sd_param_value_max_size = 65536;
+  gchar *sd_param_value = g_malloc(sd_param_value_max_size);
   gsize sd_param_value_len;
+
   gchar sd_value_name[66];
   NVHandle handle;
 
@@ -890,7 +892,7 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, guint flag
                         }
                       else
                        {
-                         if (quote && *src != '"' && *src != ']' && *src != '\\' && pos < sizeof(sd_param_value) - 1)
+                         if (quote && *src != '"' && *src != ']' && *src != '\\' && pos < sd_param_value_max_size - 1)
                            {
                              sd_param_value[pos] = '\\';
                              pos++;
@@ -899,7 +901,7 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, guint flag
                            {
                              goto error;
                            }
-                         if (pos < sizeof(sd_param_value) - 1)
+                         if (pos < sd_param_value_max_size - 1)
                            {
                              sd_param_value[pos] = *src;
                              pos++;
@@ -955,6 +957,8 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, guint flag
 
   *data = src;
   *length = left;
+
+  g_free(sd_param_value);
   return ret;
 }
 
