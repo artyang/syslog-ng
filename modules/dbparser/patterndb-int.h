@@ -19,6 +19,9 @@
  * OpenSSL libraries as published by the OpenSSL project. See the file
  * COPYING for details.
  *
+ */
+
+/*
  * Internal declarations to be used by pdbtool/patterndb internals. Not a
  * public API.
  *
