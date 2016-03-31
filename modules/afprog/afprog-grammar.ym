@@ -53,6 +53,7 @@
 
 %token KW_PROGRAM
 %token KW_KEEPALIVE
+%token KW_INHERIT_ENVIRONMENT
 
 %type   <ptr> source_afprogram
 %type   <ptr> source_afprogram_params
@@ -78,7 +79,17 @@ source_afprogram_params
 	    free($1);
 	    last_reader_options = &((AFProgramSourceDriver *) last_driver)->reader_options;
 	  }
-	  source_reader_options			{ $$ = last_driver; }
+	  source_afprogram_options			{ $$ = last_driver; }
+	;
+
+source_afprogram_options
+	: source_afprogram_option source_afprogram_options
+	|
+	;
+
+source_afprogram_option
+	: source_reader_option
+	| KW_INHERIT_ENVIRONMENT '(' yesno ')' { afprogram_set_inherit_environment(&((AFProgramSourceDriver *)last_driver)->process_info, $3); }
 	;
 
 dest_afprogram
@@ -104,6 +115,7 @@ dest_afprogram_option
 	: dest_writer_option
 	| dest_driver_option
 	| KW_KEEPALIVE '(' yesno ')'		{ ((AFProgramDestDriver *)last_driver)->keep_alive = $3; }
+	| KW_INHERIT_ENVIRONMENT '(' yesno ')' { afprogram_set_inherit_environment(&((AFProgramDestDriver *)last_driver)->process_info, $3); }
 	;
 
 /* INCLUDE_RULES */
