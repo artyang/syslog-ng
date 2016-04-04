@@ -124,6 +124,7 @@ late_ack_tracker_manage_msg_ack(AckTracker *s, LogMessage *msg, AckType ack_type
   LateAckRecord *ack_rec = (LateAckRecord *)msg->ack_record;
   LateAckRecord *last_in_range = NULL;
   guint32 ack_range_length = 0;
+  LogSource *source = self->super.source;
 
   ack_rec->acked = TRUE;
 
@@ -141,15 +142,15 @@ late_ack_tracker_manage_msg_ack(AckTracker *s, LogMessage *msg, AckType ack_type
           _drop_range(self, ack_range_length);
 
           if (ack_type == AT_SUSPENDED)
-            log_source_flow_control_suspend(self->super.source);
+            log_source_flow_control_suspend(source);
           else
-            log_source_flow_control_adjust(self->super.source, ack_range_length);
+            log_source_flow_control_adjust(source, ack_range_length);
         }
     }
   _late_tracker_unlock(self);
 
   log_msg_unref(msg);
-  log_pipe_unref((LogPipe *)self->super.source);
+  log_pipe_unref(&source->super);
 }
 
 static Bookmark *
@@ -167,7 +168,7 @@ late_ack_tracker_request_bookmark(AckTracker *s)
     {
       self->pending_ack_record->bookmark.persist_state = s->source->super.cfg->state;
 
-      self->pending_ack_record->super.tracker = (AckTracker *)self;
+      self->pending_ack_record->super.tracker = &self->super;
 
       return &(self->pending_ack_record->bookmark);
     }
@@ -180,7 +181,7 @@ late_ack_tracker_init_instance(LateAckTracker *self, LogSource *source)
 {
   self->super.late = TRUE;
   self->super.source = source;
-  source->ack_tracker = (AckTracker *)self;
+  source->ack_tracker = &self->super;
   self->super.request_bookmark = late_ack_tracker_request_bookmark;
   self->super.track_msg = late_ack_tracker_track_msg;
   self->super.manage_msg_ack = late_ack_tracker_manage_msg_ack;
@@ -195,7 +196,7 @@ late_ack_tracker_new(LogSource *source)
 
   late_ack_tracker_init_instance(self, source);
 
-  return (AckTracker *)self;
+  return &self->super;
 }
 
 void
