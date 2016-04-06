@@ -116,6 +116,7 @@ struct _GlobalConfig
   GHashTable *rewriters;
   GHashTable *templates;
   GHashTable *global_options;
+  GHashTable *persist_names;
   GPtrArray *connections;
   PersistConfig *persist;
   PersistState *state;
@@ -175,6 +176,10 @@ void persist_config_free(PersistConfig *self);
 void cfg_persist_config_move(GlobalConfig *src, GlobalConfig *dest);
 void cfg_persist_config_add(GlobalConfig *cfg, gchar *name, gpointer value, GDestroyNotify destroy, gboolean force);
 gpointer cfg_persist_config_fetch(GlobalConfig *cfg, gchar *name);
+
+void cfg_persist_names_add(GlobalConfig *cfg, const gchar *persist_name, gpointer value);
+void cfg_persist_names_remove(GlobalConfig *cfg, const gchar *persist_name);
+gboolean cfg_persist_names_is_in_use(GlobalConfig *cfg, const gchar *persist_name);
 
 typedef gboolean(* mangle_callback)(GlobalConfig *cfg, LogMessage *msg, gpointer user_data);
 
