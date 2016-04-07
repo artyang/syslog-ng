@@ -769,7 +769,7 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, const MsgF
 
   /* UTF-8 string */
   const gsize sd_param_value_max_size = options->sdata_param_value_max + 1;
-  gchar *sd_param_value = g_malloc(sd_param_value_max_size);
+  gchar sd_param_value[sd_param_value_max_size];
   gsize sd_param_value_len;
 
   gchar sd_value_name[66];
@@ -958,7 +958,6 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, const MsgF
   *data = src;
   *length = left;
 
-  g_free(sd_param_value);
   return ret;
 }
 
