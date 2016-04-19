@@ -42,6 +42,7 @@ struct _LogQueue
   QueueType type;
   gint ref_cnt;
   gboolean use_backlog;
+  gboolean is_persistent;
 
   gint throttle;
   gint throttle_buckets;

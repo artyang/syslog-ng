@@ -1410,7 +1410,7 @@ log_writer_deinit(LogPipe *s)
   main_loop_assert_main_thread();
 
   log_queue_reset_parallel_push(self->queue);
-  if (!log_writer_flush(self, LW_FLUSH_FORCE))
+  if (!log_writer_flush(self, self->queue->is_persistent ? LW_FLUSH_NORMAL : LW_FLUSH_FORCE))
     {
       log_writer_broken(self, NC_WRITE_ERROR);
     }
