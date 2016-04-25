@@ -1042,7 +1042,7 @@ log_proto_buffered_server_apply_state(LogProto *s, StateHandler *state_handler)
   LogProtoBufferedServerState *state;
   gint fd;
   gboolean new_run;
-  guint64 raw_stream_pos, raw_buffer_size, buffer_pos;
+  gint64 raw_stream_pos, raw_buffer_size, buffer_pos;
 
   fd = self->super.transport->fd;
   if (self->state_handler)
@@ -1202,6 +1202,7 @@ log_proto_buffered_server_apply_state(LogProto *s, StateHandler *state_handler)
 
       raw_stream_pos += raw_buffer_size;
       buffer_pos = state->pending_buffer_end = 0;
+      state->raw_buffer_leftover_size = 0;
       lseek(fd, raw_stream_pos, SEEK_SET);
     }
   goto exit;
@@ -1646,7 +1647,7 @@ log_proto_buffered_server_fetch(LogProto *s, const guchar **msg, gsize *msg_len,
   LogProtoBufferedServerState *state = log_proto_buffered_server_get_state(self);
   LogProtoStatus result = self->status;
   LogProtoServerOptions *options = (LogProtoServerOptions *)self->super.options;
-  gint raw_buffer_leftover_size;
+  guint8 raw_buffer_leftover_size;
 
   if (G_UNLIKELY(!self->buffer))
     {
@@ -1813,8 +1814,8 @@ log_proto_buffered_server_fetch(LogProto *s, const guchar **msg, gsize *msg_len,
         }
       else
         {
-          state->pending_raw_buffer_size += rc;
           rc += state->raw_buffer_leftover_size;
+          state->pending_raw_buffer_size += rc;
           raw_buffer_leftover_size = state->raw_buffer_leftover_size;
           state->raw_buffer_leftover_size = 0;
 
