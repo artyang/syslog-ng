@@ -972,7 +972,7 @@ log_msg_parse_sd(LogMessage *self, const guchar **data, gint *length, guint flag
 static gboolean
 log_msg_parse_legacy(MsgFormatOptions *parse_options,
                      const guchar *data, gint length,
-                     LogMessage *self)
+                     LogMessage *self, gint *position)
 {
   const guchar *src;
   gint left;
@@ -983,7 +983,7 @@ log_msg_parse_legacy(MsgFormatOptions *parse_options,
 
   if (!log_msg_parse_pri(self, &src, &left, parse_options->flags, parse_options->default_pri))
     {
-      return FALSE;
+      goto error;
     }
 
   log_msg_parse_seq(self, &src, &left);
@@ -1064,6 +1064,9 @@ log_msg_parse_legacy(MsgFormatOptions *parse_options,
     self->flags |= LF_UTF8;
 
   return TRUE;
+error:
+  *position = src - data;
+  return FALSE;
 }
 
 /**
@@ -1072,7 +1075,7 @@ log_msg_parse_legacy(MsgFormatOptions *parse_options,
  * Parse a message according to the latest syslog-protocol drafts.
  **/
 static gboolean
-log_msg_parse_syslog_proto(MsgFormatOptions *parse_options, const guchar *data, gint length, LogMessage *self)
+log_msg_parse_syslog_proto(MsgFormatOptions *parse_options, const guchar *data, gint length, LogMessage *self, gint *position)
 {
   /**
    *	SYSLOG-MSG      = HEADER SP STRUCTURED-DATA [SP MSG]
@@ -1096,23 +1099,25 @@ log_msg_parse_syslog_proto(MsgFormatOptions *parse_options, const guchar *data, 
   if (!log_msg_parse_pri(self, &src, &left, parse_options->flags, parse_options->default_pri) ||
       !log_msg_parse_version(self, &src, &left))
     {
-      return log_msg_parse_legacy(parse_options, data, length, self);
+      return log_msg_parse_legacy(parse_options, data, length, self, position);
     }
 
   if (!log_msg_parse_skip_space(self, &src, &left))
-    return FALSE;
+    {
+      goto error;
+    }
 
   /* ISO time format */
   if (!log_msg_parse_date(self, &src, &left, parse_options->flags, time_zone_info_get_offset(parse_options->recv_time_zone_info, time(NULL))))
-    return FALSE;
+    goto error;
 
   if (!log_msg_parse_skip_space(self, &src, &left))
-    return FALSE;
+    goto error;
 
   /* hostname 255 ascii */
   log_msg_parse_hostname(self, &src, &left, &hostname_start, &hostname_len, parse_options->flags, NULL);
   if (!log_msg_parse_skip_space(self, &src, &left))
-    return FALSE;
+    goto error;
 
   /* If we did manage to find a hostname, store it. */
   if (hostname_start && hostname_len == 1 && *hostname_start == '-')
@@ -1125,21 +1130,21 @@ log_msg_parse_syslog_proto(MsgFormatOptions *parse_options, const guchar *data, 
   /* application name 48 ascii*/
   log_msg_parse_column(self, LM_V_PROGRAM, &src, &left, 48);
   if (!log_msg_parse_skip_space(self, &src, &left))
-    return FALSE;
+    goto error;
 
   /* process id 128 ascii */
   log_msg_parse_column(self, LM_V_PID, &src, &left, 128);
   if (!log_msg_parse_skip_space(self, &src, &left))
-    return FALSE;
+    goto error;
 
   /* message id 32 ascii */
   log_msg_parse_column(self, LM_V_MSGID, &src, &left, 32);
   if (!log_msg_parse_skip_space(self, &src, &left))
-    return FALSE;
+    goto error;
 
   /* structured data part */
   if (!log_msg_parse_sd(self, &src, &left, parse_options->flags))
-    return FALSE;
+    goto error;
 
   /* checking if there are remaining data in log message */
   if (left == 0)
@@ -1151,7 +1156,7 @@ log_msg_parse_syslog_proto(MsgFormatOptions *parse_options, const guchar *data, 
   /* optional part of the log message [SP MSG] */
   if (!log_msg_parse_skip_space(self, &src, &left))
     {
-      return FALSE;
+      goto error;
     }
 
   if (left >= 3 && memcmp(src, "\xEF\xBB\xBF", 3) == 0)
@@ -1167,6 +1172,9 @@ log_msg_parse_syslog_proto(MsgFormatOptions *parse_options, const guchar *data, 
     }
   log_msg_set_value(self, LM_V_MESSAGE, (gchar *) src, left);
   return TRUE;
+error:
+  *position = src - data;
+  return FALSE;
 }
 
 
@@ -1176,6 +1184,7 @@ syslog_format_handler(MsgFormatOptions *parse_options,
                       LogMessage *self)
 {
   gboolean success;
+  gint problem_position = 0;
   gchar *p;
 
   while (length > 0 && (data[length - 1] == '\n' || data[length - 1] == '\0'))
@@ -1196,9 +1205,9 @@ syslog_format_handler(MsgFormatOptions *parse_options,
 
   self->initial_parse = TRUE;
   if (parse_options->flags & LP_SYSLOG_PROTOCOL)
-    success = log_msg_parse_syslog_proto(parse_options, data, length, self);
+    success = log_msg_parse_syslog_proto(parse_options, data, length, self, &problem_position);
   else
-    success = log_msg_parse_legacy(parse_options, data, length, self);
+    success = log_msg_parse_legacy(parse_options, data, length, self, &problem_position);
   self->initial_parse = FALSE;
 
   if (G_UNLIKELY(!success))
@@ -1212,7 +1221,7 @@ syslog_format_handler(MsgFormatOptions *parse_options,
       self->payload = nv_table_new(LM_V_MAX, 16, MAX(length * 2, 256));
       log_msg_set_value(self, LM_V_HOST, "", 0);
 
-      g_snprintf(buf, sizeof(buf), "Error processing log message: %.*s", (gint) length, data);
+      g_snprintf(buf, sizeof(buf), "Error processing log message (at position %d): %.*s", problem_position, (gint) length, data);
       log_msg_set_value(self, LM_V_MESSAGE, buf, -1);
       log_msg_set_value(self, LM_V_PROGRAM, "syslog-ng", 9);
       g_snprintf(buf, sizeof(buf), "%d", (int) getpid());
