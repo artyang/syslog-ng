@@ -21,6 +21,7 @@
  */
 
 #include "stringutils.h"
+#include "misc.h"
 
 #include <string.h>
 
@@ -56,3 +57,8 @@ g_string_list_find_first(GList *list, const char * str, int *result_length)
   return (guchar*) user_data.start;
 }
 
+gchar *
+normalize_key(const gchar* buffer)
+{
+  return normalize_option_name(strdup(buffer));
+}

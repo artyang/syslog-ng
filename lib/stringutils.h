@@ -26,5 +26,6 @@
 #include <glib.h>
 
 guchar* g_string_list_find_first(GList *list, const char * str, int *result_length);
+gchar *normalize_key(const gchar* buffer);
 
 #endif
