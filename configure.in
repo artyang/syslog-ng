@@ -1562,6 +1562,7 @@ AC_OUTPUT(dist.conf
           modules/Makefile
           modules/dummy/Makefile
           modules/indexed_logstore/Makefile
+          modules/indexed_logstore/tests/Makefile
           modules/logstore-common/Makefile
           modules/basic-proto/Makefile
           modules/afsocket/Makefile
