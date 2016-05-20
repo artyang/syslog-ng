@@ -469,6 +469,7 @@ cfg_new(gint version)
   self->rewriters = g_hash_table_new(g_str_hash, g_str_equal);
   self->templates = g_hash_table_new(g_str_hash, g_str_equal);
   self->global_options = g_hash_table_new(g_str_hash, g_str_equal);
+  self->persist_names = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
   self->connections = g_ptr_array_new();
 
   self->flush_lines = 0;
@@ -680,6 +681,7 @@ cfg_free(GlobalConfig *self)
   g_hash_table_destroy(self->rewriters);
   g_hash_table_destroy(self->templates);
   g_hash_table_destroy(self->global_options);
+  g_hash_table_destroy(self->persist_names);
   g_ptr_array_free(self->connections, TRUE);
   if (self->bad_hostname_compiled)
     regfree(&self->bad_hostname);
@@ -833,3 +835,21 @@ cfg_calculate_hash(GlobalConfig *cfg)
 }
 
 #endif /* ENABLE_SSL */
+
+void
+cfg_persist_names_add(GlobalConfig *cfg, const gchar *persist_name, gpointer value)
+{
+  g_hash_table_insert(cfg->persist_names, g_strdup(persist_name), value);
+}
+
+void
+cfg_persist_names_remove(GlobalConfig *cfg, const gchar *persist_name)
+{
+  g_hash_table_remove(cfg->persist_names, persist_name);
+}
+
+gboolean
+cfg_persist_names_is_in_use(GlobalConfig *cfg, const gchar *persist_name)
+{
+  return g_hash_table_lookup_extended(cfg->persist_names, persist_name, NULL, NULL);
+}
