@@ -394,7 +394,7 @@ affile_sd_notify(LogPipe *s, LogPipe *sender, gint notify_code, gpointer user_da
           }
         else
           {
-            log_pipe_deinit(self->reader);
+            log_reader_attempt_deinit(self->reader);
             log_pipe_unref(self->reader);
             self->reader = NULL;
             affile_sd_reset_file_state(cfg->state, affile_sd_format_persist_name(self->filename->str));

@@ -150,7 +150,7 @@ test_ringbuffer_SOURCES = test_ringbuffer.c
 
 test_resolve_path_SOURCES = test_resolve_path.c
 test_resolve_path_CFLAGS = $(AM_CFLAGS) -I$(top_srcdir)/modules/affile
-test_resolve_path_LDADD = $(top_builddir)/modules/affile/libaffile.la
+test_resolve_path_LDADD = $(top_builddir)/modules/affile/libaffile.la $(top_builddir)/lib/libsyslog-ng.la
 
 test_mainloop_SOURCES = test_mainloop.c
 test_hostid_SOURCES = test_hostid.c
