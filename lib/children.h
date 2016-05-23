@@ -21,7 +21,7 @@
  * COPYING for details.
  *
  */
-  
+
 #ifndef CHILDREN_H_INCLUDED
 #define CHILDREN_H_INCLUDED
 
@@ -34,5 +34,7 @@ void child_manager_sigchild(pid_t pid, int status);
 
 void child_manager_init(void);
 void child_manager_deinit(void);
+
+gboolean child_manager_is_empty(void);
 
 #endif
