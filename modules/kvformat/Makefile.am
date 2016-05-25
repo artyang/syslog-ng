@@ -1,43 +1,37 @@
-module_LTLIBRARIES				+= modules/kvformat/libkvformat.la
+moduledir = @moduledir@
+export top_srcdir
 
-modules_kvformat_libkvformat_la_SOURCES=	\
-	modules/kvformat/format-welf.c		\
-	modules/kvformat/format-welf.h		\
-	modules/kvformat/kv-parser.c		\
-	modules/kvformat/kv-parser.h		\
-	modules/kvformat/kv-scanner.c		\
-	modules/kvformat/kv-scanner.h		\
-	modules/kvformat/linux-audit-scanner.c	\
-	modules/kvformat/linux-audit-scanner.h	\
-	modules/kvformat/kv-parser-grammar.y	\
-	modules/kvformat/kv-parser-parser.c		\
-	modules/kvformat/kv-parser-parser.h		\
-	modules/kvformat/kvformat-plugin.c
+SUBDIRS = . tests
 
-modules_kvformat_libkvformat_la_CPPFLAGS	=	\
-	$(AM_CPPFLAGS)					\
-	-I$(top_srcdir)/modules/kvformat			\
-	-I$(top_builddir)/modules/kvformat
+AM_CPPFLAGS	= \
+  -I$(top_srcdir)/lib \
+  -I../../lib \
+  -I$(top_srcdir)/modules/kvformat \
+  -I$(top_builddir)/modules/kvformat
+module_LTLIBRARIES = libkvformat.la
 
-modules_kvformat_libkvformat_la_LIBADD = \
-	$(MODULE_DEPS_LIBS)
+libkvformat_la_SOURCES = \
+  format-welf.c \
+  format-welf.h \
+  kv-parser.c \
+  kv-parser.h \
+  kv-scanner.c \
+  kv-scanner.h \
+  linux-audit-scanner.c \
+  linux-audit-scanner.h \
+  kv-parser-grammar.y \
+  kv-parser-parser.c \
+  kv-parser-parser.h \
+  kvformat-plugin.c
 
-modules_kvformat_libkvformat_la_LDFLAGS	=	\
-	$(MODULE_LDFLAGS)
-modules_kvformat_libkvformat_la_DEPENDENCIES	=	\
-	$(MODULE_DEPS_LIBS)
+libkvformat_la_CPPFLAGS = $(AM_CPPFLAGS)
+libkvformat_la_LIBADD = $(MODULE_DEPS_LIBS)
+libkvformat_la_LDFLAGS = $(MODULE_LDFLAGS)
 
-modules/kvformat modules/kvformat/ mod-kvformat:	\
-	modules/kvformat/libkvformat.la
+BUILT_SOURCES = \
+  kv-parser-grammar.y \
+  kv-parser-grammar.c \
+  kv-parser-grammar.h
+EXTRA_DIST = $(BUILT_SOURCES) kv-parser-grammar.ym
 
-BUILT_SOURCES				+=	\
-	modules/kvformat/kv-parser-grammar.y	\
-	modules/kvformat/kv-parser-grammar.c	\
-	modules/kvformat/kv-parser-grammar.h
-EXTRA_DIST				+=	\
-	modules/kvformat/kv-parser-grammar.ym
-
-
-.PHONY: modules/kvformat/ mod-kvformat
-
-include modules/kvformat/tests/Makefile.am
+include $(top_srcdir)/build/lex-rules.am
