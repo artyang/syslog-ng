@@ -283,21 +283,6 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
 
   log_msg_set_tag_by_id(msg, self->options->source_group_tag);
 
-  /* mangle callbacks */
-  next_item = g_list_first(self->options->source_queue_callbacks);
-  while(next_item)
-  {
-    if(next_item->data)
-      {
-        if(!((mangle_callback) (next_item->data))(log_pipe_get_config(s),msg,self))
-          {
-            msg->ack_func = log_source_msg_ack;
-            return;
-          }
-      }
-    next_item = next_item->next;
-  }
-
   /* stats counters */
   if (stats_check_level(2))
     {
@@ -322,6 +307,8 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
       stats_unlock();
     }
   stats_counter_inc_pri(msg->pri);
+  stats_counter_inc(self->recvd_messages);
+  stats_counter_set(self->last_message_seen, msg->timestamps[LM_TS_RECVD].tv_sec);
 
   /* message setup finished, send it out */
 
@@ -343,8 +330,21 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
 
   g_assert(old_window_size > 0);
 
-  stats_counter_inc(self->recvd_messages);
-  stats_counter_set(self->last_message_seen, msg->timestamps[LM_TS_RECVD].tv_sec);
+  /* mangle callbacks */
+  next_item = g_list_first(self->options->source_queue_callbacks);
+  while(next_item)
+  {
+    if(next_item->data)
+      {
+        if(!((mangle_callback) (next_item->data))(log_pipe_get_config(s),msg,self))
+          {
+            log_msg_drop(msg, &local_options, AT_PROCESSED);
+            return;
+          }
+      }
+    next_item = next_item->next;
+  }
+
   log_pipe_forward_msg(s, msg, &local_options);
 
   msg_set_context(NULL);
