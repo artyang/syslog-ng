@@ -109,6 +109,8 @@ create_sample_message(void)
   log_msg_set_value(msg, log_msg_get_value_handle("APP.STRIP3"), "     value     ", -1);
   log_msg_set_value(msg, log_msg_get_value_handle("APP.STRIP4"), "value", -1);
   log_msg_set_value(msg, log_msg_get_value_handle("APP.STRIP5"), "", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle("escaping"), "binary stuff follows \"\xad árvíztűrőtükörfúrógép", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle("escaping2"), "\xc3", -1);
 
   return msg;
 }
