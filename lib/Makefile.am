@@ -104,6 +104,7 @@ pkginclude_HEADERS = 		\
 	type-hinting.h	\
 	utils.h			\
 	uuid.h			\
+	utf8utils.h			\
 	value-pairs.h		\
 	versioning.h	\
 	vptransform.h	\
@@ -208,6 +209,7 @@ libsyslog_ng_la_SOURCES = \
 	type-hinting.c	\
 	utils.c			\
 	uuid.c			\
+	utf8utils.c			\
 	value-pairs.c		\
 	versioning.c		\
 	vptransform.c		\
