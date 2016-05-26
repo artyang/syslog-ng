@@ -21,7 +21,6 @@
  */
 
 #include "plugin.h"
-#include "plugin-types.h"
 #include "format-welf.h"
 
 extern CfgParser kv_parser_parser;

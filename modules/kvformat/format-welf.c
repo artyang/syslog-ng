@@ -24,23 +24,20 @@
 #include "utf8utils.h"
 #include "value-pairs.h"
 
-typedef struct _TFWelfState
-{
-  TFSimpleFuncState super;
-  ValuePairs *vp;
-} TFWelfState;
-
 static gboolean
-tf_format_welf_prepare(LogTemplateFunction *self, gpointer s, LogTemplate *parent,
+tf_format_welf_prepare(LogTemplateFunction *self, LogTemplate *parent,
                        gint argc, gchar *argv[],
+                       gpointer *state, GDestroyNotify *state_destroy,
                        GError **error)
 {
-  TFWelfState *state = (TFWelfState *) s;
+  ValuePairs *vp;
 
-  state->vp = value_pairs_new_from_cmdline (parent->cfg, argc, argv, error);
-  if (!state->vp)
+  vp = value_pairs_new_from_cmdline (parent->cfg, argc, argv, error);
+  if (!vp)
     return FALSE;
 
+  *state = vp;
+  *state_destroy = (GDestroyNotify) value_pairs_unref;
   return TRUE;
 }
 
@@ -75,28 +72,20 @@ tf_format_welf_strcmp(gconstpointer a, gconstpointer b)
 }
 
 static void
-tf_format_welf_call(LogTemplateFunction *self, gpointer s, const LogTemplateInvokeArgs *args, GString *result)
+tf_format_welf_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
+                    LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+                    gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
-  TFWelfState *state = (TFWelfState *) s;
+  ValuePairs *vp = (ValuePairs *)state;
   gint i;
 
-  for (i = 0; i < args->num_messages; i++)
+  for (i = 0; i < num_messages; i++)
     {
-      value_pairs_foreach_sorted(state->vp,
+      value_pairs_foreach_sorted(vp,
                                  tf_format_welf_foreach, (GCompareDataFunc) tf_format_welf_strcmp,
-                                 args->messages[i], 0, args->tz, args->opts, result);
+                                 messages[i], 0, tz, opts, result);
     }
 
 }
 
-static void
-tf_format_welf_free_state(gpointer s)
-{
-  TFWelfState *state = (TFWelfState *) s;
-
-  if (state->vp)
-    value_pairs_unref(state->vp);
-  tf_simple_func_free_state(s);
-}
-
-TEMPLATE_FUNCTION(TFWelfState, tf_format_welf, tf_format_welf_prepare, NULL, tf_format_welf_call, tf_format_welf_free_state, NULL);
+TEMPLATE_FUNCTION(tf_format_welf, tf_format_welf_prepare, NULL, tf_format_welf_call, NULL);

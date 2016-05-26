@@ -24,7 +24,7 @@
 
 #include "cfg-parser.h"
 #include "cfg-lexer.h"
-#include "parser/parser-expr.h"
+#include "logparser.h"
 
 extern CfgParser kv_parser_parser;
 

@@ -22,7 +22,7 @@
 #ifndef KVPARSER_H_INCLUDED
 #define KVPARSER_H_INCLUDED
 
-#include "parser/parser-expr.h"
+#include "logparser.h"
 #include "kv-scanner.h"
 
 void kv_parser_set_prefix(LogParser *p, const gchar *prefix);

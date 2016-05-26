@@ -34,7 +34,7 @@
 #define kv_parser_testcase_end()                           \
   do                                                            \
     {                                                           \
-      log_pipe_unref(&kv_parser->super);                      \
+      log_pipe_unref(&kv_parser->super.super);                      \
       testcase_end();                                           \
     }                                                           \
   while (0)
@@ -55,15 +55,16 @@ parse_kv_into_log_message_no_check(const gchar *kv)
   LogPathOptions path_options = LOG_PATH_OPTIONS_INIT;
   LogParser *cloned_parser;
 
-  cloned_parser = (LogParser *) log_pipe_clone(&kv_parser->super);
+  g_assert(kv_parser->super.clone);
+  cloned_parser = (LogParser *) kv_parser->super.clone(&kv_parser->super);
   msg = log_msg_new_empty();
   if (!log_parser_process(cloned_parser, &msg, &path_options, kv, strlen(kv)))
     {
       log_msg_unref(msg);
-      log_pipe_unref(&cloned_parser->super);
+      log_pipe_unref(&cloned_parser->super.super);
       return NULL;
     }
-  log_pipe_unref(&cloned_parser->super);
+  log_pipe_unref(&cloned_parser->super.super);
   return msg;
 }
 

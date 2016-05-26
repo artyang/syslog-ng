@@ -75,7 +75,6 @@ kv_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_op
 {
   KVParser *self = (KVParser *) s;
 
-  log_msg_make_writable(pmsg, path_options);
   /* FIXME: input length */
   kv_scanner_input(self->kv_scanner, input);
   while (kv_scanner_scan_next(self->kv_scanner))
@@ -90,15 +89,15 @@ kv_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_op
 }
 
 static LogPipe *
-kv_parser_clone(LogPipe *s)
+kv_parser_clone(LogProcessPipe *s)
 {
   KVParser *self = (KVParser *) s;
   LogParser *cloned;
 
-  cloned = kv_parser_new(s->cfg, kv_scanner_clone(self->kv_scanner));
+  cloned = kv_parser_new(s->super.cfg, kv_scanner_clone(self->kv_scanner));
   kv_parser_set_prefix(cloned, self->prefix);
 
-  return &cloned->super;
+  return &cloned->super.super;
 }
 
 static void
@@ -117,8 +116,8 @@ kv_parser_new(GlobalConfig *cfg, KVScanner *kv_scanner)
 {
   KVParser *self = g_new0(KVParser, 1);
 
-  log_parser_init_instance(&self->super, cfg);
-  self->super.super.free_fn = kv_parser_free;
+  log_parser_init_instance(&self->super);
+  self->super.super.super.free_fn = kv_parser_free;
   self->super.super.clone = kv_parser_clone;
   self->super.process = kv_parser_process;
 
