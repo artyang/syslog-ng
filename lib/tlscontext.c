@@ -305,14 +305,8 @@ tls_context_verify_locations(TLSContext *self, gchar *dir)
 {
   if (file_exists(dir))
     {
-      if (self->ca_dir_layout == CA_DIR_LAYOUT_SHA1 && !SSL_CTX_load_verify_locations(self->ssl_ctx, NULL, dir))
+      if (!SSL_CTX_load_verify_locations(self->ssl_ctx, NULL, dir))
         return FALSE;
-#if ! ENABLE_FIPS
-      else if (self->ca_dir_layout == CA_DIR_LAYOUT_MD5 && !SSL_CTX_load_verify_locations_old(self->ssl_ctx, NULL, dir))
-        return FALSE;
-#else
-      g_assert(self->ca_dir_layout != CA_DIR_LAYOUT_MD5);
-#endif
     }
   return TRUE;
 }
