@@ -24,6 +24,9 @@
 
 #include "children.h"
 #include <atomic.h>
+#include <sys/types.h>
+#include <signal.h>
+
 
 typedef struct _ChildEntry
 {
@@ -82,6 +85,19 @@ child_manager_sigchild(pid_t pid, int status)
       g_hash_table_remove(child_hash, &pid);
       (void)g_atomic_counter_dec_and_test(&child_count);
     }
+}
+
+void
+_child_manager_kill_all_helper(gpointer key, gpointer value, gpointer user_data)
+{
+  pid_t pid = *((pid_t*)key);
+  kill(pid, SIGKILL);
+}
+
+void
+child_manager_kill_all()
+{
+  g_hash_table_foreach(child_hash, _child_manager_kill_all_helper, NULL);
 }
 
 void

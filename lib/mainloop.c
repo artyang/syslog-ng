@@ -438,6 +438,9 @@ main_loop_reload_config_initiate(void)
  * syncronized exit
  ************************************************************************************/
 
+#define CHILD_WAIT_TIMER_TIMEOUT 100
+#define CHILD_WAIT_TIMER_MAXRESTART_COUNT 50
+static int main_loop_child_wait_timer_restart_count = 0;
 static struct iv_timer main_loop_child_wait_timer;
 static struct iv_timer main_loop_exit_timer;
 
@@ -450,17 +453,28 @@ start_child_wait_timer(void)
   iv_validate_now();
   main_loop_child_wait_timer.expires = iv_now;
   main_loop_child_wait_timer.handler = main_loop_child_wait_timer_elapsed;
-  timespec_add_msec(&main_loop_child_wait_timer.expires, 100);
+  timespec_add_msec(&main_loop_child_wait_timer.expires, CHILD_WAIT_TIMER_TIMEOUT);
   iv_timer_register(&main_loop_child_wait_timer);
 }
 
 static void
 main_loop_child_wait_timer_elapsed(void *arg)
 {
-  if (!child_manager_is_empty()) {
-    start_child_wait_timer();
-    return;
-  }
+  if (child_manager_is_empty())
+    {
+      iv_quit();
+      return;  // should not reach
+    }
+
+  main_loop_child_wait_timer_restart_count++;
+
+  if (main_loop_child_wait_timer_restart_count <= CHILD_WAIT_TIMER_MAXRESTART_COUNT)
+    {
+      start_child_wait_timer();
+      return;
+    }
+
+  child_manager_kill_all();
   iv_quit();
 }
 
