@@ -87,8 +87,8 @@ child_manager_sigchild(pid_t pid, int status)
     }
 }
 
-void
-_child_manager_kill_all_helper(gpointer key, gpointer value, gpointer user_data)
+static void
+_kill_all_helper(gpointer key, gpointer value, gpointer user_data)
 {
   pid_t pid = *((pid_t*)key);
   kill(pid, SIGKILL);
@@ -97,7 +97,7 @@ _child_manager_kill_all_helper(gpointer key, gpointer value, gpointer user_data)
 void
 child_manager_kill_all()
 {
-  g_hash_table_foreach(child_hash, _child_manager_kill_all_helper, NULL);
+  g_hash_table_foreach(child_hash, _kill_all_helper, NULL);
 }
 
 void

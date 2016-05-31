@@ -461,10 +461,7 @@ static void
 main_loop_child_wait_timer_elapsed(void *arg)
 {
   if (child_manager_is_empty())
-    {
-      iv_quit();
-      return;  // should not reach
-    }
+    goto out;
 
   main_loop_child_wait_timer_restart_count++;
 
@@ -475,6 +472,7 @@ main_loop_child_wait_timer_elapsed(void *arg)
     }
 
   child_manager_kill_all();
+out:
   iv_quit();
 }
 
