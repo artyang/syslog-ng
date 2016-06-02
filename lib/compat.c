@@ -185,6 +185,19 @@ writev(int fd, const struct iovec *vector, int count)
   return bytes_written;
 }
 
+static off_t
+_get_aligned_offset(off_t unaligned_offset)
+{
+  static off_t alignment = 0;
+  if (alignment == 0)
+    {
+      SYSTEM_INFO si;
+      GetSystemInfo(&si);
+      alignment = si.dwAllocationGranularity;
+    }
+  return (unaligned_offset / alignment) * alignment;
+}
+
 void *
 mmap(void *addr, size_t len, int prot, int flags,
        int fildes, off_t off)
@@ -226,7 +239,8 @@ mmap(void *addr, size_t len, int prot, int flags,
   DWORD dwDesiredAccess = 0;
   HANDLE file_mapping;
   void *ret_addr;
-  offset.QuadPart = off ;
+  off_t aligned_offset = _get_aligned_offset(off);
+  offset.QuadPart = aligned_offset;
 
   switch (prot)
    {
@@ -258,7 +272,7 @@ mmap(void *addr, size_t len, int prot, int flags,
   if (file_mapping == NULL)
     return MAP_FAILED;
 
-  ret_addr = MapViewOfFile(file_mapping, dwDesiredAccess, offset.HighPart, offset.LowPart, len);
+  ret_addr = MapViewOfFile(file_mapping, dwDesiredAccess, offset.HighPart, offset.LowPart, len + (off - aligned_offset));
 
   /*
    * Mapped views of a file mapping object maintain internal references to the object,
@@ -278,7 +292,7 @@ mmap(void *addr, size_t len, int prot, int flags,
 int
 munmap(void *addr, size_t len)
 {
-  return UnmapViewOfFile(addr);
+  return UnmapViewOfFile((void *)(_get_aligned_offset((off_t)addr))) != 0 ? 0 : -1;
 }
 
 int
