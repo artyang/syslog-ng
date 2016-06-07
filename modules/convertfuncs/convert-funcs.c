@@ -23,75 +23,6 @@ tf_ipv4_to_int(LogMessage *msg, gint argc, GString *argv[], GString *result)
 
 TEMPLATE_FUNCTION_SIMPLE(tf_ipv4_to_int);
 
-static gboolean
-tf_format_welf_prepare(LogTemplateFunction *self, LogTemplate *parent,
-                gint argc, gchar *argv[],
-                gpointer *state, GDestroyNotify *state_destroy,
-                GError **error)
-{
-  ValuePairs *vp;
-
-  vp = value_pairs_new_from_cmdline (parent->cfg, argc, argv, error);
-  if (!vp)
-    return FALSE;
-
-  *state = vp;
-  *state_destroy = (GDestroyNotify) value_pairs_unref;
-
-  return TRUE;
-}
-
-static gboolean
-tf_format_welf_foreach(const gchar *name, TypeHint type, const gchar *value, gpointer user_data)
-{
-  GString *result=(GString *) user_data;
-  gchar *escaped_value = utf8_escape_string_ex(value);
-
-  if (result->len > 0)
-    g_string_append(result," ");
-
-  if (strchr(value, ' ') == NULL)
-    g_string_append_printf(result, "%s=%s", name, escaped_value);
-  else
-    g_string_append_printf(result, "%s=\"%s\"", name, escaped_value);
-
-  g_free(escaped_value);
-  return FALSE;
-}
-
-static gint
-tf_format_welf_strcmp(gconstpointer a, gconstpointer b)
-{
-  gchar *sa = (gchar *)a, *sb = (gchar *)b;
-  if (strcmp (sa, "id") == 0)
-    return -1;
-  return strcmp(sa, sb);
-}
-
-static void
-tf_format_welf_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-             LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
-             gint tz, gint seq_num, const gchar *context_id, GString *result)
-{
-  gint i;
-  ValuePairs *vp = (ValuePairs *)state;
-
-  for (i = 0; i < num_messages; i++)
-    value_pairs_foreach_sorted(vp, tf_format_welf_foreach, (GCompareDataFunc)tf_format_welf_strcmp,
-        messages[i], 0, tz, opts, result);
-
-}
-
-static void
-tf_format_welf_eval (LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-              LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
-              gint tz, gint seq_num, const gchar *context_id)
-{
-  return;
-}
-
-TEMPLATE_FUNCTION(tf_format_welf,tf_format_welf_prepare,tf_format_welf_eval,tf_format_welf_call,NULL);
-
 typedef struct _SnareFormatOptions {
   GlobalConfig *cfg;
   LogTemplate *protocol_template;
@@ -443,7 +374,6 @@ TEMPLATE_FUNCTION_SIMPLE(tf_lowercase);
 static Plugin convert_func_plugins[] =
 {
   TEMPLATE_FUNCTION_PLUGIN(tf_ipv4_to_int, "ipv4-to-int"),
-  TEMPLATE_FUNCTION_PLUGIN(tf_format_welf, "format-welf"),
   TEMPLATE_FUNCTION_PLUGIN(tf_format_snare, "format-snare"),
   TEMPLATE_FUNCTION_PLUGIN(tf_replace,"replace"),
   TEMPLATE_FUNCTION_PLUGIN(tf_lowercase,"lowercase"),
