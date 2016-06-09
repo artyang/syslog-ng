@@ -286,7 +286,7 @@ mmap(void *addr, size_t len, int prot, int flags,
     goto error;
 
   CloseHandle(file_mapping);
-  return ret_addr;
+  return ret_addr + (off - aligned_offset);
 
 error:
   errno = _map_windows_error(GetLastError());
