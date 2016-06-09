@@ -21,7 +21,7 @@
  * COPYING for details.
  *
  */
-  
+
 #include "logsource.h"
 #include "messages.h"
 #include "misc.h"
@@ -153,7 +153,7 @@ log_source_mangle_hostname(LogSource *self, LogMessage *msg)
   gchar resolved_name[256];
   gsize resolved_name_len = sizeof(resolved_name);
   const gchar *orig_host;
-  
+
   resolve_sockaddr(resolved_name, &resolved_name_len, msg->saddr, self->options->use_dns, self->options->use_fqdn, self->options->use_dns_cache, self->options->normalize_hostnames);
 
   log_msg_set_value(msg, LM_V_HOST_FROM, resolved_name, resolved_name_len);
@@ -163,39 +163,39 @@ log_source_mangle_hostname(LogSource *self, LogMessage *msg)
     {
       gchar host[256];
       gint host_len = -1;
-      if (G_UNLIKELY(self->options->chain_hostnames)) 
-	{
+      if (G_UNLIKELY(self->options->chain_hostnames))
+        {
           msg->flags |= LF_CHAINED_HOSTNAME;
-	  if (msg->flags & LF_LOCAL) 
-	    {
-	      /* local */
-	      host_len = g_snprintf(host, sizeof(host), "%s@%s", self->options->group_name, resolved_name);
-	    }
-	  else if (!orig_host || !orig_host[0])
-	    {
-	      /* remote && no hostname */
-	      host_len = g_snprintf(host, sizeof(host), "%s/%s", resolved_name, resolved_name);
-	    } 
-	  else 
-	    {
-	      /* everything else, append source hostname */
-	      if (orig_host && orig_host[0])
-		host_len = g_snprintf(host, sizeof(host), "%s/%s", orig_host, resolved_name);
-	      else
+          if (msg->flags & LF_LOCAL)
+            {
+              /* local */
+              host_len = g_snprintf(host, sizeof(host), "%s@%s", self->options->group_name, resolved_name);
+            }
+          else if (!orig_host || !orig_host[0])
+            {
+              /* remote && no hostname */
+              host_len = g_snprintf(host, sizeof(host), "%s/%s", resolved_name, resolved_name);
+            }
+          else
+            {
+              /* everything else, append source hostname */
+              if (orig_host && orig_host[0])
+                host_len = g_snprintf(host, sizeof(host), "%s/%s", orig_host, resolved_name);
+              else
                 {
                   strncpy(host, resolved_name, sizeof(host));
                   /* just in case it is not zero terminated */
                   host[255] = 0;
                 }
-	    }
+            }
           if (host_len >= sizeof(host))
             host_len = sizeof(host) - 1;
           log_msg_set_value(msg, LM_V_HOST, host, host_len);
-	}
+        }
       else
-	{
+        {
           log_msg_set_value(msg, LM_V_HOST, resolved_name, resolved_name_len);
-	}
+        }
     }
 }
 
@@ -216,7 +216,7 @@ gboolean
 log_source_deinit(LogPipe *s)
 {
   LogSource *self = (LogSource *) s;
-  
+
   stats_lock();
   stats_unregister_counter(self->stats_source | SCS_SOURCE, self->stats_id, self->stats_instance, SC_TYPE_PROCESSED, &self->recvd_messages);
   stats_unregister_counter(self->stats_source | SCS_SOURCE, self->stats_id, self->stats_instance, SC_TYPE_STAMP, &self->last_message_seen);
@@ -283,21 +283,6 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
 
   log_msg_set_tag_by_id(msg, self->options->source_group_tag);
 
-  /* mangle callbacks */
-  next_item = g_list_first(self->options->source_queue_callbacks);
-  while(next_item)
-  {
-    if(next_item->data)
-      {
-        if(!((mangle_callback) (next_item->data))(log_pipe_get_config(s),msg,self))
-          {
-            msg->ack_func = log_source_msg_ack;
-            return;
-          }
-      }
-    next_item = next_item->next;
-  }
-
   /* stats counters */
   if (stats_check_level(2))
     {
@@ -322,6 +307,8 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
       stats_unlock();
     }
   stats_counter_inc_pri(msg->pri);
+  stats_counter_inc(self->recvd_messages);
+  stats_counter_set(self->last_message_seen, msg->timestamps[LM_TS_RECVD].tv_sec);
 
   /* message setup finished, send it out */
 
@@ -330,7 +317,7 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
   log_msg_ref(msg); // TODO: move to register_msg?
   log_msg_add_ack(msg, &local_options);
   msg->ack_func = log_source_msg_ack;
-    
+
   old_window_size = g_atomic_counter_exchange_and_add(&self->window_size, -1);
 
   /*
@@ -343,8 +330,21 @@ log_source_queue(LogPipe *s, LogMessage *msg, const LogPathOptions *path_options
 
   g_assert(old_window_size > 0);
 
-  stats_counter_inc(self->recvd_messages);
-  stats_counter_set(self->last_message_seen, msg->timestamps[LM_TS_RECVD].tv_sec);
+  /* mangle callbacks */
+  next_item = g_list_first(self->options->source_queue_callbacks);
+  while(next_item)
+  {
+    if(next_item->data)
+      {
+        if(!((mangle_callback) (next_item->data))(log_pipe_get_config(s),msg,self))
+          {
+            log_msg_drop(msg, &local_options, AT_PROCESSED);
+            return;
+          }
+      }
+    next_item = next_item->next;
+  }
+
   log_pipe_forward_msg(s, msg, &local_options);
 
   msg_set_context(NULL);
@@ -378,7 +378,7 @@ log_source_set_options(LogSource *self, LogSourceOptions *options, gint stats_le
   /* NOTE: we don't adjust window_size even in case it was changed in the
    * configuration and we received a SIGHUP.  This means that opened
    * connections will not have their window_size changed. */
-  
+
   if (g_atomic_counter_get(&self->window_size) == -1)
     g_atomic_counter_set(&self->window_size, options->init_window_size);
   self->options = options;
@@ -439,7 +439,7 @@ log_source_options_defaults(LogSourceOptions *options)
  * NOTE: options_init and options_destroy are a bit weird, because their
  * invocation is not completely symmetric:
  *
- *   - init is called from driver init (e.g. affile_sd_init), 
+ *   - init is called from driver init (e.g. affile_sd_init),
  *   - destroy is called from driver free method (e.g. affile_sd_free, NOT affile_sd_deinit)
  *
  * The reason:
@@ -455,7 +455,7 @@ log_source_options_defaults(LogSourceOptions *options)
  *
  * As init allocates memory, it has to take care about freeing memory
  * allocated by the previous init call (or it has to reuse those).
- *   
+ *
  */
 void
 log_source_options_init(LogSourceOptions *options, GlobalConfig *cfg, const gchar *group_name)
@@ -464,7 +464,7 @@ log_source_options_init(LogSourceOptions *options, GlobalConfig *cfg, const gcha
   gchar *source_group_name;
   gboolean read_old_records;
   GArray *tags;
-  
+
   host_override = options->host_override;
   options->host_override = NULL;
   program_override = options->program_override;
@@ -481,13 +481,13 @@ log_source_options_init(LogSourceOptions *options, GlobalConfig *cfg, const gcha
   log_source_options_destroy(options);
 
   options->tags = tags;
-  
+
   options->host_override = host_override;
   options->host_override_len = -1;
   options->program_override = program_override;
   options->program_override_len = -1;
   options->read_old_records = read_old_records;
-  
+
 
   options->source_queue_callbacks = cfg->source_mangle_callback_list;
 
