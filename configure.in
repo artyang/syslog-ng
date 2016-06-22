@@ -1679,6 +1679,7 @@ dnl PE modules
       tests/unit/Makefile
       tests/unit/filters-in-list/Makefile
       tests/complex/Makefile
+      tests/copyright/Makefile
       tests/loggen/Makefile
       winbuild/Makefile
           )

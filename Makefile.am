@@ -48,6 +48,8 @@ check_%:
                 $(MAKE) SUBDIRS=tests/unit check_PROGRAMS=`echo "$@" | sed -r 's/^check_unit_//g'` check ; \
         elif test $${target:0:17} = 'check_functional_' ; then \
                 $(MAKE) SUBDIRS=pe-tests/functional testcase=`echo "$@" | sed -r 's/^check_functional_//g'` check ; \
+        elif test $$target = 'check_copyright' ; then \
+                $(MAKE) SUBDIRS=tests/copyright check ; \
         else \
                 echo "Unknown type of test: '`echo $@ | sed -r 's/^check_([^_]+)_.*/\\1/g'`'" ; \
         fi

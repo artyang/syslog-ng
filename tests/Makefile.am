@@ -1,20 +1,6 @@
 EXTRA_DIST = \
-	collect-cov.sh \
-	copyright/check.sh \
-	copyright/policy \
-	copyright/license.text.GPLv2+.txt \
-	copyright/license.text.GPLv2+_SSL.txt \
-	copyright/license.text.LGPLv2.1+.txt \
-	copyright/license.text.LGPLv2.1+_SSL.txt
+	collect-cov.sh
 
-SUBDIRS = unit loggen complex
+SUBDIRS = unit loggen complex copyright
 
-check-copyright:
-	@$(top_srcdir)/tests/copyright/check.sh $(top_srcdir) $(top_builddir) policy
-
-CLEAN_HOOKS = clean-check-copyright
-
-clean-check-copyright:
-	rm -f $(top_builddir)/copyright-run.log $(top_builddir)/copyright-err.log
-
-TESTS = collect-cov.sh check-copyright
+TESTS = collect-cov.sh
