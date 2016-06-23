@@ -54,8 +54,12 @@ modules/java-modules/*/build/
 modules/java-modules/.gradle/
 modules/java-modules/build/
 pe-tests
+scl/snmp
+scl/sql
+syslog-ng-query
 tags
 typescript
+tools
 windows-tools
 windows-binaries
 *.pyc

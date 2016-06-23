@@ -47,6 +47,23 @@ set -e
         ln -s $binpath $pebin
     fi
  done
+
+ for pebin in syslog-ng-query tools; do
+    binpath=$pemodrepo/core/$pebin
+    if [ -d $binpath ]; then
+        if [ -h $pebin ] || [ -d $pebin ]; then rm -rf $pebin; fi
+        ln -s $binpath $pebin
+    fi
+ done
+
+ for scl in snmp sql; do
+    binpath=$pemodrepo/core-scl/$scl
+    pebin=scl/$scl
+    if [ -d $binpath ]; then
+        if [ -h $pebin ] || [ -d $pebin ]; then rm -rf $pebin; fi
+        ln -s $binpath $pebin
+    fi
+ done
 )
 
 ACLOCALPATHS=
