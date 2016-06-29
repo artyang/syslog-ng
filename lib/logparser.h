@@ -62,5 +62,7 @@ void log_column_parser_set_columns(LogColumnParser *s, GList *fields);
 void log_column_parser_init_instance(LogColumnParser *self);
 void log_column_parser_free_method(LogPipe *s);
 
+gboolean log_parser_process_message(LogParser *self, LogMessage **pmsg, const LogPathOptions *path_options);
+
 #endif
 
