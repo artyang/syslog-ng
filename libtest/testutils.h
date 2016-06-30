@@ -90,7 +90,8 @@ gboolean assert_msg_field_equals_non_fatal(LogMessage *msg, gchar *field_name, g
 #define assert_string(actual, expected, error_message, ...) (assert_nstring_non_fatal(actual, -1, expected, -1, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
 #define assert_nstring(actual, actual_len, expected, expected_len, error_message, ...) (assert_nstring_non_fatal(actual, actual_len, expected, expected_len, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
 
-#define expect_nstring(actual, actual_len, expected, expected_len, error_message, ...) (assert_nstring_non_fatal(actual, actual_len, expected, expected_len, error_message, ##__VA_ARGS__) ? 1 : (slng_template_lib_failure = TRUE,0))
+#define expect_nstring(actual, actual_len, expected, expected_len, error_message, ...) \
+  assert_nstring_non_fatal(actual, actual_len, expected, expected_len, error_message, ##__VA_ARGS__)
 
 #define assert_guint32_array(actual, actual_length, expected, expected_length, error_message, ...) ( \
     assert_guint32_array_non_fatal(actual, actual_length, expected, expected_length, error_message, ##__VA_ARGS__)\
@@ -108,9 +109,10 @@ gboolean assert_msg_field_equals_non_fatal(LogMessage *msg, gchar *field_name, g
 #define assert_true(value, error_message, ...) (assert_gboolean(value, TRUE, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
 #define assert_false(value, error_message, ...) (assert_gboolean(value, FALSE, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
 
-#define expect_gboolean(actual, expected, error_message, ...) (assert_gboolean_non_fatal(actual, expected, error_message, ##__VA_ARGS__) ? 1 : (slng_template_lib_failure = TRUE,0))
-#define expect_true(value, error_message, ...) (expect_gboolean(value, TRUE, error_message, ##__VA_ARGS__) ? 1 : (slng_template_lib_failure = TRUE,0))
-#define expect_false(value, error_message, ...) (expect_gboolean(value, FALSE, error_message, ##__VA_ARGS__) ? 1 : (slng_template_lib_failure = TRUE,0))
+#define expect_gboolean(actual, expected, error_message, ...) \
+  assert_gboolean_non_fatal(actual, expected, error_message, ##__VA_ARGS__)
+#define expect_true(value, error_message, ...) expect_gboolean(value, TRUE, error_message, ##__VA_ARGS__)
+#define expect_false(value, error_message, ...) expect_gboolean(value, FALSE, error_message, ##__VA_ARGS__)
 
 #define assert_null(pointer, error_message, ...) (assert_null_non_fatal((void *)pointer, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
 #define assert_not_null(pointer, error_message, ...) (assert_not_null_non_fatal((void *)pointer, error_message, ##__VA_ARGS__) ? 1 : (exit(1),0))
@@ -136,6 +138,8 @@ static inline char *basename(const char *path)
   return result;
 }
 #endif
+
+gboolean testutils_deinit(void);
 
 #define testcase_begin(description_template, ...) \
     do { \
