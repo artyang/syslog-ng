@@ -175,8 +175,6 @@ raise_mkdir_permissions()
 
 gchar *utf8_escape_string(const gchar *str, gssize len);
 
-gchar* utf8_escape_string_ex(const gchar *str);
-
 gchar *normalize_option_name(gchar *name);
 
 /*only windows function. sry for the ifdef*/

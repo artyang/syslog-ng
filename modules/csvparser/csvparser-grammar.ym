@@ -34,8 +34,7 @@
 #include "csvparser-grammar.h"
 #include "syslog-names.h"
 #include "messages.h"
-
-extern LogParser *last_parser;
+#include "cfg-grammar.h"
 
 }
 

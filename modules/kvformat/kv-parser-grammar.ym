@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2002-2013 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2013 Balázs Scheidler
+ * Copyright (c) 2015 Balabit
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -18,28 +17,25 @@
  * As an additional exemption you are allowed to compile & link against the
  * OpenSSL libraries as published by the OpenSSL project. See the file
  * COPYING for details.
- *
  */
 
 %code top {
-#include "dbparser-parser.h"
+#include "kv-parser-parser.h"
 
 }
 
 
 %code {
 
-#include "dbparser.h"
+#include "kv-parser.h"
+#include "linux-audit-scanner.h"
 #include "cfg-parser.h"
-#include "dbparser-grammar.h"
-#include "syslog-names.h"
-#include "messages.h"
-#include <string.h>
+#include "kv-parser-grammar.h"
 #include "cfg-grammar.h"
 
 }
 
-%name-prefix "dbparser_"
+%name-prefix "kv_parser_"
 
 /* this parameter is needed in order to instruct bison to use a complete
  * argument list for yylex/yyerror */
@@ -51,41 +47,49 @@
 
 /* INCLUDE_DECLS */
 
-%token KW_DB_PARSER
-%token KW_INJECT_MODE
+%token KW_KV_PARSER
+%token KW_LINUX_AUDIT_PARSER
+%token KW_PREFIX
+%token KW_VALUE_SEPARATOR
 
-%type <cptr> parser_db_inject_mode
+%type	<ptr> parser_expr_kv
 
 %%
 
 start
-        : LL_CONTEXT_PARSER parser_expr_db                  { YYACCEPT; }
-        ;
+	: LL_CONTEXT_PARSER parser_expr_kv                  { YYACCEPT; }
+	;
 
-parser_expr_db
-        : KW_DB_PARSER '('
-          {
-            last_parser = *instance = (LogParser *) log_db_parser_new(configuration);
+
+parser_expr_kv
+	: KW_KV_PARSER '('
+	  {
+	    last_parser = *instance = (LogParser *) kv_parser_new(configuration, kv_scanner_new());
+	  }
+	  parser_kv_opts
+	  ')'					{ $$ = last_parser; }
+	| KW_LINUX_AUDIT_PARSER '('
+	  {
+	    last_parser = *instance = (LogParser *) kv_parser_new(configuration, linux_audit_scanner_new());
+	  }
+	  parser_kv_opts
+	  ')'					{ $$ = last_parser; }
+	;
+
+parser_kv_opts
+	: parser_kv_opt parser_kv_opts
+	|
+	;
+
+parser_kv_opt
+	: KW_PREFIX '(' string ')'		{ kv_parser_set_prefix(last_parser, $3); free($3); }
+	| KW_VALUE_SEPARATOR '(' string ')'
+	  {
+	    CHECK_ERROR((strlen($3) == 1), @3, "kv-parser() only supports single-character values for value-separator()");
+            kv_parser_set_value_separator(last_parser, $3[0]);
+            free($3);
           }
-          parser_db_opts
-          ')'
-        ;
-
-parser_db_opts
-        : parser_db_opt parser_db_opts
-        |
-        ;
-
-/* NOTE: we don't support parser_opt as we don't want the user to specify a template */
-parser_db_opt
-        : KW_FILE '(' string ')'                		{ log_db_parser_set_db_file(((LogDBParser *) last_parser), $3); free($3); }
-	| KW_INJECT_MODE '(' parser_db_inject_mode ')'		{ log_db_parser_set_inject_mode(((LogDBParser *) last_parser), $3); free($3); }
 	| parser_opt
-        ;
-
-parser_db_inject_mode
-	: string				{ $$ = $1; }
-	| KW_INTERNAL				{ $$ = strdup("internal"); }
 	;
 
 /* INCLUDE_RULES */

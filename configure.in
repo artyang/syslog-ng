@@ -1553,6 +1553,7 @@ AC_OUTPUT(dist.conf
           syslog-ng.pc
           build/Makefile
           lib/Makefile
+          lib/tests/Makefile
 	        libtest/Makefile
           syslog-ng/Makefile
           syslog-ng-ctl/Makefile
@@ -1588,6 +1589,8 @@ AC_OUTPUT(dist.conf
           modules/convertfuncs/tests/Makefile
           modules/json/Makefile
           modules/json/tests/Makefile
+          modules/kvformat/Makefile
+          modules/kvformat/tests/Makefile
           modules/agent-config/Makefile
           modules/agent-config/tests/Makefile
           modules/agent-config/tests/unit/Makefile
