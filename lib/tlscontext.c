@@ -330,6 +330,13 @@ tls_context_set_default_ca_dir_layout(TLSContext *self, GlobalConfig *cfg)
     }
 }
 
+static gint
+_get_number_of_available_compression_methods(void)
+{
+  STACK_OF(SSL_COMP) *ssl_comp_methods = SSL_COMP_get_compression_methods();
+  return sk_SSL_COMP_num(ssl_comp_methods);
+}
+
 static gboolean
 tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
 {
@@ -404,22 +411,16 @@ tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
 
   SSL_CTX_set_verify(self->ssl_ctx, verify_mode, tls_session_verify_callback);
   SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_SSLv2);
+
   if (self->allow_compress <= 0)
     {
       SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_COMPRESSION);
     }
-  else
+  else if (_get_number_of_available_compression_methods() == 0)
     {
-      int n = 0;
-      STACK_OF(SSL_COMP) *ssl_comp_methods = NULL;
-      ssl_comp_methods = SSL_COMP_get_compression_methods();
-      n = sk_SSL_COMP_num(ssl_comp_methods);
-      if (n == 0)
-        {
-          msg_warning("Can't use compression, because there aren't any available methods",evt_tag_id(MSG_TLS_CANT_COMPRESS),NULL);
-          self->allow_compress = 0;
-          SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_COMPRESSION);
-        }
+      msg_warning("Can't use compression, because there aren't any available methods",evt_tag_id(MSG_TLS_CANT_COMPRESS),NULL);
+      self->allow_compress = 0;
+      SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_COMPRESSION);
     }
   if (self->cipher_suite)
     {
