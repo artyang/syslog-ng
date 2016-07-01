@@ -337,10 +337,38 @@ _get_number_of_available_compression_methods(void)
   return sk_SSL_COMP_num(ssl_comp_methods);
 }
 
+static void
+tls_context_setup_verify_mode(TLSContext *self)
+{
+  gint verify_mode = 0;
+
+  switch ((int)self->verify_mode)
+    {
+    case TVM_NONE:
+      verify_mode = SSL_VERIFY_NONE;
+      break;
+    case TVM_OPTIONAL | TVM_UNTRUSTED:
+      verify_mode = SSL_VERIFY_NONE;
+      break;
+    case TVM_OPTIONAL | TVM_TRUSTED:
+      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE;
+      break;
+    case TVM_REQUIRED | TVM_UNTRUSTED:
+      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+      break;
+    case TVM_REQUIRED | TVM_TRUSTED:
+      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+      break;
+    default:
+      g_assert_not_reached();
+    }
+
+  SSL_CTX_set_verify(self->ssl_ctx, verify_mode, tls_session_verify_callback);
+}
+
 static gboolean
 tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
 {
-  gint verify_mode = 0;
   gint verify_flags = X509_V_FLAG_POLICY_CHECK;
   gulong ssl_error;
 
@@ -388,28 +416,8 @@ tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
 
   X509_VERIFY_PARAM_set_flags(self->ssl_ctx->param, verify_flags);
 
-  switch ((int)self->verify_mode)
-    {
-    case TVM_NONE:
-      verify_mode = SSL_VERIFY_NONE;
-      break;
-    case TVM_OPTIONAL | TVM_UNTRUSTED:
-      verify_mode = SSL_VERIFY_NONE;
-      break;
-    case TVM_OPTIONAL | TVM_TRUSTED:
-      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE;
-      break;
-    case TVM_REQUIRED | TVM_UNTRUSTED:
-      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
-      break;
-    case TVM_REQUIRED | TVM_TRUSTED:
-      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
-      break;
-    default:
-      g_assert_not_reached();
-    }
+  tls_context_setup_verify_mode(self);
 
-  SSL_CTX_set_verify(self->ssl_ctx, verify_mode, tls_session_verify_callback);
   SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_SSLv2);
 
   if (self->allow_compress <= 0)
