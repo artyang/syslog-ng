@@ -367,6 +367,21 @@ tls_context_setup_verify_mode(TLSContext *self)
 }
 
 static gboolean
+tls_context_setup_ecdh(TLSContext *self)
+{
+  if (self->curve_list && !SSL_CTX_set1_curves_list(self->ssl_ctx, self->curve_list))
+    {
+      msg_error("Error setting up TLS session context, invalid curve name in list",
+                evt_tag_str("curve_list", self->curve_list),
+                NULL);
+      return FALSE;
+    }
+
+  SSL_CTX_set_ecdh_auto(self->ssl_ctx, 1);
+  return TRUE;
+}
+
+static gboolean
 tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
 {
   gint verify_flags = X509_V_FLAG_POLICY_CHECK;
@@ -437,7 +452,14 @@ tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
     }
 
   if (self->mode == TM_SERVER)
-      SSL_CTX_set_ecdh_auto(self->ssl_ctx, 1);
+    {
+      if (!tls_context_setup_ecdh(self))
+        {
+          SSL_CTX_free(self->ssl_ctx);
+          self->ssl_ctx = NULL;
+          return FALSE;
+        }
+    }
 
   return TRUE;
 
@@ -490,6 +512,13 @@ tls_context_new(TLSMode mode)
   return self;
 }
 
+void
+tls_context_set_curve_list(TLSContext *self, const gchar *curve_list)
+{
+  g_free(self->curve_list);
+  self->curve_list = g_strdup(curve_list);
+}
+
 static void
 tls_context_free(TLSContext *self)
 {
@@ -505,6 +534,7 @@ tls_context_free(TLSContext *self)
   g_free(self->ca_dir);
   g_free(self->crl_dir);
   g_free(self->cipher_suite);
+  g_free(self->curve_list);
   g_free(self);
 }
 

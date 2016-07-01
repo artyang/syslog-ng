@@ -79,6 +79,7 @@ struct _TLSContext
   gchar *ca_dir;
   gchar *crl_dir;
   gchar *cipher_suite;
+  gchar *curve_list;
   gchar *cert_subject;
   CADirLayout ca_dir_layout;
   SSL_CTX *ssl_ctx;
@@ -94,6 +95,7 @@ TLSSession *tls_context_setup_session(TLSContext *self, GlobalConfig *cfg);
 void tls_session_set_trusted_fingerprints(TLSContext *self, GList *fingerprints);
 void tls_session_set_trusted_dn(TLSContext *self, GList *dns);
 TLSContext *tls_context_new(TLSMode mode);
+void tls_context_set_curve_list(TLSContext *self, const gchar *curve_list);
 void tls_context_unref(TLSContext *s);
 TLSContext *tls_context_ref(TLSContext *s);
 
