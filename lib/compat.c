@@ -296,7 +296,10 @@ error:
 int
 munmap(void *addr, size_t len)
 {
-  if (!UnmapViewOfFile((void *)(_get_aligned_offset((off_t)addr))))
+  off_t add_off = GPOINTER_TO_SIZE(addr);
+  off_t aligned_offset = _get_aligned_offset(add_off);
+
+  if (!UnmapViewOfFile(GSIZE_TO_POINTER(aligned_offset)))
     {
       errno = _map_windows_error(GetLastError());
       return -1;
