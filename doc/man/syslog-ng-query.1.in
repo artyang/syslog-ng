@@ -1,0 +1,238 @@
+'\" t
+.\"     Title: syslog-ng-query
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/05/2016
+.\"    Manual: The syslog-ng-query tool manual page
+.\"    Source: 5 F6
+.\"  Language: English
+.\"
+.TH "SYSLOG\-NG\-QUERY" "1" "07/05/2016" "5 F6" "The syslog-ng-query tool manua"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+syslog-ng-query \- Query metrics and statistic data from a running instance
+.SH "SYNOPSIS"
+.HP \w'\fBsyslog\-ng\-query\fR\ 'u
+\fBsyslog\-ng\-query\fR [command] [options]
+.SH "DESCRIPTION"
+.PP
+NOTE: The syslog\-ng\-query application is distributed with the system logging application, and is usually part of the syslog\-ng package\&. The latest version of the syslog\-ng application is available at
+\m[blue]\fBthe official syslog\-ng website\fR\m[]\&.
+.PP
+This manual page is only an abstract; for the complete documentation of syslog\-ng, see
+\m[blue]\fBThe syslog\-ng Administrator Guide\fR\m[]\&.
+.PP
+The
+\fBsyslog\-ng\-query\fR
+application is a utility that can be used to query metrics and statistic data from a running instance\&.
+.PP
+The application stores various data, metrics, and statistics in a hierarchical data structure tree (\fBsyslog\-ng\fR
+is the root node of the tree)\&. The nodes of the tree can contain properties (but not every node contains properties)\&. Every property has a name and a value\&. For example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+[syslog\-ng]
+|
+|_[destinations]\-[network]\-[tcp]\->[stats]\->{received:12;dropped:2}
+|
+|_[sources]\-[sql]\-[stats]\->{reveived:501;dropped:0}
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+You can query the nodes of this tree, and also use filters to select the information you need\&. A query is actually a path in the tree\&. You can also use the
+\fB?\fR
+and
+\fB*\fR
+wildcards\&. For example:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Select every property:
+\fB*\fR
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Select all
+\fBdropped\fR
+value from every
+\fBstats\fR
+node:
+\fB*\&.stats\&.dropped\fR
+.RE
+.PP
+The nodes and properties available in the tree depend on your configuration (that is, the sources, destinations, and other objects you have configured), and also on your
+\fIstats\-level()\fR
+settings\&.
+.SH "THE LIST COMMAND"
+.HP \w'\fBsyslog\-ng\-query\ list\fR\ 'u
+\fBsyslog\-ng\-query list\fR
+.PP
+Use the
+\fBsyslog\-ng\-query list\fR
+command to display the list of metrics that collects about the processed messages\&. For details about the displayed metrics, see
+\m[blue]\fBThe syslog\-ng Administrator Guide\fR\m[]???\&.
+.PP
+An example output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+stats
+center\&.received\&.stats\&.processed
+center\&.queued\&.stats\&.processed
+destination\&.java\&.d_elastic#0\&.java_dst(ElasticSearch,elasticsearch\-syslog\-ng\-test,t7cde889529c034aea9ec_micek)\&.stats\&.dropped
+destination\&.java\&.d_elastic#0\&.java_dst(ElasticSearch,elasticsearch\-syslog\-ng\-test,t7cde889529c034aea9ec_micek)\&.stats\&.processed
+destination\&.java\&.d_elastic#0\&.java_dst(ElasticSearch,elasticsearch\-syslog\-ng\-test,t7cde889529c034aea9ec_micek)\&.stats\&.stored
+destination\&.d_elastic\&.stats\&.processed
+source\&.s_tcp\&.stats\&.processed
+source\&.severity\&.7\&.stats\&.processed
+source\&.severity\&.0\&.stats\&.processed
+source\&.severity\&.1\&.stats\&.processed
+source\&.severity\&.2\&.stats\&.processed
+source\&.severity\&.3\&.stats\&.processed
+source\&.severity\&.4\&.stats\&.processed
+source\&.severity\&.5\&.stats\&.processed
+source\&.severity\&.6\&.stats\&.processed
+source\&.facility\&.7\&.stats\&.processed
+source\&.facility\&.16\&.stats\&.processed
+source\&.facility\&.8\&.stats\&.processed
+source\&.facility\&.17\&.stats\&.processed
+source\&.facility\&.9\&.stats\&.processed
+source\&.facility\&.18\&.stats\&.processed
+source\&.facility\&.19\&.stats\&.processed
+source\&.facility\&.20\&.stats\&.processed
+source\&.facility\&.0\&.stats\&.processed
+source\&.facility\&.21\&.stats\&.processed
+source\&.facility\&.1\&.stats\&.processed
+source\&.facility\&.10\&.stats\&.processed
+source\&.facility\&.22\&.stats\&.processed
+source\&.facility\&.2\&.stats\&.processed
+source\&.facility\&.11\&.stats\&.processed
+source\&.facility\&.23\&.stats\&.processed
+source\&.facility\&.3\&.stats\&.processed
+source\&.facility\&.12\&.stats\&.processed
+source\&.facility\&.4\&.stats\&.processed
+source\&.facility\&.13\&.stats\&.processed
+source\&.facility\&.5\&.stats\&.processed
+source\&.facility\&.14\&.stats\&.processed
+source\&.facility\&.6\&.stats\&.processed
+source\&.facility\&.15\&.stats\&.processed
+source\&.facility\&.other\&.stats\&.processed
+global\&.payload_reallocs\&.stats\&.processed
+global\&.msg_clones\&.stats\&.processed
+global\&.sdata_updates\&.stats\&.processed
+tag\&.\&.source\&.s_tcp\&.stats\&.processed
+.fi
+.if n \{\
+.RE
+.\}
+.SH "DISPLAYING METRICS AND STATISTICS"
+.HP \w'\fBsyslog\-ng\-query\ sum\fR\ 'u
+\fBsyslog\-ng\-query sum\fR [options]
+.PP
+The
+\fBsyslog\-ng\-query sum <query>\fR
+command lists the nodes that match the query, and their values\&. For example, the
+\fBsyslog\-ng\-query sum "destination*"\fR
+command lists the configured destinations, and the metrics related to each destination\&. An example output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+destination\&.java\&.d_elastic#0\&.java_dst(ElasticSearch,elasticsearch\-syslog\-ng\-test,t7cde889529c034aea9ec_micek)\&.stats\&.dropped: 0
+destination\&.java\&.d_elastic#0\&.java_dst(ElasticSearch,elasticsearch\-syslog\-ng\-test,t7cde889529c034aea9ec_micek)\&.stats\&.processed: 0
+destination\&.java\&.d_elastic#0\&.java_dst(ElasticSearch,elasticsearch\-syslog\-ng\-test,t7cde889529c034aea9ec_micek)\&.stats\&.stored: 0
+destination\&.d_elastic\&.stats\&.processed: 0
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The
+\fBsyslog\-ng\-query sum\fR
+command has the following options:
+.PP
+\fB\-\-aggregate\fR
+.RS 4
+Add up the result of each matching node and return only a single number\&.
+.RE
+.PP
+For example, the
+\fBsyslog\-ng\-query sum \-\-aggregate "destination*\&.dropped"\fR
+command displays the number of messages dropped by the instance\&.
+.SH "FILES"
+.PP
+/opt/syslog\-ng/sbin/syslog\-ng\-query
+.SH "SEE ALSO"
+.PP
+\m[blue]\fB\fBThe syslog\-ng Administrator Guide\fR\fR\m[]
+.PP
+\fBsyslog\-ng\&.conf\fR(5)
+.PP
+\fBsyslog\-ng\fR(8)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+For the detailed documentation of see
+\m[blue]\fB\fBThe 5 F6 Administrator Guide\fR\fR\m[]
+.PP
+If you experience any problems or need help with syslog\-ng, visit
+\m[blue]\fBvisit the syslog\-ng wiki\fR\m[]
+or the
+\m[blue]\fB\fBsyslog\-ng mailing list\fR\fR\m[]\&.
+.PP
+For news and notifications about of syslog\-ng, visit the
+\m[blue]\fB\fBsyslog\-ng Blog\fR\fR\m[]\&.
+.sp .5v
+.RE
+.SH "AUTHOR"
+.PP
+This manual page was written by the BalaBit Documentation Team <documentation@balabit\&.com>\&.
+.SH "COPYRIGHT"

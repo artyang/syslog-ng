@@ -1,0 +1,440 @@
+'\" t
+.\"     Title: persist-tool
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/05/2016
+.\"    Manual: The persist-tool tool manual page
+.\"    Source: 5 F6
+.\"  Language: English
+.\"
+.TH "PERSIST\-TOOL" "1" "07/05/2016" "5 F6" "The persist-tool tool manual p"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+persist-tool \- Display the content of the persist file
+.SH "SYNOPSIS"
+.HP \w'\fBpersist\-tool\fR\ 'u
+\fBpersist\-tool\fR [command] [options]
+.SH "DESCRIPTION"
+.PP
+NOTE: The persist\-tool application is distributed with the system logging application, and is usually part of the syslog\-ng package\&. The latest version of the syslog\-ng application is available at the
+\m[blue]\fBofficial syslog\-ng website\fR\m[]\&.
+.PP
+This manual page is only an abstract; for the complete documentation of syslog\-ng, see
+\m[blue]\fBThe Administrator Guide\fR\m[]\&.
+.PP
+The
+\fBpersist\-tool\fR
+application is a utility that can be used to dump the content of the persist file, and manipulate its content\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+.PP
+Persist\-tool is a special tool for syslog\-ng experts\&. Do use the tool unless you know exactly what you are doing\&. Misconfiguring it will result in irrecoverable damage to the persist file, without any warning\&.
+.sp .5v
+.RE
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+Limitations:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+The persist\-state functions can be used only with syslog\-ng PE 5 LTS style persist file (SLP4)\&. Older persist files are not supported\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Wildcard characters are not supported in file/directory names\&.
+.RE
+.sp .5v
+.RE
+.SH "THE DUMP COMMAND"
+.HP \w'\fBdump\fR\ 'u
+\fBdump\fR [options] [persist_file]
+.PP
+Use the
+\fBdump\fR
+command to print the current content of the persist file in JSON format to the console\&.
+.PP
+The
+\fBdump\fR
+command has the following options:
+.PP
+\fB\-\-help\fR or \fB\-?\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+persist\-tool dump /opt/syslog\-ng/var/syslog\-ng\&.persist 
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The output looks like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+evtxlog_reader_curpos(Application) = { "version": 0, "big_endian": false, "bookmark_xml": "<BookmarkList Direction=\*(Aqbackward\*(Aq>\er\en  <Bookmark Channel=\*(AqApplication\*(Aq RecordId=\*(Aq2610170\*(Aq IsCurrent=\*(Aqtrue\*(Aq\e
+/>\er\en<\e/BookmarkList>" }
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+affile_sd_curpos(/tmp/foo\&.txt) = { "version": 1, "big_endian": false, "raw_buffer_leftover_size": 0, "buffer_pos": 0, "pending_buffer_end": 0, "buffer_size
+": 0, "buffer_cached_eol": 0, "pending_buffer_pos": 0, "raw_stream_pos": 64, "pending_raw_stream_pos": 0, "raw_buffer_size": 0, "pending_raw_buffer_size": 0, "file_size": 64, "file_inode": 0, "run_id"
+: 0 }
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE GENERATE COMMAND"
+.HP \w'\fBgenerate\fR\ 'u
+\fBgenerate\fR [options]
+.PP
+Use the
+\fBgenerate\fR
+command to generate a persist file based on the content of the given configuration file\&. It will find all files and event sources that match the sources configured in the configuration file, and generate a state entry into the persist file for all of them\&. The position for the state entries will be set to the end of the source, therefore syslog\-ng will continue them from the last position instead of sending messages from the beginning\&. Any other type of source will be skipped from persist generation\&. If the persist file already exists, persist\-tool will display an error message and exit to prevent overwriting an already existing persist file\&.
+.PP
+To use the
+\fBgenerate\fR
+command: stop syslog\-ng, remove the persist file, then execute
+\fBpersist\-tool generate\fR\&.
+.PP
+The
+\fBgenerate\fR
+command has the following options:
+.PP
+\fB\-\-help\fR or \fB\-?\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-config\-file=<config_file>\fR or \fB\-c\fR
+.RS 4
+Required parameter\&. The syslog\-ng configuration file that will be the base of the generated persist file\&.
+.RE
+.PP
+\fB\-\-force\fR or \fB\-f\fR
+.RS 4
+Overwrite the persist file if it already exists\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+Use this option with care, persist\-tool will not ask for confirmation\&.
+.sp .5v
+.RE
+.RE
+.PP
+\fB\-\-output\-dir=<directory>\fR or \fB\-o\fR
+.RS 4
+Required parameter\&. The directory where the persist file will be generated to\&. The name of the persist file will be
+syslog\-ng\&.persist\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/opt/syslog\-ng/bin/persist\-tool generate \-c /opt/syslog\-ng/etc/syslog\-ng\&.conf \-o \&.
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The output looks like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+New persist file generated: \&./syslog\-ng\&.persist
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE GENERATE-AGENT COMMAND"
+.HP \w'\fBgenerate\-agent\fR\ 'u
+\fBgenerate\-agent\fR [options]
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+This command is only available on Windows\&.
+.sp .5v
+.RE
+.PP
+Use the
+\fBgenerate\-agent\fR
+command to generate a persist file based on the registry by default, or use the content of the given XML configuration file\&. It will find all files and event sources that match the sources configured in the registry or configuration file, and generate a state entry into the persist file for all of them\&. The position for the state entries will be set to the end of the source, therefore syslog\-ng will continue them from the last position instead of sending messages from the beginning\&. Any other type of source will be skipped from persist generation\&. If the persist file already exists, persist\-tool will display an error message and exit to prevent overwriting an already existing persist file\&.
+.PP
+To use the
+\fBgenerate\fR
+command: stop syslog\-ng, remove the persist file, then execute
+\fBpersist\-tool generate\fR\&.
+.PP
+The
+\fBgenerate\-agent\fR
+command has the following options:
+.PP
+\fB\-\-help\fR or \fB\-?\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-force\fR or \fB\-f\fR
+.RS 4
+Overwrite the persist file if it already exists\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+Use this option with care, persist\-tool will not ask for confirmation\&.
+.sp .5v
+.RE
+.RE
+.PP
+\fB\-\-output\-dir=<directory>\fR or \fB\-o\fR
+.RS 4
+The directory where the persist file will be generated to\&. The name of the persist file will be
+syslog\-ng\&.persist\&.
+.RE
+.PP
+\fB\-\-xml\-config\fR or \fB\-x\fR
+.RS 4
+The XML configuration file of the syslog\-ng Agent for Windows application\&. If this parameter is set, the persist file will be generated from the XML configuration file\&. If this parameter is missing, the configuration available in the system registry will be used\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+persist\-tool\&.exe generate\-agent \-f \-x c:\eeee\&.xml \-o "c:\eprogram files\esyslog\-ng agent\evar"
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE ADD COMMAND"
+.HP \w'\fBadd\fR\ 'u
+\fBadd\fR [options] [input_file]
+.PP
+Use the
+\fBadd\fR
+command to add or modify a specified state\-entry in the persist file\&. The state\-entry should be in the same format as the
+\fBdump\fR
+command displays it\&. If the given state\-entry already exists, it will be updated\&. Otherwise, a new value will be added\&. If the given persist state is invalid, it will be skipped\&.
+.PP
+To use the
+\fBadd\fR
+command: use
+\fBpersist\-tool dump\fR
+to print the content of the current persist file, and redirect it to a file\&. Edit the content of this file\&. Use
+\fBpersist\-tool add\fR
+with this file to modify the persist\&.
+.PP
+The
+\fBadd\fR
+command has the following options:
+.PP
+\fB\-\-help\fR or \fB\-?\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-output\-dir=<directory>\fR or \fB\-o\fR
+.RS 4
+Required parameter\&. The directory where the persist file is located at\&. The name of the persist file stored in this directory must be
+syslog\-ng\&.persist\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+/opt/syslog\-ng/bin/persist\-tool add dump_persist \-o \&.
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The valid output looks like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+log_reader_curpos(Application)      OK
+affile_sd_curpos(/var/aaa\&.txt)        OK
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The invalid output looks like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+log_reader_curpos(Application)      OK
+wrong
+        FAILED (error: Invalid entry syntax)
+affile_sd_curpos(/var/aaa\&.txt)        OK
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE RENAME-KEY COMMAND"
+.HP \w'\fBrename\-key\fR\ 'u
+\fBrename\-key\fR [\-\-old_key\ <old\-key\-in\-persist\-file>] [\-\-new_key\ <new\-key\-in\-persist\-file>] [persist\-file]
+.PP
+Use the
+\fBrename\-key\fR
+command rename a specified state\-entry in the persist file\&. The key of the state\-entry to rename should be the same as the
+\fBdump\fR
+command displays it\&. After renaming, the
+\fBdump\fR
+command of the persist file shows both the old entry with the old key and a new entry with new key, but the old entry will be flagged as unused\&. When is started and loads the modified persist file, it automatically deletes the old entry\&.
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+persist\-tool rename\-key \-o "java,org\&.syslog_ng\&.hdfs\&.HdfsDestination" \-n "java_dst(hdfs,hdfs://10\&.140\&.32\&.80:8020,var/dest/hadoop\&.txt)" syslog\-ng\&.persist
+.fi
+.if n \{\
+.RE
+.\}
+.SH "FILES"
+.PP
+/opt/syslog\-ng/bin/persist\-tool
+.SH "SEE ALSO"
+.PP
+\fBsyslog\-ng\&.conf\fR(5)
+.PP
+\fBsyslog\-ng\fR(8)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+For the detailed documentation of see
+\m[blue]\fB\fBThe 5 F6 Administrator Guide\fR\fR\m[]
+.PP
+If you experience any problems or need help with syslog\-ng, visit
+\m[blue]\fBvisit the syslog\-ng wiki\fR\m[]
+or the
+\m[blue]\fB\fBsyslog\-ng mailing list\fR\fR\m[]\&.
+.PP
+For news and notifications about of syslog\-ng, visit the
+\m[blue]\fB\fBsyslog\-ng Blog\fR\fR\m[]\&.
+.sp .5v
+.RE
+.SH "AUTHOR"
+.PP
+This manual page was written by the BalaBit Documentation Team <documentation@balabit\&.com>\&.
+.SH "COPYRIGHT"

@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: syslog-ng-ctl
 .\"    Author: [see the "Author" section]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 06/30/2010
-.\"    Manual: The logstore tool manual page
-.\"    Source: syslog-ng 3.2
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/05/2016
+.\"    Manual: The syslog-ng control tool manual page
+.\"    Source: 5 F6
 .\"  Language: English
 .\"
-.TH "SYSLOG\-NG\-CTL" "1" "06/30/2010" "syslog\-ng" "The syslog\-ng\-ctl page"
+.TH "SYSLOG\-NG\-CTL" "1" "07/05/2016" "5 F6" "The syslog-ng control tool man"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -19,17 +28,17 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-syslog-ng-ctl \- Display message statistics and enable verbose, debug and trace modes in syslog\-ng
+syslog-ng-ctl \- Display message statistics and enable verbose, debug and trace modes in
 .SH "SYNOPSIS"
 .HP \w'\fBsyslog\-ng\-ctl\fR\ 'u
 \fBsyslog\-ng\-ctl\fR [command] [options]
 .SH "DESCRIPTION"
 .PP
-NOTE: The syslog\-ng\-ctl application is distributed with the syslog\-ng system logging application, and is usually part of the syslog\-ng package\&. The latest version of the syslog\-ng application is available at the
-\m[blue]\fBofficial syslog\-ng website\fR\m[]\&\s-2\u[1]\d\s+2\&.
+NOTE: The syslog\-ng\-ctl application is distributed with the system logging application, and is usually part of the syslog\-ng package\&. The latest version of the syslog\-ng application is available at
+\m[blue]\fBthe official syslog\-ng website\fR\m[]\&.
 .PP
 This manual page is only an abstract; for the complete documentation of syslog\-ng, see
-\m[blue]\fBThe syslog\-ng Administrator Guide\fR\m[]\&\s-2\u[2]\d\s+2\&.
+\m[blue]\fBThe syslog\-ng Administrator Guide\fR\m[]\&.
 .PP
 The
 \fBsyslog\-ng\-ctl\fR
@@ -54,7 +63,29 @@ enable/disable various syslog\-ng messages for troubleshooting;
 .sp -1
 .IP \(bu 2.3
 .\}
-display statistics about the processed messages\&.
+display statistics about the processed messages;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+reload the configuration of ;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+stop \&.
 .RE
 .SH "ENABLING TROUBLESHOOTING MESSAGES"
 .HP \w'\fBcommand\fR\ 'u
@@ -62,7 +93,7 @@ display statistics about the processed messages\&.
 .PP
 Use the
 \fBsyslog\-ng\-ctl <command> \-\-set=on\fR
-command to display verbose, trace, or debug messages\&. If you are trying to solve configuration problems, the debug (and occassionally trace) messages are usually sufficient; debug messages are needed mostly for finding software errors\&. After solving the problem, do not forget to turn these messages off using the
+command to display verbose, trace, or debug messages\&. If you are trying to solve configuration problems, the verbose (and occasionally trace) messages are usually sufficient; debug messages are needed mostly for finding software errors\&. After solving the problem, do not forget to turn these messages off using the
 \fBsyslog\-ng\-ctl <command> \-\-set=off\fR\&. Note that enabling debug messages does not enable verbose and trace messages\&.
 .PP
 Use
@@ -78,7 +109,7 @@ command to specify the socket to use\&.
 Print verbose messages\&. If syslog\-ng was started with the
 \fI\-\-stderr\fR
 or
-\fI\-e\fR
+\fB\-e\fR
 option, the messages will be sent to stderr\&. If not specified, syslog\-ng will log such messages to its internal source\&.
 .RE
 .PP
@@ -87,7 +118,7 @@ option, the messages will be sent to stderr\&. If not specified, syslog\-ng will
 Print trace messages of how messages are processed\&. If syslog\-ng was started with the
 \fI\-\-stderr\fR
 or
-\fI\-e\fR
+\fB\-e\fR
 option, the messages will be sent to stderr\&. If not specified, syslog\-ng will log such messages to its internal source\&.
 .RE
 .PP
@@ -96,7 +127,7 @@ option, the messages will be sent to stderr\&. If not specified, syslog\-ng will
 Print debug messages\&. If syslog\-ng was started with the
 \fI\-\-stderr\fR
 or
-\fI\-e\fR
+\fB\-e\fR
 option, the messages will be sent to stderr\&. If not specified, syslog\-ng will log such messages to its internal source\&.
 .RE
 .PP
@@ -116,14 +147,24 @@ syslog\-ng\-ctl verbose \-\-set=on
 \fBstats\fR [options]
 .PP
 Use the
-\fBvalidate\fR
-command to validate the signatures and timestamps of a logstore file\&. The
-\fBvalidate\fR
+\fBstats\fR
+command to display statistics about the processed messages\&. For details about the displayed statistics, see
+\m[blue]\fBThe syslog\-ng Administrator Guide\fR\m[]???\&. The
+\fBstats\fR
 command has the following options:
 .PP
 \fB\-\-control=<socket>\fR or \fB\-c\fR
 .RS 4
 Specify the socket to use to access syslog\-ng\&. Only needed when using a non\-standard socket\&.
+.RE
+.PP
+\fB\-\-reset=<socket>\fR or \fB\-r\fR
+.RS 4
+Reset all statistics to zero, except for the
+\fBstored\fR
+counters\&. (The
+\fBstored\fR
+counters show the number of messages stored in the message queue of the destination driver, waiting to be sent to the destination\&.)
 .RE
 .PP
 Example:
@@ -175,50 +216,258 @@ destination;df_facility_dot_err;;a;processed;0
 .if n \{\
 .RE
 .\}
-
+.SH "DISPLAYING LICENSE-RELATED INFORMATION"
+.HP \w'\fBsyslog\-ng\-ctl\ show\-license\-info\fR\ 'u
+\fBsyslog\-ng\-ctl show\-license\-info\fR [options]
+.PP
+The application uses a license in server mode to determine the maximum number of hosts that are allowed to connect\&. Use the
+\fBsyslog\-ng\-ctl show\-license\-info\fR
+command to display license\-related information the number of hosts currently logging to your server\&. This helps you to plan your capacity, to check your license usage, and to detect client misconfiguration that can result in a license miscount anomaly\&. Note that in client or relay mode, does not require a license\&.
+.PP
+The
+\fBsyslog\-ng\-ctl show\-license\-info\fR
+command displays the following information\&. In case of an unlimited license, or in client or relay mode, only the license type is displayed:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+License Type: none, limited, unlimited
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Host Limit: the maximum number of hosts that are allowed to connect\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Currently Used Slots: the number of currently used host slots
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Usage: the percent of used host slots
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Licensed Clients: the list of hostnames that are stored in the license module
+.RE
+.PP
+The
+\fBsyslog\-ng\-ctl show\-license\-info\fR
+command has the following options:
+.PP
+\fB\-\-json\fR or \fB\-J\fR
+.RS 4
+Print license\-related information in JSON format\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-ng\-ctl show\-license\-info
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+An example output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+License\-Type: limited
+Host\-Limit: 10
+Currently\-Used\-Slots: 7
+Usage: 70%
+Licensed\-Clients:
+    192\&.168\&.0\&.1
+    192\&.168\&.0\&.2
+    192\&.168\&.0\&.3
+    192\&.168\&.1\&.4
+    192\&.168\&.1\&.5
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-ng\-ctl show\-license\-info \-\-json
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+An example output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+{
+    "license_type": "limited",
+    "host_limit": 10,
+    "currently_used_slots": 7,
+    "usage": "70%",
+    "licensed_clients": [
+        "xy\&.testdomain",
+        "testhost",
+        "192\&.168\&.0\&.3",
+        "test_host",
+        "192\&.168\&.1\&.5"
+    ]
+}
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-ng\-ctl show\-license\-info
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+in case of an unlimited license
+.PP
+An example output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ syslog\-ng\-ctl show\-license\-info
+License\-Type: unlimited
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-ng\-ctl show\-license\-info
+.fi
+.if n \{\
+.RE
+.\}
+.sp
+if is in client or relay mode
+.PP
+An example output:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ syslog\-ng\-ctl show\-license\-info
+License\-Type: none
+.fi
+.if n \{\
+.RE
+.\}
+.SH "RELOADING THE CONFIGURATION"
+.HP \w'\fBsyslog\-ng\-ctl\ reload\fR\ 'u
+\fBsyslog\-ng\-ctl reload\fR [options]
+.PP
+Use the
+\fBsyslog\-ng\-ctl reload\fR
+command to reload the configuration file of without having to restart the application\&. The
+\fBsyslog\-ng\-ctl reload\fR
+works like a SIGHUP (\-1)\&.
+.SH "STOPPING"
+.HP \w'\fBsyslog\-ng\-ctl\ stop\fR\ 'u
+\fBsyslog\-ng\-ctl stop\fR [options]
+.PP
+Use the
+\fBsyslog\-ng\-ctl stop\fR
+command to stop the application\&. The
+\fBsyslog\-ng\-ctl stop\fR
+works like a SIGHUP (\-15) on Linux and Unix systems\&.
+.SH "FILES"
+.PP
+/opt/syslog\-ng/sbin/syslog\-ng\-ctl
 .SH "SEE ALSO"
 .PP
-
-\m[blue]\fBThe syslog\-ng Administrator Guide\fR\m[]\&\s-2\u[2]\d\s+2
+\m[blue]\fB\fBThe syslog\-ng Administrator Guide\fR\fR\m[]
 .PP
-
 \fBsyslog\-ng\&.conf\fR(5)
 .PP
-
 \fBsyslog\-ng\fR(8)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
 .PP
-If you experience any problems or need help with syslog\-ng, visit the
-\m[blue]\fBsyslog\-ng mailing list\fR\m[]\&\s-2\u[3]\d\s+2
+For the detailed documentation of see
+\m[blue]\fB\fBThe 5 F6 Administrator Guide\fR\fR\m[]
 .PP
-For news and notifications about the documentation of syslog\-ng, visit the
-\m[blue]\fBBalaBit Documentation Blog\fR\m[]\&\s-2\u[4]\d\s+2\&.
+If you experience any problems or need help with syslog\-ng, visit
+\m[blue]\fBvisit the syslog\-ng wiki\fR\m[]
+or the
+\m[blue]\fB\fBsyslog\-ng mailing list\fR\fR\m[]\&.
+.PP
+For news and notifications about of syslog\-ng, visit the
+\m[blue]\fB\fBsyslog\-ng Blog\fR\fR\m[]\&.
+.sp .5v
+.RE
 .SH "AUTHOR"
 .PP
 This manual page was written by the BalaBit Documentation Team <documentation@balabit\&.com>\&.
 .SH "COPYRIGHT"
-.PP
-Copyright \(co 2000\-2009 BalaBit IT Security Ltd\&. Published under the Creative Commons Attribution\-Noncommercial\-No Derivative Works (by\-nc\-nd) 3\&.0 license\&. See
-\m[blue]\fBhttp://creativecommons\&.org/\fR\m[]
-for details\&. The latest version is always available at
-\m[blue]\fBhttp://www\&.balabit\&.com/support/documentation\fR\m[]\&.
-.SH "NOTES"
-.IP " 1." 4
-official syslog-ng website
-.RS 4
-\%http://www.balabit.com/network-security/syslog-ng/
-.RE
-.IP " 2." 4
-The syslog-ng Administrator Guide
-.RS 4
-\%http://www.balabit.com/support/documentation/
-.RE
-.IP " 3." 4
-syslog-ng mailing list
-.RS 4
-\%https://lists.balabit.hu/mailman/listinfo/syslog-ng
-.RE
-.IP " 4." 4
-BalaBit Documentation Blog
-.RS 4
-\%http://robert.blogs.balabit.com
-.RE
