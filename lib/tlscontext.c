@@ -435,6 +435,10 @@ tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
       if (!SSL_CTX_set_cipher_list(self->ssl_ctx, self->cipher_suite))
         goto error;
     }
+
+  if (self->mode == TM_SERVER)
+      SSL_CTX_set_ecdh_auto(self->ssl_ctx, 1);
+
   return TRUE;
 
  error:
