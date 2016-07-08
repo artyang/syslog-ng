@@ -1,7 +1,6 @@
 /*
  * Copyright (c) 2016 Balabit
  * Copyright (c) 2016 Viktor Juhasz <viktor.juhasz@balabit.com>
- * Copyright (c) 2016 Zoltan Pallagi <zoltan.pallagi@balabit.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -22,26 +21,44 @@
  *
  */
 
-package org.syslog_ng.elasticsearch_v2.client;
+package org.syslog_ng.elasticsearch_v2.messageprocessor.esnative;
 
-import java.util.ArrayList;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.plugins.Plugin;
-import org.elasticsearch.shield.ShieldPlugin;
+import org.apache.log4j.Logger;
+import org.elasticsearch.action.index.IndexRequest;
 import org.syslog_ng.elasticsearch_v2.ElasticSearchOptions;
+import org.syslog_ng.elasticsearch_v2.client.esnative.ESNativeClient;
+import org.syslog_ng.elasticsearch_v2.messageprocessor.ESIndex;
+import org.syslog_ng.elasticsearch_v2.messageprocessor.ESMessageProcessor;
 
-public class ESTransportShieldClient extends ESTransportClient {
+public abstract class ESNativeMessageProcessor implements ESMessageProcessor {
+	protected ElasticSearchOptions options;
+	protected ESNativeClient client;
+	protected Logger logger;
 
-	public ESTransportShieldClient(ElasticSearchOptions options) {
-		super(options);
+
+	public ESNativeMessageProcessor(ElasticSearchOptions options, ESNativeClient client) {
+		this.options = options;
+		this.client = client;
+		logger = Logger.getRootLogger();
 	}
-	
+
+	public void init() {
+
+	}
+
+	public void flush() {
+
+	}
+
+	public void deinit() {
+
+	}
+
+	protected abstract boolean send(IndexRequest req);
+
 	@Override
-    public Client createClient() {
-	    ArrayList<Class<? extends Plugin>> plugins = new ArrayList<Class<? extends Plugin>>();    
-        plugins.add(ShieldPlugin.class);
-        
-        super.createClient(plugins);
-        return transportClient;
-    }
+	public final boolean send(ESIndex index) {
+		IndexRequest req = new IndexRequest(index.getIndex(), index.getType(), index.getId()).source(index.getFormattedMessage());
+		return send(req);
+	}
 }

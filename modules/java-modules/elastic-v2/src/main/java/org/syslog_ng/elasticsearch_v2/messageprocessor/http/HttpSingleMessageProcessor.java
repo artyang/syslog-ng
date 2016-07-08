@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2016 Balabit
  * Copyright (c) 2016 Laszlo Budai <laszlo.budai@balabit.com>
+ * Copyright (c) 2016 Viktor Tusa <tusavik@gmail.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -21,16 +22,32 @@
  *
  */
 
-package org.syslog_ng.elasticsearch_v2.client;
+package org.syslog_ng.elasticsearch_v2.messageprocessor.http;
 
-import org.syslog_ng.elasticsearch_v2.messageprocessor.ESIndex;
+import io.searchbox.core.Index;
+import org.syslog_ng.elasticsearch_v2.ElasticSearchOptions;
+import org.syslog_ng.elasticsearch_v2.client.http.ESHttpClient;
 
-public interface ESClient {
-	boolean open();
-	void close();
-	boolean isOpened();
-	void init();
-	void deinit();
-	boolean send(ESIndex index);
-	String getClusterName();
+import java.io.IOException;
+
+public class HttpSingleMessageProcessor extends  HttpMessageProcessor {
+
+	public HttpSingleMessageProcessor(ElasticSearchOptions options, ESHttpClient client) {
+		super(options, client);
+	}
+
+	@Override
+	public boolean send(Index req) {
+		boolean result = true;
+		try {
+			client.getClient().execute(req);
+		}
+		catch (IOException e)
+		{
+			logger.error(e.getMessage());
+			result = false;
+		}
+		return result;
+	}
+
 }

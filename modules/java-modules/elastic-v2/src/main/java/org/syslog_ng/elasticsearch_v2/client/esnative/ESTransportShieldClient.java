@@ -1,6 +1,7 @@
 /*
  * Copyright (c) 2016 Balabit
  * Copyright (c) 2016 Viktor Juhasz <viktor.juhasz@balabit.com>
+ * Copyright (c) 2016 Zoltan Pallagi <zoltan.pallagi@balabit.com>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -21,31 +22,27 @@
  *
  */
 
-package org.syslog_ng.elasticsearch_v2.messageprocessor;
+package org.syslog_ng.elasticsearch_v2.client.esnative;
 
-import org.elasticsearch.ElasticsearchException;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexResponse;
+import java.util.ArrayList;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.plugins.Plugin;
+import org.elasticsearch.shield.ShieldPlugin;
 import org.syslog_ng.elasticsearch_v2.ElasticSearchOptions;
-import org.syslog_ng.elasticsearch_v2.client.ESClient;
+import org.syslog_ng.elasticsearch_v2.client.esnative.ESTransportClient;
 
-public class ESSingleMessageProcessor extends ESMessageProcessor {
+public class ESTransportShieldClient extends ESTransportClient {
 
-	public ESSingleMessageProcessor(ElasticSearchOptions options, ESClient client) {
-		super(options, client);
+	public ESTransportShieldClient(ElasticSearchOptions options) {
+		super(options);
 	}
-
+	
 	@Override
-	public boolean send(IndexRequest req) {
-		try {
-			IndexResponse response = client.getClient().index(req).actionGet();
-			logger.debug("Message inserted with id: " + response.getId());
-			return true;
-		}
-		catch (ElasticsearchException e) {
-			logger.error("Failed to send message: " + e.getMessage());
-			return false;
-		}
-	}
-
+    public Client createClient() {
+	    ArrayList<Class<? extends Plugin>> plugins = new ArrayList<Class<? extends Plugin>>();    
+        plugins.add(ShieldPlugin.class);
+        
+        super.createClient(plugins);
+        return transportClient;
+    }
 }

@@ -25,7 +25,13 @@ package org.syslog_ng.elasticsearch.client;
 
 import static org.elasticsearch.node.NodeBuilder.nodeBuilder;
 
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings.Builder;
+import org.elasticsearch.common.settings.SettingsException;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 import org.syslog_ng.elasticsearch.ElasticSearchOptions;
