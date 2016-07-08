@@ -27,6 +27,8 @@
 #include "messages.h"
 #include "sgroup.h"
 
+#define PERSIST_FILENAME "test.persist"
+
 extern GlobalConfig *main_loop_old_config;
 extern GlobalConfig *main_loop_new_config;
 
@@ -128,7 +130,7 @@ GlobalConfig* create_and_init_old_configuration()
 
   GlobalConfig *cfg = create_config(spipe, dpipe);
 
-  main_loop_initialize_state(cfg, "test.persist");
+  main_loop_initialize_state(cfg, PERSIST_FILENAME);
 
   stats_timer_init(cfg);
 
@@ -159,6 +161,7 @@ int main()
   assert_gint(number_of_times_test_source_deinit_called, 2, "deinit() of TestPipe didn't called properly");
 
   app_shutdown();
+  unlink(PERSIST_FILENAME);
 
   return 0;
 };

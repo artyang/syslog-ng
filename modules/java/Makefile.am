@@ -61,6 +61,7 @@ clean-local:
 	rm -f $(SYSLOG_NG_CORE_PACKAGE_DIR)/*.class
 	rm -f $(SYSLOG_NG_CORE_JAR)
 	rm -f $(JAVA_HEADER_FILES)
+	rm -f native/java-grammar.h
 
 uninstall-local:
 	rm -f $(JAVA_DST_DIR)/*.jar

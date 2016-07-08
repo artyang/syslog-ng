@@ -143,6 +143,7 @@ test_state_dump()
 
   persist_state_commit(state);
   persist_state_free(state);
+  unlink(TEST_PERSIST_FILE);
 }
 
 void
@@ -201,6 +202,7 @@ test_state_alloc()
 
   persist_state_commit(state);
   persist_state_free(state);
+  unlink(TEST_PERSIST_FILE);
 }
 
 #define JSON_STRING "{ \"test_int64\": -4822678189205112, \"test_int\": 2003195204, \"test_boolean\": true, \"test_string\": \"test_value\"}"

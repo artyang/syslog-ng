@@ -56,4 +56,6 @@ check_%:
 
 ChangeLog:
 	(cd $(top_srcdir); git log) > $@
-	
+
+clean-local:
+	rm -f ChangeLog

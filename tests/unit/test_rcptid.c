@@ -49,6 +49,8 @@ LogTemplate *rcptid_template;
     }       \
   while (0)
 
+#define PERSIST_FILENAME "test_values.persist"
+
 void
 testcase(gchar *message)
 {
@@ -59,8 +61,8 @@ testcase(gchar *message)
   SerializeArchive *sa;
   PersistState *state;
 
-  unlink("test_values.persist");
-  state = persist_state_new("test_values.persist");
+  unlink(PERSIST_FILENAME);
+  state = persist_state_new(PERSIST_FILENAME);
   if (!persist_state_start(state))
     {
       fprintf(stderr, "Error starting persist_state object\n");
@@ -95,7 +97,7 @@ testcase(gchar *message)
   persist_state_commit(state);
   persist_state_free(state);
   g_rcptidstate.g_rcptid=0;
-  state = persist_state_new("test_values.persist");
+  state = persist_state_new(PERSIST_FILENAME);
   if (!persist_state_start(state))
     {
       fprintf(stderr, "Error starting persist_state object\n");
@@ -123,6 +125,9 @@ testcase(gchar *message)
   TEST_ASSERT(strcmp(serialized->str,"RCPTID:  MESSAGE: This is a test message") == 0,"%s",serialized->str,"RPCTID:  MESSAGE: This is a test message");
 
   g_string_free(serialized, TRUE);
+  persist_state_commit(state);
+  persist_state_free(state);
+  unlink(PERSIST_FILENAME);
   return;
 }
 

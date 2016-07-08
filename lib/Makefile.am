@@ -11,6 +11,8 @@ YFLAGS=@YFLAGS@
 
 export top_srcdir
 
+SUBDIRS = . tests
+
 lib_LTLIBRARIES = libsyslog-ng.la
 libsyslog_ng_la_LIBADD = @CORE_DEPS_LIBS@ @OPENSSL_LIBS@ $(PCRE_LIBS) -ljson $(SYSTEMD_LIBS)
 libsyslog_ng_la_LDFLAGS = -no-undefined -release @LIBSYSLOGNG_VERSION@
@@ -40,7 +42,7 @@ pkginclude_HEADERS = 		\
 	filter-expr-parser.h	\
 	filter-in-list.h	\
 	filter.h		\
-    groupset.h      \
+	groupset.h  \
 	gsocket.h		\
 	gsockaddr.h		\
   hostname.h  \

@@ -195,6 +195,8 @@ int main(int argc, char **argv)
   HOSTID_TESTCASE(test_if_hostid_remain_unchanged_when_persist_file_exists);
   HOSTID_TESTCASE(test_if_hostid_is_serialized);
 
+  unlink(PERSIST_FILE);
+
   app_shutdown();
 
   return 0;

@@ -143,6 +143,7 @@ test_state_v4()
   log_proto_free(&proto->super.super);
   persist_state_commit(state);
   persist_state_free(state);
+  unlink(TEST_PERSIST_FILE);
 }
 
 #define V3_STATE_FILE_POS 100
@@ -211,6 +212,7 @@ test_state_v3()
   log_proto_free(&proto->super.super);
   persist_state_commit(state);
   persist_state_free(state);
+  unlink(TEST_PERSIST_FILE);
 }
 
 #define STATE_NAME "affile_sd_curpos(/var/tmp/manylog.txt)"
@@ -304,6 +306,7 @@ test_load_state()
   log_proto_free(&proto->super.super);
   persist_state_commit(state);
   persist_state_free(state);
+  unlink(TEST_PERSIST_FILE);
 }
 
 static void
@@ -336,6 +339,7 @@ test_state_update()
 
   persist_state_commit(state);
   persist_state_free(state);
+  unlink(TEST_PERSIST_FILE);
   return;
 }
 
