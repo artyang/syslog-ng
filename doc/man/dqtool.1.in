@@ -1,0 +1,145 @@
+'\" t
+.\"     Title: dqtool
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/05/2016
+.\"    Manual: The dqtool tool manual page
+.\"    Source: 5 F6
+.\"  Language: English
+.\"
+.TH "DQTOOL" "1" "07/05/2016" "5 F6" "The dqtool tool manual page"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+dqtool \- Display the contents of a disk\-buffer file created with
+.SH "SYNOPSIS"
+.HP \w'\fBdqtool\fR\ 'u
+\fBdqtool\fR [command] [options]
+.SH "DESCRIPTION"
+.PP
+NOTE: The dqtool application is distributed with the system logging application, and is usually part of the syslog\-ng package\&. The latest version of the syslog\-ng application is available at the
+\m[blue]\fBofficial syslog\-ng website\fR\m[]\&.
+.PP
+This manual page is only an abstract; for the complete documentation of syslog\-ng, see
+\m[blue]\fBThe Administrator Guide\fR\m[]\&.
+.PP
+The
+\fBdqtool\fR
+application is a utility that can be used to display and format the messages stored in a disk\-buffer file\&.
+.SH "THE CAT COMMAND"
+.HP \w'\fBcat\fR\ 'u
+\fBcat\fR [options] [file]
+.PP
+Use the
+\fBcat\fR
+command to display the log messages stored in the disk\-buffer (also called disk\-queue) file, and also information from the header of the disk queue file\&. The messages are printed to the standard output (stdout), so it is possible to use grep and other tools to find particular log messages, e\&.g\&.,
+\fBdqtool cat /var/log/messages\&.lgs |grep 192\&.168\&.1\&.1\fR\&.
+.PP
+The
+\fBcat\fR
+command has the following options:
+.PP
+\fB\-\-debug\fR or \fB\-d\fR
+.RS 4
+Print diagnostic and debugging messages to stderr\&.
+.RE
+.PP
+\fB\-\-help\fR or \fB\-h\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-template=<template>\fR or \fB\-t\fR
+.RS 4
+Format the messages using the specified template\&.
+.RE
+.PP
+\fB\-\-verbose\fR or \fB\-v\fR
+.RS 4
+Print verbose messages to stderr\&.
+.RE
+.PP
+\fB\-\-version\fR or \fB\-V\fR
+.RS 4
+Display version information\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+\&./dqtool cat \&.\&./var/syslog\-ng\-00000\&.qf
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The output looks like:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+Disk\-buffer state loaded; filename=\*(Aq\&.\&./var/syslog\-ng\-00000\&.qf\*(Aq, qout_length=\*(Aq65\*(Aq, qbacklog_length=\*(Aq0\*(Aq, qoverflow_length=\*(Aq9205\*(Aq, qdisk_length=\*(Aq0\*(Aq
+Mar  3 10:52:05 tristram localprg[1234]: seq: 0000011630, runid: 1267609923, stamp: 2010\-03\-03T10:52:05 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD
+Mar  3 10:52:05 tristram localprg[1234]: seq: 0000011631, runid: 1267609923, stamp: 2010\-03\-03T10:52:05 PADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADDPADD
+.fi
+.if n \{\
+.RE
+.\}
+.SH "FILES"
+.PP
+/opt/syslog\-ng/bin/dqtool
+.SH "SEE ALSO"
+.PP
+\fBsyslog\-ng\&.conf\fR(5)
+.PP
+\fBsyslog\-ng\fR(8)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+For the detailed documentation of see
+\m[blue]\fB\fBThe 5 F6 Administrator Guide\fR\fR\m[]
+.PP
+If you experience any problems or need help with syslog\-ng, visit
+\m[blue]\fBvisit the syslog\-ng wiki\fR\m[]
+or the
+\m[blue]\fB\fBsyslog\-ng mailing list\fR\fR\m[]\&.
+.PP
+For news and notifications about of syslog\-ng, visit the
+\m[blue]\fB\fBsyslog\-ng Blog\fR\fR\m[]\&.
+.sp .5v
+.RE
+.SH "AUTHOR"
+.PP
+This manual page was written by the BalaBit Documentation Team <documentation@balabit\&.com>\&.
+.SH "COPYRIGHT"

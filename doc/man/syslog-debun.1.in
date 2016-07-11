@@ -1,0 +1,380 @@
+'\" t
+.\"     Title: syslog-debun
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/05/2016
+.\"    Manual: The syslog-debun manual page
+.\"    Source: 5 F6
+.\"  Language: English
+.\"
+.TH "SYSLOG\-DEBUN" "1" "07/05/2016" "5 F6" "The syslog-debun manual page"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+syslog-debun \- syslog\-ng DEBUg buNdle generator
+.SH "SYNOPSIS"
+.HP \w'\fBsyslog\-debun\fR\ 'u
+\fBsyslog\-debun\fR [options]
+.SH "DESCRIPTION"
+.PP
+NOTE: The
+\fBsyslog\-debun\fR
+application is distributed with the system logging application, and is usually part of the package\&. The latest version of the application is available at \&.
+.PP
+This manual page is only an abstract; for the complete documentation of syslog\-ng, see
+\m[blue]\fBThe syslog\-ng Administrator Guide\fR\m[]\&.
+.PP
+The
+\fBsyslog\-debun\fR
+tool collects and saves information about your installation, making troubleshooting easier, especially if you ask help about your related problem\&.
+.SH "GENERAL OPTIONS"
+.PP
+\fB\-h\fR
+.RS 4
+Display the help page\&.
+.RE
+.PP
+\fB\-l\fR
+.RS 4
+Do not collect privacy\-sensitive data, for example, process tree, fstab, and so on\&. If you use with
+\fB\-d\fR, then the following parameters will be used for debug mode:\fB\-Fev\fR
+.RE
+.PP
+\fB\-R <directory>\fR
+.RS 4
+The directory where syslog\-ng Premium Edition installed instead of
+/opt/syslog\-ng\&.
+.RE
+.PP
+\fB\-W <directory>\fR
+.RS 4
+Set the working directory, where the debug bundle will be saved\&. Default value:
+/tmp
+.RE
+.SH "DEBUG MODE OPTIONS"
+.PP
+\fB\-d\fR
+.RS 4
+Start in debug mode, using the
+\fB\-Fedv \-\-enable\-core\fR
+options\&.
+.sp
+Warning! Using this option under high message load may increase disk I/O during the debug, and the resulting debug bundle can be huge\&. To exit debug mode, press Enter\&.
+.RE
+.PP
+\fB\-D <options>\fR
+.RS 4
+Start in debug mode, using the specified command\-line options\&. To exit debug mode, press Enter\&. For details on the available options, see
+???\&.
+.RE
+.PP
+\fB\-t <seconds>\fR
+.RS 4
+Run in noninteractive debug mode for <seconds>, and automatically exit debug mode after the specified number of seconds\&.
+.RE
+.PP
+\fB\-w <seconds>\fR
+.RS 4
+Wait <seconds> seconds before starting debug mode\&.
+.RE
+.SH "SYSTEM CALL TRACING"
+.PP
+\fB\-s\fR
+.RS 4
+Enable syscall tracing (\fBstrace \-f\fR
+or
+\fBtruss \-f\fR)\&. Note that using
+\fB\-s\fR
+itself does not enable debug mode, only traces the system calls of an already running process\&. To trace system calls in debug mode, use both the
+\fB\-s\fR
+and
+\fB\-d\fR
+options\&.
+.RE
+.SH "PACKET CAPTURE OPTIONS"
+.PP
+\fB\-i <interface>\fR
+.RS 4
+Capture packets only on the specified interface, for example,
+\fBeth0\fR\&.
+.RE
+.PP
+\fB\-p\fR
+.RS 4
+Capture incoming packets with
+\fBtcpdump\fR, using the following filter:
+\fBport 514 or port 601 or port 53\fR
+.RE
+.PP
+\fB\-P <options>\fR
+.RS 4
+Capture incoming packets with
+\fBtcpdump\fR, using the specified filter\&.
+.RE
+.PP
+\fB\-t <seconds>\fR
+.RS 4
+Run in noninteractive debug mode for <seconds>, and automatically exit debug mode after the specified number of seconds\&.
+.RE
+.SH "EXAMPLES"
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Create a simple debug bundle, collecting information about your environment, for example, list packages containing the word: syslog, ldd of your syslog\-binary, and so on\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-l
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Similar to
+\fBsyslog\-debun\fR, but without privacy\-sensitive information\&. For example, the following is NOT collected: fstab, df output, mount info, ip / network interface configuration, DNS resolv info, and process tree\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-d
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Similar to
+\fBsyslog\-debun\fR, but it also stops syslog\-ng, then restarts it in debug mode (\fB\-Fedv \-\-enable\-core\fR)\&. To stop debug mode, press Enter\&. The output of the debug mode collected into a separate file, and also added to the debug bundle\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-s
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Trace the system calls (using
+\fBstrace\fR
+or
+\fBtruss\fR) of an already running process\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-d \-s
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Restart in debug mode, and also trace the system calls (using
+\fBstrace\fR
+or
+\fBtruss\fR) of the process\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-p
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Run packet capture (pcap, using tcpdump) with the filter:
+\fBport 514 or port 601 or port 53\fR
+Also waits for pressing Enter, like debug mode\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-p \-t 10
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Noninteractive debug mode: Similar to
+\fBsyslog\-debun \-p\fR, but automatically exit from tcpdump mode after 10 seconds\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-P "host 1\&.2\&.3\&.4"  \-D "\-Fev \-\-enable\-core"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Change the packet\-capturing filter from the default to
+\fBhost 1\&.2\&.3\&.4\fR\&. Also change debugging parameters from the default to
+\fB\-Fev \-\-enable\-core\fR\&. Since a timeout (\fB\-t\fR) is not given, waits for pressing Enter\&.
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+syslog\-debun \-p \-d \-w 5 \-t 10
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Collect pcap and debug mode output following this scenario:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Start packet capture with default parameters (\fB\-p\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Wait 5 seconds (\fB\-w 5\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Stop syslog\-ng
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Start syslog\-ng in debug mode with default parameters (\fB\-d\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Wait 10 seconds (\fB\-t 10\fR)
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Stop syslog\-ng debuging
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Start syslog\-ng
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+Stop packet capturing
+.RE
+.SH "FILES"
+.PP
+/opt/syslog\-ng/bin/loggen
+.SH "SEE ALSO"
+.PP
+\fBsyslog\-ng\&.conf\fR(5)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+For the detailed documentation of see
+\m[blue]\fB\fBThe 5 F6 Administrator Guide\fR\fR\m[]
+.PP
+If you experience any problems or need help with syslog\-ng, visit
+\m[blue]\fBvisit the syslog\-ng wiki\fR\m[]
+or the
+\m[blue]\fB\fBsyslog\-ng mailing list\fR\fR\m[]\&.
+.PP
+For news and notifications about of syslog\-ng, visit the
+\m[blue]\fB\fBsyslog\-ng Blog\fR\fR\m[]\&.
+.sp .5v
+.RE
+.SH "AUTHOR"
+.PP
+This manual page was written by the BalaBit Documentation Team <documentation@balabit\&.com>\&.
+.SH "COPYRIGHT"

@@ -1,0 +1,798 @@
+'\" t
+.\"     Title: lgstool
+.\"    Author: [see the "Author" section]
+.\" Generator: DocBook XSL Stylesheets v1.78.1 <http://docbook.sf.net/>
+.\"      Date: 07/05/2016
+.\"    Manual: The logstore tool manual page
+.\"    Source: 5 F6
+.\"  Language: English
+.\"
+.TH "LGSTOOL" "1" "07/05/2016" "5 F6" "The logstore tool manual page"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.\" -----------------------------------------------------------------
+.\" * set default formatting
+.\" -----------------------------------------------------------------
+.\" disable hyphenation
+.nh
+.\" disable justification (adjust text to left margin only)
+.ad l
+.\" -----------------------------------------------------------------
+.\" * MAIN CONTENT STARTS HERE *
+.\" -----------------------------------------------------------------
+.SH "NAME"
+lgstool \- Inspect and validate the binary log files (logstores) created with
+.SH "SYNOPSIS"
+.HP \w'\fBlgstool\fR\ 'u
+\fBlgstool\fR [command] [options]
+.SH "DESCRIPTION"
+.PP
+NOTE: The lgstool application is distributed with the system logging application, and is usually part of the syslog\-ng package\&. The latest version of the syslog\-ng application is available at the
+\m[blue]\fBofficial syslog\-ng website\fR\m[]\&. The
+\fBlgstool\fR
+utility is available for Microsoft Windows operating systems at the
+\m[blue]\fBDownload Page\fR\m[]\&.
+.PP
+This manual page is only an abstract; for the complete documentation of syslog\-ng, see
+\m[blue]\fBThe Administrator Guide\fR\m[]\&.
+.PP
+The
+\fBlgstool\fR
+application is a utility that can be used to:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+display and format the messages stored in logstore files;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+display the record structure of logstore files;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+process log messages from orphaned journal files and write them into logstore files;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+follow (tail) messages arriving to a logstore file real\-time;
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+validate the digital signature and timestamp of encrypted logstore files;
+.RE
+.PP
+Note that in the Windows\-version of
+\fBlgstool\fR
+the
+\fBrecover\fR
+option is not available and the functionality of the
+\fBtail\fR
+option is limited\&.
+.SH "THE CAT COMMAND"
+.HP \w'\fBcat\fR\ 'u
+\fBcat\fR [options] [file]
+.PP
+Use the
+\fBcat\fR
+command to display the log messages stored in the logstore file\&. Log messages available in the journal file of the logstore (but not yet written to the logstore file itself) are displayed as well\&. The messages are printed to the standard output (stdout), so it is possible to use grep and other tools to find particular log messages, e\&.g\&.,
+\fBlgstool cat /var/log/messages\&.lgs |grep 192\&.168\&.1\&.1\fR\&. Note that can also follow logstore files \(em for details on this feature, see
+the section called \(lqTHE TAIL COMMAND\(rq\&.
+.PP
+The
+\fBcat\fR
+command has the following options:
+.PP
+\fB\-\-debug\fR or \fB\-d\fR
+.RS 4
+Print diagnostic and debugging messages to stderr\&.
+.RE
+.PP
+\fB\-\-filter<expression>\fR or \fB\-i\fR
+.RS 4
+Only print messages matching the specified filter\&. All possible macros, regular expressions and logical expressions can be specified in a filter\&.
+.PP
+\fBExample\ \&1.\ \&lgstool cat filter\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+lgstool cat  \-t \*(Aqhost: ${HOST} program: ${PROGRAM} msg: ${MSG}\en\*(Aq \-\-filter=\*(Aqprogram("prg0000[0]")\*(Aq /tmp/logstore\-serialized\&.lgs
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-\-help\fR or \fB\-h\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-key=<keyfile>\fR or \fB\-k\fR
+.RS 4
+Use the specified private key to decrypt encrypted logstore files\&.
+.RE
+.PP
+\fB\-\-seek=<ID>\fR or \fB\-s\fR
+.RS 4
+Display only messages newer than the message specified\&.
+.RE
+.PP
+\fB\-\-template=<template>\fR or \fB\-t\fR
+.RS 4
+Format the messages using the specified template\&.
+.RE
+.PP
+\fB\-\-verbose\fR or \fB\-v\fR
+.RS 4
+Print verbose messages to stderr\&.
+.RE
+.PP
+\fB\-\-version\fR or \fB\-V\fR
+.RS 4
+Display version information\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+lgstool cat \-\-key=mykey\&.pem mylogstore\&.lgs
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE INSPECT COMMAND"
+.HP \w'\fBinspect\fR\ 'u
+\fBinspect\fR [options] [file]
+.PP
+Use the
+\fBinspect\fR
+command to display structure of the logstore file\&. The following information is displayed:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcipher\fR: The cipher algorithm used to encrypt the logstore file\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIdigest\fR: The digest (hash) algorithm used\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIencrypt\fR:
+\fBTRUE\fR
+if the logstore file is encrypted\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIcompress\fR:
+\fBTRUE\fR
+if the logstore file is compressed\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIhmac\fR:
+\fBTRUE\fR
+if the logstore file includes HMAC (Hash\-based Message Authentication Code) information for the chunks\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIchunk_mac\fR: The MAC (Message Authentication Code) of the chunk\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIfile_mac\fR: The MAC (Message Authentication Code) of the chunk\&.
+.RE
+.PP
+For timestamped logstore files, the following information is also displayed:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIchunk_id\fR: The ID of the chunk\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIVersion\fR: The version of the logstore file format used\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIPolicy OID\fR: The OID of the timestamping policy used in the timestamping request\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIHash Algorithm\fR: The digest (hash) algorithm used to create the hash of the chunk\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fISerial number\fR: The serial number of the timestamp\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fITimestamp\fR: The date when the Timestamping Authority timestamped the chunk\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIAccuracy\fR: The accuracy of the timestamp\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fIOrdering\fR: Indicates the status of the ordering field in the timestamping request\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fINonce\fR: The nonce (a large random number with a high probability that it is generated by the client only once) included in the timestamping request (if any)\&.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.sp -1
+.IP \(bu 2.3
+.\}
+\fITSA\fR: The Distinguished Name (DN) of the Timestamping Authority\&.
+.RE
+.PP
+The
+\fBinspect\fR
+command has the following options:
+.PP
+\fB\-\-debug\fR or \fB\-d\fR
+.RS 4
+Print diagnostic and debugging messages to stderr\&.
+.RE
+.PP
+\fB\-\-help\fR or \fB\-h\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-key=<keyfile>\fR or \fB\-k\fR
+.RS 4
+Use the specified private key to decrypt encrypted logstore files\&.
+.RE
+.PP
+\fB\-\-verbose\fR or \fB\-v\fR
+.RS 4
+Print verbose messages to stderr\&.
+.RE
+.PP
+\fB\-\-version\fR or \fB\-V\fR
+.RS 4
+Display version information\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+lgstool inspect \-\-key=mykey\&.pem mylogstore\&.lgs
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+A sample output looks like this:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+XFRM_INFO @941
+    cipher: aes\-128\-cbc
+    digest: sha1
+CHUNK 0@1079: [1 \- 1000]:
+    encrypt: TRUE
+    compress: TRUE
+    hmac: TRUE
+    chunk_mac: e4d5d813979cf865d5ae4624f7aa98047123cd52
+    file_mac: 6600600ca5befb002a73b15be8f0ac04973d5936
+TIMESTAMP @36481:
+    chunk_id: 0
+    Status info:
+    Status: Granted\&.
+    Status description: unspecified
+    Failure info: unspecified
+    TST info:
+    Version: 1
+    Policy OID: 1\&.2\&.3\&.4
+    Hash Algorithm: sha1
+    Message data:
+        0000 \- 66 00 60 0c a5 be fb 00\-2a 73 b1 5b e8 f0 ac 04 f\&.`\&.\&.\&.\&.\&.*s\&.[\&.\&.\&.\&.
+        0010 \- 97 3d 59 36                                       \&.=Y6
+    Serial number: 0x029A
+    Time stamp: Mar 19 13:48:57 2010 GMT
+    Accuracy: 0x01 seconds, 0x01F4 millis, 0x64 micros
+    Ordering: no
+    Nonce: 0xB613F55AEFFA6DC0
+    TSA: unspecified
+    Extensions:
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE RECOVER COMMAND"
+.HP \w'\fBrecover\fR\ 'u
+\fBrecover\fR [options] [file]
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+.PP
+Do NOT use the
+\fBlgstool recover\fR
+command on logstore files that are actively used by \&. It might lead to data loss\&. Always stop first\&.
+.sp .5v
+.RE
+.PP
+Use the
+\fBrecover\fR
+command can process and correct broken logstore files\&. It can also process orphaned journal files and move their contents to the respective logstore file\&. Encrypted, compressed, and timestamped logstore files can be recovered as well \(em the private key of the logstore is not needed to recover encrypted logstore files (recovering the encrypted file does not give access to its contents)\&. Note that the
+\fBrecover\fR
+option is not available in the Windows\-version of
+\fBlgstool\fR\&.
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBWarning\fR
+.ps -1
+.br
+.PP
+The
+\fBlgstool\fR
+application cannot fetch timestamps to the chunks (message blocks), so chunks recovered with
+\fBlgstool\fR
+are not timestamped (the internal timestamp of the syslog messages is included in the messages)\&.
+.sp .5v
+.RE
+.PP
+The
+\fBrecover\fR
+command is available in 3\&.2 and later, and has the following options:
+.PP
+\fB\-\-compress\-level\fR or \fB\-c\fR
+.RS 4
+Set the level of compression when processing a journal file into a compressed logstore\&. Default value: 3
+.RE
+.PP
+\fB\-\-debug\fR or \fB\-d\fR
+.RS 4
+Print diagnostic and debugging messages to stderr\&.
+.RE
+.PP
+\fB\-\-help\fR or \fB\-h\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-verbose\fR or \fB\-v\fR
+.RS 4
+Print verbose messages to stderr\&.
+.RE
+.PP
+\fB\-\-version\fR or \fB\-V\fR
+.RS 4
+Display version information\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+lgstool recover mylogstore\&.lgs
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE TAIL COMMAND"
+.HP \w'\fBtail\fR\ 'u
+\fBtail\fR [options] [file]
+.PP
+Use the
+\fBtail \-f\fR
+command to follow the contents of a logstore file like the traditional
+\fBtail\fR
+command does on Linux/UNIX systems\&. The messages are printed to the standard output (stdout)\&. Contents of the journal file related to the logstore file are displayed as well\&.
+.PP
+The
+\fBtail\fR
+command is available in 3\&.2 and later, and has the following options\&. Note that in the Windows\-version of
+\fBlgstool\fR
+the
+\fBtail \-f\fR
+option is not available\&.
+.PP
+\fB\-\-debug\fR or \fB\-d\fR
+.RS 4
+Print diagnostic and debugging messages to stderr\&.
+.RE
+.PP
+\fB\-\-help\fR or \fB\-h\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-filter=<expression>\fR or \fB\-i\fR
+.RS 4
+Only print messages matching the specified filter\&. All possible macros, regular expressions and logical expressions can be specified in a filter\&.
+.PP
+\fBExample\ \&2.\ \&lgstool tail filter\fR
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+lgstool tail  \-t \*(Aqhost: ${HOST} program: ${PROGRAM} msg: ${MSG}\en\*(Aq \-\-filter=\*(Aqprogram("prg0000[0]")\*(Aq /tmp/logstore\-serialized\&.lgs
+.fi
+.if n \{\
+.RE
+.\}
+.RE
+.PP
+\fB\-\-follow\fR or \fB\-f\fR
+.RS 4
+Follow mode: display messages as they arrive into the logstore\&.
+.RE
+.PP
+\fB\-\-key=<keyfile>\fR or \fB\-k\fR
+.RS 4
+Use the specified private key to decrypt encrypted logstore files\&.
+.RE
+.PP
+\fB\-\-lines=<N>\fR or \fB\-n\fR
+.RS 4
+Display the last N lines of the logstore file instead of the last 10\&. Alternatively, use
+\fB+N\fR
+to display lines starting with the Nth\&.
+.RE
+.PP
+\fB\-\-sleep_interval=<seconds>\fR or \fB\-s\fR
+.RS 4
+Number of seconds to wait before displaying new messages in follow mode\&.
+.RE
+.PP
+\fB\-\-template=<template>\fR or \fB\-t\fR
+.RS 4
+Format the messages using the specified template\&.
+.RE
+.PP
+\fB\-\-verbose\fR or \fB\-v\fR
+.RS 4
+Print verbose messages to stderr\&.
+.RE
+.PP
+\fB\-\-version\fR or \fB\-V\fR
+.RS 4
+Display version information\&.
+.RE
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+lgstool tail \-f \-n=20 \-\-key=mykey\&.pem mylogstore\&.lgs
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE VALIDATE COMMAND"
+.HP \w'\fBvalidate\fR\ 'u
+\fBvalidate\fR [options] [file]
+.PP
+Use the
+\fBvalidate\fR
+command to validate the signatures and timestamps of a logstore file\&. The
+\fBvalidate\fR
+command has the following options:
+.PP
+\fB\-\-ca\-dir=<directory>\fR or \fB\-C\fR
+.RS 4
+The directory that stores the certificates of the trusted Certificate Authorities\&. Use this option if the timestamps of your logstore files were signed with certificates belonging to different Certificate Authorities\&.
+.RE
+.PP
+\fB\-\-ca\-dir\-layout=<md5|sha1>\fR
+.RS 4
+The type of the hash used for the CA certificates\&. The default value (\fBmd5\fR) is expected to change to
+\fBsha1\fR
+in subsequent releases of \&.
+.RE
+.PP
+\fB\-\-ca\-file=<file>\fR or \fB\-P\fR
+.RS 4
+A file that stores the certificate of the trusted Certificate Authority\&. Use this option if the timestamps of your logstore files were signed with a single certificate, or if every such certificate belongs to the same Certificate Authority\&.
+.RE
+.PP
+\fB\-\-crl\-dir=<directory>\fR or \fB\-R\fR
+.RS 4
+The directory that stores the Certificate Revocation Lists of the trusted Certificate Authorities\&.
+.RE
+.PP
+\fB\-\-debug\fR or \fB\-d\fR
+.RS 4
+Print diagnostic and debugging messages to stderr\&.
+.RE
+.PP
+\fB\-\-help\fR or \fB\-h\fR
+.RS 4
+Display a brief help message\&.
+.RE
+.PP
+\fB\-\-key=<keyfile>\fR or \fB\-k\fR
+.RS 4
+Use the specified private key to decrypt encrypted logstore files\&.
+.RE
+.PP
+\fB\-\-require\-ts\fR or \fB\-T\fR
+.RS 4
+Consider the logstore file invalid unless the entire file is protected by a valid timestamp\&.
+.RE
+.PP
+\fB\-\-seed\fR or \fB\-S\fR
+.RS 4
+Use the
+~/\&.rnd
+file or the file specified in the
+\fI$RANDFILE\fR
+environmental variable as seed\&. This is needed only on platforms that do not have a
+/dev/random
+device (for example, Solaris) and the entropy gathering daemon
+\fBegd\fR
+application is not installed on the system\&.
+.RE
+.PP
+\fB\-\-ts\-name=<name>\fR or \fB\-D\fR
+.RS 4
+Consider the logstore file invalid unless the timestamps are signed by the specified Timestamping Authority\&. Specify the Distinguished Name (DN) of the Timestamping Authority\&.
+.RE
+.PP
+\fB\-\-verbose\fR or \fB\-v\fR
+.RS 4
+Print verbose messages to stderr\&.
+.RE
+.PP
+\fB\-\-version\fR or \fB\-V\fR
+.RS 4
+Display version information\&.
+.RE
+.PP
+By default, the
+\fBlgstool validate\fR
+command checks only the checksum of the file\&. Use the
+\fI\-\-require\-ts\fR
+option to validate the timestamps as well\&. THe digital signature of the timestamps is checked only if the
+\fI\-\-ca\-dir\fR
+or the
+\fI\-\-ca\-file\fR
+parameter is set\&.
+.PP
+Example:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+lgstool validate \-\-key=mykey\&.pem \-\-ca\-file=mycacert\&.pem \-\-ts\-name=MYTSA mylogstore\&.lgs
+.fi
+.if n \{\
+.RE
+.\}
+.SH "THE REINDEX COMMAND"
+.HP \w'\fBreindex\fR\ 'u
+\fBreindex\fR [options] [file]
+.PP
+The
+\fBreindex\fR
+command is an experimental, currently unsupported tool\&. Do not attempt to use it unless your support team explicitly instructs you to do so\&.
+.SH "FILES"
+.PP
+/opt/syslog\-ng/bin/lgstool
+.SH "SEE ALSO"
+.PP
+\fBsyslog\-ng\&.conf\fR(5)
+.PP
+\fBsyslog\-ng\fR(8)
+.if n \{\
+.sp
+.\}
+.RS 4
+.it 1 an-trap
+.nr an-no-space-flag 1
+.nr an-break-flag 1
+.br
+.ps +1
+\fBNote\fR
+.ps -1
+.br
+.PP
+For the detailed documentation of see
+\m[blue]\fB\fBThe 5 F6 Administrator Guide\fR\fR\m[]
+.PP
+If you experience any problems or need help with syslog\-ng, visit
+\m[blue]\fBvisit the syslog\-ng wiki\fR\m[]
+or the
+\m[blue]\fB\fBsyslog\-ng mailing list\fR\fR\m[]\&.
+.PP
+For news and notifications about of syslog\-ng, visit the
+\m[blue]\fB\fBsyslog\-ng Blog\fR\fR\m[]\&.
+.sp .5v
+.RE
+.SH "AUTHOR"
+.PP
+This manual page was written by the BalaBit Documentation Team <documentation@balabit\&.com>\&.
+.SH "COPYRIGHT"

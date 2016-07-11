@@ -1622,7 +1622,7 @@ dnl PE modules
 	pe-tests/unit/Makefile
 	pe-tests/tools/Makefile
 	pe-tests/functional/Makefile
-        windows-binaries/Makefile
+	windows-binaries/Makefile
 	windows-tools/Makefile
 	windows-tools/upgrade-tool/Makefile
 	windows-tools/upgrade-tool/tests/Makefile
@@ -1632,11 +1632,16 @@ dnl PE modules
       scripts/Makefile
       scripts/update-patterndb
       doc/Makefile
-      doc/man/loggen.1
+      doc/man/syslog-ng-ctl.1
+      doc/man/syslog-ng.conf.5
+      doc/man/syslog-debun.1
       doc/man/pdbtool.1
       doc/man/syslog-ng.8
-      doc/man/syslog-ng.conf.5
-      doc/man/syslog-ng-ctl.1
+      doc/man/syslog-ng-query.1
+      doc/man/persist-tool.1
+      doc/man/dqtool.1
+      doc/man/loggen.1
+      doc/man/lgstool.1
       contrib/Makefile
       scl/Makefile
       tests/Makefile
