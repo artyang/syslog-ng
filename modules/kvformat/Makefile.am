@@ -1,7 +1,7 @@
 moduledir = @moduledir@
 export top_srcdir
 
-#SUBDIRS = . tests
+SUBDIRS = . tests
 
 AM_CPPFLAGS	= \
   -I$(top_srcdir)/lib \
