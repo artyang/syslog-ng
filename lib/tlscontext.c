@@ -333,9 +333,9 @@ tls_context_set_default_ca_dir_layout(TLSContext *self, GlobalConfig *cfg)
 static gboolean
 tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
 {
-  gint ssl_error;
   gint verify_mode = 0;
   gint verify_flags = X509_V_FLAG_POLICY_CHECK;
+  gulong ssl_error;
 
   if (self->mode == TM_CLIENT)
     self->ssl_ctx = SSL_CTX_new(SSLv23_client_method());
