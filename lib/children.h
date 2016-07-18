@@ -21,7 +21,7 @@
  * COPYING for details.
  *
  */
-  
+
 #ifndef CHILDREN_H_INCLUDED
 #define CHILDREN_H_INCLUDED
 
@@ -31,8 +31,11 @@
 void child_manager_register(pid_t pid, void (*callback)(pid_t, int, gpointer), gpointer user_data, GDestroyNotify user_data_destroy);
 void child_manager_unregister(pid_t pid);
 void child_manager_sigchild(pid_t pid, int status);
+void child_manager_kill_all(void);
 
 void child_manager_init(void);
 void child_manager_deinit(void);
+
+gboolean child_manager_is_empty(void);
 
 #endif

@@ -21,8 +21,12 @@
  * COPYING for details.
  *
  */
-  
+
 #include "children.h"
+#include <atomic.h>
+#include <sys/types.h>
+#include <signal.h>
+
 
 typedef struct _ChildEntry
 {
@@ -33,6 +37,9 @@ typedef struct _ChildEntry
 } ChildEntry;
 
 GHashTable *child_hash;
+
+/* This variable will be used concurrently from the main loop and signal handlers. */
+GAtomicCounter child_count;
 
 static void
 child_manager_child_entry_free(ChildEntry *ce)
@@ -53,6 +60,7 @@ child_manager_register(pid_t pid, void (*callback)(pid_t, int, gpointer), gpoint
   ce->callback_data_destroy = callback_data_destroy;
 
   g_hash_table_insert(child_hash, &ce->pid, ce);
+  g_atomic_counter_inc(&child_count);
 }
 
 void
@@ -61,6 +69,7 @@ child_manager_unregister(pid_t pid)
   if (g_hash_table_lookup(child_hash, &pid))
     {
       g_hash_table_remove(child_hash, &pid);
+      (void)g_atomic_counter_dec_and_test(&child_count);
     }
 }
 
@@ -74,17 +83,40 @@ child_manager_sigchild(pid_t pid, int status)
     {
       ce->exit_callback(pid, status, ce->callback_data);
       g_hash_table_remove(child_hash, &pid);
+      (void)g_atomic_counter_dec_and_test(&child_count);
     }
+}
+
+static void
+_kill_all_helper(gpointer key, gpointer value, gpointer user_data)
+{
+  pid_t pid = *((pid_t*)key);
+  kill(pid, SIGKILL);
+}
+
+void
+child_manager_kill_all()
+{
+  g_hash_table_foreach(child_hash, _kill_all_helper, NULL);
 }
 
 void
 child_manager_init(void)
 {
   child_hash = g_hash_table_new_full(g_int_hash, g_int_equal, NULL, (GDestroyNotify) child_manager_child_entry_free);
+  g_atomic_counter_set(&child_count, 0);
 }
 
 void
 child_manager_deinit(void)
 {
   g_hash_table_destroy(child_hash);
+}
+
+/* We expect that there are no more child process starts when we started the shutdown.
+ * So if we read 0, it stays 0 */
+gboolean
+child_manager_is_empty(void)
+{
+  return (g_atomic_counter_get(&child_count) == 0);
 }

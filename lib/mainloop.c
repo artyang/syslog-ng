@@ -144,8 +144,6 @@ struct _Quit_Callback_Func
   gpointer user_data;
 };
 
-GList *quit_callback_list = NULL;
-
 ThreadId main_thread_handle;
 
 static void sig_term_handler(void *s);
@@ -440,57 +438,60 @@ main_loop_reload_config_initiate(void)
  * syncronized exit
  ************************************************************************************/
 
+#define CHILD_WAIT_TIMER_TIMEOUT 100
+#define CHILD_WAIT_TIMER_MAXRESTART_COUNT 50
+static int main_loop_child_wait_timer_restart_count = 0;
+static struct iv_timer main_loop_child_wait_timer;
 static struct iv_timer main_loop_exit_timer;
+
+static void main_loop_child_wait_timer_elapsed(void *arg);
+
+static void
+start_child_wait_timer(void)
+{
+  IV_TIMER_INIT(&main_loop_child_wait_timer);
+  iv_validate_now();
+  main_loop_child_wait_timer.expires = iv_now;
+  main_loop_child_wait_timer.handler = main_loop_child_wait_timer_elapsed;
+  timespec_add_msec(&main_loop_child_wait_timer.expires, CHILD_WAIT_TIMER_TIMEOUT);
+  iv_timer_register(&main_loop_child_wait_timer);
+}
+
+static void
+main_loop_child_wait_timer_elapsed(void *arg)
+{
+  if (child_manager_is_empty())
+    goto out;
+
+  main_loop_child_wait_timer_restart_count++;
+
+  if (main_loop_child_wait_timer_restart_count <= CHILD_WAIT_TIMER_MAXRESTART_COUNT)
+    {
+      start_child_wait_timer();
+      return;
+    }
+
+  child_manager_kill_all();
+out:
+  iv_quit();
+}
 
 static void
 main_loop_exit_finish(void)
 {
   /* deinit the current configuration, as at this point we _know_ that no
-   * threads are running.  This will unregister ivykis tasks and timers
-   * that could fire while the configuration is being destructed */
+   *    * threads are running.  This will unregister ivykis tasks and timers
+   *    * that could fire while the configuration is being destructed
+   *    * also triggers the stopping of child processes */
   cfg_deinit(current_configuration);
-  iv_quit();
+  main_loop_child_wait_timer_elapsed(NULL);
 }
 
 static void
 main_loop_exit_timer_elapsed(void *arg)
 {
+  /* Triggers thread exit and sub sequent calling of main_loop_exit_finish */
   main_loop_worker_sync_call(main_loop_exit_finish);
-}
-
-void
-main_loop_add_quit_callback_list_element(gpointer func, gpointer user_data)
-{
-  Quit_Callback_Func *cfunc = g_new(Quit_Callback_Func,1);
-
-  cfunc->func = func;
-  cfunc->user_data = user_data;
-
-  quit_callback_list = g_list_append(quit_callback_list, cfunc);
-
-  return;
-}
-
-
-static void
-main_loop_call_quit_callback_list_element(Quit_Callback_Func *func)
-{
-
-  func->func(func->user_data);
-
-  return;
-}
-
-static void
-main_loop_call_thread_quit_callback()
-{
-
-  g_list_foreach(quit_callback_list,(GFunc) main_loop_call_quit_callback_list_element,NULL);
-  g_list_foreach(quit_callback_list,(GFunc) g_free ,NULL);
-  g_list_free(quit_callback_list);
-  quit_callback_list = NULL;
-
-  return;
 }
 
 /************************************************************************************
@@ -502,7 +503,6 @@ sig_hup_handler(void *s)
 {
   if (!__main_loop_is_terminating)
     {
-      main_loop_call_thread_quit_callback();
       main_loop_reload_config_initiate();
     }
 }
@@ -515,14 +515,13 @@ sig_term_handler(void *s)
 
   show_config_shutdown_message(current_configuration);
 
-  main_loop_call_thread_quit_callback();
-
   IV_TIMER_INIT(&main_loop_exit_timer);
   iv_validate_now();
   main_loop_exit_timer.expires = iv_now;
   main_loop_exit_timer.handler = main_loop_exit_timer_elapsed;
   timespec_add_msec(&main_loop_exit_timer.expires, 100);
   iv_timer_register(&main_loop_exit_timer);
+
   __main_loop_is_terminating = TRUE;
 }
 
