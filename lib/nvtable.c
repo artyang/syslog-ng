@@ -75,11 +75,11 @@ nv_registry_alloc_handle(NVRegistry *self, const gchar *name)
                 NULL);
       goto exit;
     }
-  else if (self->names->len >= 65535)
+  else if (self->names->len >= NVHANDLE_MAX_VALUE)
     {
-      msg_error("Hard wired limit of 65535 name-value pairs have been reached, all further name-value pair will expand to nothing",
+      msg_error("Hard wired limit of name-value pairs have been reached, all further name-value pair will expand to nothing",
+                evt_tag_printf("limit", "%"G_GUINT32_FORMAT, NVHANDLE_MAX_VALUE),
                 evt_tag_str("value", name),
-                evt_tag_id(MSG_CANT_ALLOC_NV_HANDLE),
                 NULL);
       goto exit;
     }
