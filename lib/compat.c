@@ -102,6 +102,8 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <glib.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #ifndef SSIZE_MAX
 #define SSIZE_MAX SHRT_MAX
@@ -525,66 +527,15 @@ getpagesize (void)
 
 #if (_WIN32_WINNT < 0x0600)
 const char *
-inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
+inet_ntop(int af, const void *src, char *dst, socklen_t size)
 {
-  if (af == AF_INET)
-    {
-      struct sockaddr_in in;
-       memset(&in, 0, sizeof(in));
-       in.sin_family = AF_INET;
-       memcpy(&in.sin_addr, src, sizeof(struct in_addr));
-       getnameinfo((struct sockaddr *)&in, sizeof(struct sockaddr_in), dst, cnt, NULL, 0, NI_NUMERICHOST);
-       return dst;
-    }
-  else if (af == AF_INET6)
-    {
-      struct sockaddr_in6 in;
-      memset(&in, 0, sizeof(in));
-      in.sin6_family = AF_INET6;
-      memcpy(&in.sin6_addr, src, sizeof(struct in_addr6));
-      getnameinfo((struct sockaddr *)&in, sizeof(struct sockaddr_in6), dst, cnt, NULL, 0, NI_NUMERICHOST);
-     return dst;
-   }
-  return NULL;
+  return compat_inet_ntop(af, src, dst, size);
 }
 
 int
 inet_pton(int af, const char *src, void *dst)
 {
-  struct addrinfo hints, *res, *ressave;
-
-  memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = af;
-
-  if (getaddrinfo(src, NULL, &hints, &res) != 0)
-    {
-      return -1;
-    }
-
-  ressave = res;
-
-  while (res)
-    {
-      switch (af)
-        {
-        case AF_INET:
-          memcpy(dst, &(((struct sockaddr_in *)res->ai_addr)->sin_addr), sizeof(struct in_addr));
-          break;
-#if ENABLE_IPV6
-        case AF_INET6:
-          memcpy(dst, &(((struct sockaddr_in6 *)res->ai_addr)->sin6_addr), sizeof(struct in6_addr));
-          break;
-#endif
-        default:
-          g_assert_not_reached();
-          break;
-        }
-
-      res = res->ai_next;
-    }
-
-  freeaddrinfo(ressave);
-  return 0;
+  return compat_inet_pton(af, src, dst);
 }
 
 #endif /*_WIN32_WINNT < 0x0600*/
@@ -1010,6 +961,99 @@ init_signals()
 
 #endif /* _WIN32 */
 
+const char *
+_compat_getnameinfo(const struct sockaddr *sa, socklen_t salen,
+                    char *host,
+                    size_t hostlen)
+{
+  int error = getnameinfo(sa, salen, host, hostlen, NULL, 0, NI_NUMERICHOST);
+  if (error)
+    {
+      if (error == EAI_OVERFLOW)
+        errno = ENOSPC;
+      return NULL;
+    }
+  return host;
+}
+
+const char *
+compat_inet_ntop(int af, const void *src, char *dst, socklen_t size)
+{
+  switch (af)
+    {
+    case AF_INET:
+      {
+        struct sockaddr_in sa4;
+        memset(&sa4, 0, sizeof(sa4));
+        sa4.sin_family = AF_INET;
+        memcpy(&sa4.sin_addr, src, sizeof(sa4.sin_addr));
+        return _compat_getnameinfo((struct sockaddr *)&sa4, sizeof(sa4), dst, size);
+      }
+#if ENABLE_IPV6
+    case AF_INET6:
+      {
+        struct sockaddr_in6 sa6;
+        memset(&sa6, 0, sizeof(sa6));
+        sa6.sin6_family = AF_INET6;
+        memcpy(&sa6.sin6_addr, src, sizeof(sa6.sin6_addr));
+        return _compat_getnameinfo((struct sockaddr *)&sa6, sizeof(sa6), dst, size);
+      }
+#endif
+    default:
+      {
+        errno = EAFNOSUPPORT;
+        return NULL;
+      }
+    }
+}
+
+int
+compat_inet_pton(int af, const char *src, void *dst)
+{
+  struct addrinfo hints, *res;
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = af;
+
+  if (getaddrinfo(src, NULL, &hints, &res) != 0)
+    {
+      errno = EAFNOSUPPORT;
+      return -1;
+    }
+
+  int ok = 0;
+  if (res && (af == res->ai_family))
+    {
+      switch (af)
+        {
+        case AF_INET:
+          {
+            struct sockaddr_in *sa4 = (struct sockaddr_in *)res->ai_addr;
+            memcpy(dst, &sa4->sin_addr, sizeof(sa4->sin_addr));
+            ok = 1;
+            break;
+          }
+#if ENABLE_IPV6
+        case AF_INET6:
+          {
+            struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)res->ai_addr;
+            memcpy(dst, &sa6->sin6_addr, sizeof(sa6->sin6_addr));
+            ok = 1;
+            break;
+          }
+#endif
+        default:
+          {
+            errno = EAFNOSUPPORT;
+            ok = -1;
+          }
+        }
+
+    }
+
+  freeaddrinfo(res);
+  return ok;
+}
 
 EVTTAG *
 evt_tag_socket_error(const char *name, int value)
