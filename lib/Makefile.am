@@ -1,3 +1,5 @@
+SUBDIRS = tests
+
 moduledir = @moduledir@
 pkgincludedir = @includedir@/syslog-ng
 
