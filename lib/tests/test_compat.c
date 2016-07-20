@@ -47,8 +47,8 @@ _test_inet_ntop(void)
   expect_nstring(dst, -1, "255.255.255.255", -1, "inet_ntop(): wrong IPv4 address");
 
 #if ENABLE_IPV6
-  const struct in6_addr sa6 = { { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 } };
-  res = compat_inet_ntop(AF_INET6, &sa6, dst, len);
+  const char sa6[] = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
+  res = compat_inet_ntop(AF_INET6, (const struct in6_addr *)&sa6, dst, len);
   expect_false(res == NULL, "inet_ntop() should succeed on IPv6");
   expect_nstring(dst, -1,
                  "101:101:202:202:303:303:404:404", -1,
@@ -76,10 +76,11 @@ _test_inet_pton(void)
   struct in6_addr sa6;
   res = compat_inet_pton(AF_INET6, "101:101:202:202:303:303:404:404", &sa6);
   expect_true(res == 1, "inet_pton() should succeed on IPv6");
-  const struct in6_addr expected_sa6 = { { 1, 1, 1, 1, 2, 2, 3, 2, 3, 3, 3, 3, 4, 4, 4, 4 } };
-  assert_guint8_array_non_fatal((const guint8 *)&sa6.__in6_u, 4,
-                                 (const guint8 *)&expected_sa6, 4,
-                                 "inet_pton(): wrong IPv6 address");
+  const char expected_sa6[] = { 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4 };
+  gsize len = sizeof(expected_sa6) / sizeof(expected_sa6[0]);
+  assert_guint8_array_non_fatal((const guint8 *)&sa6, len,
+                                expected_sa6, len,
+                                "inet_pton(): wrong IPv6 address");
 #endif
 }
 
