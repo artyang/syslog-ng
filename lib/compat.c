@@ -102,8 +102,6 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <glib.h>
-#include <sys/socket.h>
-#include <netdb.h>
 
 #ifndef SSIZE_MAX
 #define SSIZE_MAX SHRT_MAX

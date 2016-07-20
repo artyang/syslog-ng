@@ -162,6 +162,7 @@ int inet_aton(const char *cp, struct in_addr *dst);
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/mman.h>
+#include <netdb.h>
 #endif /* _WIN32 */
 
 const char *compat_inet_ntop(int af, const void *src, char *dst, socklen_t size);
