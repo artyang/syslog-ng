@@ -967,8 +967,10 @@ _compat_getnameinfo(const struct sockaddr *sa, socklen_t salen,
   int error = getnameinfo(sa, salen, host, hostlen, NULL, 0, NI_NUMERICHOST);
   if (error)
     {
+#ifdef EAI_OVERFLOW
       if (error == EAI_OVERFLOW)
         errno = ENOSPC;
+#endif
       return NULL;
     }
   return host;
