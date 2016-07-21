@@ -40,7 +40,9 @@ _test_inet_ntop(void)
   expect_true(res == NULL, "inet_ntop() should fail on invalid family");
 
   res = compat_inet_ntop(AF_INET, &sa4, dst, 1);
+#ifndef _AIX
   expect_true(res == NULL, "inet_ntop() should fail on small buffer");
+#endif
 
   res = compat_inet_ntop(AF_INET, &sa4, dst, len);
   expect_false(res == NULL, "inet_ntop() should succeed on IPv4");
