@@ -13,7 +13,7 @@ check_PROGRAMS =			\
     test_compat \
 	test_utf8utils
 
-test_utf8utils_SOURCES = test_utf8utils.c test_utf8utils.h
+test_utf8utils_SOURCES = test_utf8utils.c
 test_compat_SOURCES = test_compat.c
 
 TESTS = $(check_PROGRAMS)
