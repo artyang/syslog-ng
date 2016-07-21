@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2002-2010 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2010 Balázs Scheidler
+ * Copyright (c) 2002-2011 Balabit
+ * Copyright (c) 1998-2011 Balázs Scheidler
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,6 +22,76 @@
  *
  */
 
+/* The following copyright notice applies to strcasestr() */
+/*-
+ * Copyright (c) 1990, 1993
+ *      The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Chris Torek.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *      This product includes software developed by the University of
+ *      California, Berkeley and its contributors.
+ * 4. Neither the name of the University nor the names of its contributors
+ *    may be used to endorse or promote products derived from this software
+ *    without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND
+ * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+ * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/*
+ * The following copyright notice applies to
+ * conv_num(), find_string() and strptime()
+ */
+
+/*-
+ * Copyright (c) 1997, 1998, 2005, 2008 The NetBSD Foundation, Inc.
+ * All rights reserved.
+ *
+ * This code was contributed to The NetBSD Foundation by Klaus Klein.
+ * Heavily optimised by David Laight
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE NETBSD FOUNDATION, INC. AND CONTRIBUTORS
+ * ``AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ */
 
 #include "compat.h"
 #include <fcntl.h>
@@ -455,66 +525,15 @@ getpagesize (void)
 
 #if (_WIN32_WINNT < 0x0600)
 const char *
-inet_ntop(int af, const void *src, char *dst, socklen_t cnt)
+inet_ntop(int af, const void *src, char *dst, socklen_t size)
 {
-  if (af == AF_INET)
-    {
-      struct sockaddr_in in;
-       memset(&in, 0, sizeof(in));
-       in.sin_family = AF_INET;
-       memcpy(&in.sin_addr, src, sizeof(struct in_addr));
-       getnameinfo((struct sockaddr *)&in, sizeof(struct sockaddr_in), dst, cnt, NULL, 0, NI_NUMERICHOST);
-       return dst;
-    }
-  else if (af == AF_INET6)
-    {
-      struct sockaddr_in6 in;
-      memset(&in, 0, sizeof(in));
-      in.sin6_family = AF_INET6;
-      memcpy(&in.sin6_addr, src, sizeof(struct in_addr6));
-      getnameinfo((struct sockaddr *)&in, sizeof(struct sockaddr_in6), dst, cnt, NULL, 0, NI_NUMERICHOST);
-     return dst;
-   }
-  return NULL;
+  return compat_inet_ntop(af, src, dst, size);
 }
 
 int
 inet_pton(int af, const char *src, void *dst)
 {
-  struct addrinfo hints, *res, *ressave;
-
-  memset(&hints, 0, sizeof(struct addrinfo));
-  hints.ai_family = af;
-
-  if (getaddrinfo(src, NULL, &hints, &res) != 0)
-    {
-      return -1;
-    }
-
-  ressave = res;
-
-  while (res)
-    {
-      switch (af)
-        {
-        case AF_INET:
-          memcpy(dst, &(((struct sockaddr_in *)res->ai_addr)->sin_addr), sizeof(struct in_addr));
-          break;
-#if ENABLE_IPV6
-        case AF_INET6:
-          memcpy(dst, &(((struct sockaddr_in6 *)res->ai_addr)->sin6_addr), sizeof(struct in6_addr));
-          break;
-#endif
-        default:
-          g_assert_not_reached();
-          break;
-        }
-
-      res = res->ai_next;
-    }
-
-  freeaddrinfo(ressave);
-  return 0;
+  return compat_inet_pton(af, src, dst);
 }
 
 #endif /*_WIN32_WINNT < 0x0600*/
@@ -916,6 +935,8 @@ void openlog(const char *ident, int option, int facility)
 
 #else
 
+#include <netinet/in.h>
+
 int
 setsock_timeout(int sock, int opt_name, struct timeval *socket_timeout)
 {
@@ -940,6 +961,101 @@ init_signals()
 
 #endif /* _WIN32 */
 
+const char *
+_compat_getnameinfo(const struct sockaddr *sa, socklen_t salen,
+                    char *host,
+                    size_t hostlen)
+{
+  int error = getnameinfo(sa, salen, host, hostlen, NULL, 0, NI_NUMERICHOST);
+  if (error)
+    {
+#ifdef EAI_OVERFLOW
+      if (error == EAI_OVERFLOW)
+        errno = ENOSPC;
+#endif
+      return NULL;
+    }
+  return host;
+}
+
+const char *
+compat_inet_ntop(int af, const void *src, char *dst, socklen_t size)
+{
+  switch (af)
+    {
+    case AF_INET:
+      {
+        struct sockaddr_in sa4;
+        memset(&sa4, 0, sizeof(sa4));
+        sa4.sin_family = AF_INET;
+        memcpy(&sa4.sin_addr, src, sizeof(sa4.sin_addr));
+        return _compat_getnameinfo((struct sockaddr *)&sa4, sizeof(sa4), dst, size);
+      }
+#if ENABLE_IPV6
+    case AF_INET6:
+      {
+        struct sockaddr_in6 sa6;
+        memset(&sa6, 0, sizeof(sa6));
+        sa6.sin6_family = AF_INET6;
+        memcpy(&sa6.sin6_addr, src, sizeof(sa6.sin6_addr));
+        return _compat_getnameinfo((struct sockaddr *)&sa6, sizeof(sa6), dst, size);
+      }
+#endif
+    default:
+      {
+        errno = EAFNOSUPPORT;
+        return NULL;
+      }
+    }
+}
+
+int
+compat_inet_pton(int af, const char *src, void *dst)
+{
+  struct addrinfo hints, *res;
+
+  memset(&hints, 0, sizeof(hints));
+  hints.ai_family = af;
+
+  if (getaddrinfo(src, NULL, &hints, &res) != 0)
+    {
+      errno = EAFNOSUPPORT;
+      return -1;
+    }
+
+  int ok = 0;
+  if (res && (af == res->ai_family))
+    {
+      switch (af)
+        {
+        case AF_INET:
+          {
+            struct sockaddr_in *sa4 = (struct sockaddr_in *)res->ai_addr;
+            memcpy(dst, &sa4->sin_addr, sizeof(sa4->sin_addr));
+            ok = 1;
+            break;
+          }
+#if ENABLE_IPV6
+        case AF_INET6:
+          {
+            struct sockaddr_in6 *sa6 = (struct sockaddr_in6 *)res->ai_addr;
+            memcpy(dst, &sa6->sin6_addr, sizeof(sa6->sin6_addr));
+            ok = 1;
+            break;
+          }
+#endif
+        default:
+          {
+            errno = EAFNOSUPPORT;
+            ok = -1;
+          }
+        }
+
+    }
+
+  freeaddrinfo(res);
+  return ok;
+}
 
 EVTTAG *
 evt_tag_socket_error(const char *name, int value)

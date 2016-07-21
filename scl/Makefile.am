@@ -1,6 +1,18 @@
 SCL_SUBDIRS = system pacct syslogconf snmp sql elasticsearch kafka hdfs
-SCL_CONFIGS = scl.conf modules.conf syslog-ng.conf
-EXTRA_DIST = $(SCL_CONFIGS) $(SCL_SUBDIRS)
+SCL_CONFIGS = scl.conf                  \
+              modules.conf              \
+              syslog-ng.conf            \
+              elasticsearch/plugin.conf \
+              hdfs/plugin.conf          \
+              pacct/plugin.conf         \
+              kafka/plugin.conf         \
+              syslogconf/plugin.conf    \
+              syslogconf/README         \
+              syslogconf/convert-syslogconf.awk \
+              system/plugin.conf        \
+              system/generate-system-source.sh
+
+EXTRA_DIST = $(SCL_CONFIGS)
 
 scldir = $(datadir)/include/scl
 

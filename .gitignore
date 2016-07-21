@@ -38,6 +38,7 @@ m4/ltsugar.m4
 m4/ltversion.m4
 m4/pkg.m4
 modules/logstore
+modules/logstore-common
 modules/diskq
 modules/snmp
 modules/license
@@ -45,6 +46,7 @@ modules/confighash
 modules/afsqlsource
 modules/agent-config
 modules/eventlog
+modules/indexed_logstore
 modules/rltp-proto
 modules/windows-resource
 modules/java/.gradle/
@@ -54,8 +56,12 @@ modules/java-modules/*/build/
 modules/java-modules/.gradle/
 modules/java-modules/build/
 pe-tests
+scl/snmp
+scl/sql
+syslog-ng-query
 tags
 typescript
+tools
 windows-tools
 windows-binaries
 *.pyc

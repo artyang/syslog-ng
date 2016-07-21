@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2012 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2012 Balabit
+ * Copyright (c) 2012 Peter Gyorko
  * Copyright (c) 2012 Balázs Scheidler
  *
  * This library is free software; you can redistribute it and/or
@@ -277,8 +278,8 @@ assert_nstring_non_fatal(const gchar *actual, gint actual_len, const gchar *expe
 
 
 static gboolean
-compare_arrays_trivially(void *actual, guint32 actual_length,
-                               void *expected, guint32 expected_length,
+compare_arrays_trivially(const void *actual, guint32 actual_length,
+                               const void *expected, guint32 expected_length,
                                const gchar *error_message_template, va_list error_message_args)
 {
   if (expected_length != actual_length)
@@ -297,15 +298,15 @@ compare_arrays_trivially(void *actual, guint32 actual_length,
 }
 
 gboolean
-assert_guint32_array_non_fatal(guint32 *actual, guint32 actual_length, guint32 *expected, guint32 expected_length, const gchar *error_message, ...)
+assert_guint8_array_non_fatal(const guint8 *actual, gsize actual_length, const guint8 *expected, gsize expected_length, const gchar *error_message, ...)
 {
   va_list args;
   gboolean assertion_ok = TRUE;
-  guint32 i;
+  gsize i;
 
   va_start(args, error_message);
 
-  assertion_ok = compare_arrays_trivially((void *)actual, actual_length, (void *)expected, expected_length, error_message, args);
+  assertion_ok = compare_arrays_trivially((const void *)actual, actual_length, (const void *)expected, expected_length, error_message, args);
   if (assertion_ok)
     {
       for (i = 0; i < expected_length; ++i)
@@ -325,7 +326,35 @@ assert_guint32_array_non_fatal(guint32 *actual, guint32 actual_length, guint32 *
 }
 
 gboolean
-assert_guint64_array_non_fatal(guint64 *actual, guint64 actual_length, guint64 *expected, guint64 expected_length, const gchar *error_message, ...)
+assert_guint32_array_non_fatal(const guint32 *actual, guint32 actual_length, const guint32 *expected, guint32 expected_length, const gchar *error_message, ...)
+{
+  va_list args;
+  gboolean assertion_ok = TRUE;
+  guint32 i;
+
+  va_start(args, error_message);
+
+  assertion_ok = compare_arrays_trivially((const void *)actual, actual_length, (const void *)expected, expected_length, error_message, args);
+  if (assertion_ok)
+    {
+      for (i = 0; i < expected_length; ++i)
+        {
+          if (expected[i] != actual[i])
+            {
+              print_failure(error_message, args, "actual=%u, expected=%u, index=%u", actual[i], expected[i], i);
+              assertion_ok = FALSE;
+              break;
+            }
+        }
+    }
+
+  va_end(args);
+
+  return assertion_ok;
+}
+
+gboolean
+assert_guint64_array_non_fatal(const guint64 *actual, guint64 actual_length, const guint64 *expected, guint64 expected_length, const gchar *error_message, ...)
 {
   va_list args;
   gboolean assertion_ok = TRUE;
@@ -333,7 +362,7 @@ assert_guint64_array_non_fatal(guint64 *actual, guint64 actual_length, guint64 *
 
   va_start(args, error_message);
 
-  assertion_ok = compare_arrays_trivially((void *)actual, actual_length, (void *)expected, expected_length, error_message, args);
+  assertion_ok = compare_arrays_trivially((const void *)actual, actual_length, (const void *)expected, expected_length, error_message, args);
   if (assertion_ok)
     {
       for (i = 0; i < expected_length; ++i)

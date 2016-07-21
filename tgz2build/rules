@@ -15,7 +15,8 @@ CONFIGURE_OPTS := --prefix $(ZBS_PREFIX) --enable-ssl --enable-dynamic-linking $
 	--with-module-dir='$${prefix}/lib/syslog-ng' \
 	--with-ivykis=system \
 	--with-libmongo-client=system \
-  --disable-java
+  --disable-java \
+  --disable-copyright-check
 
 INSTALL:=./install-sh
 RPATH=-Wl,-R/opt/syslog-ng/lib

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2002-2010 BalaBit IT Ltd, Budapest, Hungary
- * Copyright (c) 1998-2010 Balázs Scheidler
+ * Copyright (c) 2002-2012 Balabit
+ * Copyright (c) 1998-2012 Balázs Scheidler
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -152,7 +152,7 @@ int munmap(void *addr, size_t len);
 int madvise(void *addr, size_t len, int advice);
 long getpagesize (void);
 #if (_WIN32_WINNT < 0x0600)
-const char *inet_ntop(int af, const void *src, char *dst, socklen_t cnt);
+const char *inet_ntop(int af, const void *src, char *dst, socklen_t size);
 int inet_pton(int af, const char *src, void *dst);
 #endif /*_WIN32_WINNT >= 0x0600*/
 int inet_aton(const char *cp, struct in_addr *dst);
@@ -162,7 +162,11 @@ int inet_aton(const char *cp, struct in_addr *dst);
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/mman.h>
+#include <netdb.h>
 #endif /* _WIN32 */
+
+const char *compat_inet_ntop(int af, const void *src, char *dst, socklen_t size);
+int compat_inet_pton(int af, const char *src, void *dst);
 
 #ifndef O_BINARY
 #define O_BINARY 0

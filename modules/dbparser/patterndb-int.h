@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2013 BalaBit IT Ltd, Budapest, Hungary
+ * Copyright (c) 2002-2013 Balabit
  * Copyright (c) 1998-2013 Balázs Scheidler
  *
  * This program is free software; you can redistribute it and/or modify it
@@ -19,6 +19,9 @@
  * OpenSSL libraries as published by the OpenSSL project. See the file
  * COPYING for details.
  *
+ */
+
+/*
  * Internal declarations to be used by pdbtool/patterndb internals. Not a
  * public API.
  *
