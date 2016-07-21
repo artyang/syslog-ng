@@ -34,7 +34,8 @@ _test_inet_ntop(void)
 {
   char *dst = g_strdup_printf("xxx.xxx.xxx.xxx...................");
   socklen_t len = strlen(dst) + 1;
-  const struct in_addr sa4 = {0xffffffff};
+  struct in_addr sa4;
+  memset((void *)&sa4, 0xFF, sizeof(sa4));
 
   const char *res = compat_inet_ntop(-1, &sa4, dst, len);
   expect_true(res == NULL, "inet_ntop() should fail on invalid family");
