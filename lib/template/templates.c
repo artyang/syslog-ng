@@ -303,7 +303,7 @@ result_append_value(GString *result, LogMessage *lm, NVHandle handle, gboolean e
 }
 
 gboolean
-log_macro_expand(GString *result, gint id, gboolean escape, LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, LogMessage *msg)
+log_macro_expand(GString *result, gint id, gboolean escape, const LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, LogMessage *msg)
 {
   static LogTemplateOptions default_opts = { TS_FMT_BSD, { NULL, NULL }, { NULL, NULL }, 0 };
 
@@ -782,7 +782,7 @@ tf_simple_func_prepare(LogTemplateFunction *self, LogTemplate *parent, gint numb
 
 void
 tf_simple_func_eval(LogTemplateFunction *self, gpointer tf_state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages,
-                    LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id)
+                    const LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id)
 {
   TFSimpleFuncState *state = (TFSimpleFuncState *) tf_state;
   gint i;
@@ -803,7 +803,7 @@ tf_simple_func_eval(LogTemplateFunction *self, gpointer tf_state, GPtrArray *arg
 
 void
 tf_simple_func_call(LogTemplateFunction *self, gpointer tf_state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages,
-                    LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
+                    const LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
 {
   TFSimpleFunc simple_func = (TFSimpleFunc) self->arg;
   TFSimpleFuncState *state = (TFSimpleFuncState *) tf_state;
@@ -1310,7 +1310,7 @@ log_template_compile(LogTemplate *self, const gchar *template, GError **error)
 }
 
 void
-log_template_append_format_with_context(LogTemplate *self, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
+log_template_append_format_with_context(LogTemplate *self, LogMessage **messages, gint num_messages, const LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
 {
   GList *p;
   LogTemplateElem *e;
@@ -1400,20 +1400,20 @@ log_template_append_format_with_context(LogTemplate *self, LogMessage **messages
 }
 
 void
-log_template_format_with_context(LogTemplate *self, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
+log_template_format_with_context(LogTemplate *self, LogMessage **messages, gint num_messages, const LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
 {
   g_string_truncate(result, 0);
   log_template_append_format_with_context(self, messages, num_messages, opts, tz, seq_num, context_id, result);
 }
 
 void
-log_template_append_format(LogTemplate *self, LogMessage *lm, LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
+log_template_append_format(LogTemplate *self, LogMessage *lm, const LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
 {
   log_template_append_format_with_context(self, &lm, 1, opts, tz, seq_num, context_id, result);
 }
 
 void
-log_template_format(LogTemplate *self, LogMessage *lm, LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
+log_template_format(LogTemplate *self, LogMessage *lm, const LogTemplateOptions *opts, gint tz, gint32 seq_num, const gchar *context_id, GString *result)
 {
   g_string_truncate(result, 0);
   log_template_append_format(self, lm, opts, tz, seq_num, context_id, result);

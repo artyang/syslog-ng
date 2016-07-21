@@ -137,7 +137,7 @@ tf_format_snare_prepare(LogTemplateFunction *self, LogTemplate *parent,
 
 static void
 tf_format_snare_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-             LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+             LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
              gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   gint i;
@@ -166,7 +166,7 @@ tf_format_snare_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_b
 
 static void
 tf_format_snare_eval (LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-              LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+              LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
               gint tz, gint seq_num, const gchar *context_id)
 {
   return;
@@ -298,7 +298,7 @@ tf_cut_get_valid_index(int max,int index)
 
 static void
 tf_cut_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-             LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+             LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
              gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   StrcutOptions *options = (StrcutOptions *)state;
@@ -343,7 +343,7 @@ tf_cut_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
 
 static void
 tf_cut_eval (LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-              LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+              LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
               gint tz, gint seq_num, const gchar *context_id)
 {
   return;

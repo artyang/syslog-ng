@@ -73,7 +73,7 @@ tf_format_welf_strcmp(gconstpointer a, gconstpointer b)
 
 static void
 tf_format_welf_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-                    LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+                    LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
                     gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   ValuePairs *vp = (ValuePairs *)state;

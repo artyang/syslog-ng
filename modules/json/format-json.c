@@ -60,7 +60,7 @@ typedef struct
 {
   gboolean need_comma;
   GString *buffer;
-  LogTemplateOptions *template_options;
+  const LogTemplateOptions *template_options;
 } json_state_t;
 
 static inline void
@@ -244,7 +244,7 @@ tf_json_value(const gchar *name, const gchar *prefix,
 
 static gboolean
 tf_json_append(GString *result, ValuePairs *vp, LogMessage *msg,
-               LogTemplateOptions *template_options, gint time_zone_mode, gint seq_num)
+               const LogTemplateOptions *template_options, gint time_zone_mode, gint seq_num)
 {
   json_state_t state;
 
@@ -261,7 +261,7 @@ tf_json_append(GString *result, ValuePairs *vp, LogMessage *msg,
 
 static void
 tf_json_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-             LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+             LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
              gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   gint i;

@@ -159,7 +159,7 @@ tf_cef_walker(const gchar *name, TypeHint type, const gchar *value,
 
 static gboolean
 tf_cef_append(GString *result, ValuePairs *vp, LogMessage *msg,
-               LogTemplateOptions *template_options, gint time_zone_mode, gint seq_num)
+              const LogTemplateOptions *template_options, gint time_zone_mode, gint seq_num)
 {
   CefWalkerState state;
 
@@ -175,7 +175,7 @@ tf_cef_append(GString *result, ValuePairs *vp, LogMessage *msg,
 
 static void
 tf_cef_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-             LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+             LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
              gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   gint i;
