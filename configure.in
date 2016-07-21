@@ -209,6 +209,10 @@ AC_ARG_ENABLE(indexer-func-tests,
               [  --enable-indexer-func-tests  Run function tests for indexer (default: no)]
                 ,,enable_indexer_func_tests="no")
 
+AC_ARG_ENABLE(copyright-check,
+              [  --enable-copyright-check Run copyright checking (default: yes)]
+                ,,enable_copyright_check="yes")
+
 AC_ARG_ENABLE(dynamic-linking,
               [  --enable-dynamic-linking        Link everything dynamically.],,enable_dynamic_linking="auto")
 
@@ -1410,8 +1414,10 @@ AC_SUBST(SYSLOG_NG_LIBS)
 AC_SUBST(syslog_ng_tools)
 AC_DEFINE_UNQUOTED(ENABLE_INDEXER, `enable_value $enable_indexer`, [Enable indexer support])
 AC_DEFINE_UNQUOTED(ENABLE_INDEXER_FUNC_TESTS, `enable_value $enable_indexer_func_tests`, [Enable indexer functionality tests])
+AC_DEFINE_UNQUOTED(ENABLE_COPYRIGHT_CHECK, `enable_value $enable_copyright_check`, [Enable copyright checking])
 AM_CONDITIONAL([ENABLE_INDEXER], [test "$enable_indexer" = "yes"])
 AM_CONDITIONAL([ENABLE_INDEXER_FUNC_TESTS], [test "$enable_indexer_func_tests" = "yes"])
+AM_CONDITIONAL([ENABLE_COPYRIGHT_CHECK], [test "$enable_copyright_check" = "yes"])
 
 ########################################################
 # TESTS for PE End
