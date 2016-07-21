@@ -935,6 +935,8 @@ void openlog(const char *ident, int option, int facility)
 
 #else
 
+#include <netinet/in.h>
+
 int
 setsock_timeout(int sock, int opt_name, struct timeval *socket_timeout)
 {
