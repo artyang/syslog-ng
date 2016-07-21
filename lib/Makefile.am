@@ -3,17 +3,8 @@ SUBDIRS = tests
 moduledir = @moduledir@
 pkgincludedir = @includedir@/syslog-ng
 
-template_headers = \
-	template/templates.h
-
-template_sources = \
-	template/templates.c
-
-stats_headers = \
-    stats/stats-counter.h
-
-stats_sources = \
-    stats/stats-counter.c
+include template/Makefile.am
+include stats/Makefile.am
 
 YFLAGS=@YFLAGS@
 
