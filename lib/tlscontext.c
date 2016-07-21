@@ -330,119 +330,224 @@ tls_context_set_default_ca_dir_layout(TLSContext *self, GlobalConfig *cfg)
     }
 }
 
-TLSSession *
-tls_context_setup_session(TLSContext *self, GlobalConfig *cfg)
+static gint
+_get_number_of_available_compression_methods(void)
 {
-  SSL *ssl;
-  TLSSession *session;
-  gint ssl_error;
+  STACK_OF(SSL_COMP) *ssl_comp_methods = SSL_COMP_get_compression_methods();
+  return sk_SSL_COMP_num(ssl_comp_methods);
+}
 
-  if (!self->ssl_ctx)
+static gboolean
+_is_dh_valid(DH *dh)
+{
+  if (!dh)
+    return FALSE;
+
+  gint check_flags;
+  if (!DH_check(dh, &check_flags))
+    return FALSE;
+
+  gboolean error_flag_is_set = check_flags &
+    (DH_CHECK_P_NOT_PRIME
+    | DH_UNABLE_TO_CHECK_GENERATOR
+    | DH_CHECK_P_NOT_SAFE_PRIME
+    | DH_NOT_SUITABLE_GENERATOR);
+
+  return !error_flag_is_set;
+}
+
+static DH *
+_load_dh_from_file(const gchar *dhparam_file)
+{
+  if (!file_exists(dhparam_file))
+    return NULL;
+
+  BIO *bio = BIO_new_file(dhparam_file, "r");
+  if (!bio)
+    return NULL;
+
+  DH *dh = PEM_read_bio_DHparams(bio, NULL, NULL, NULL);
+  BIO_free(bio);
+
+  if (!_is_dh_valid(dh))
     {
-      gint verify_mode = 0;
-      gint verify_flags = X509_V_FLAG_POLICY_CHECK;
+      msg_error("Error setting up TLS session context, invalid DH parameters",
+                evt_tag_str("dhparam_file", dhparam_file),
+                NULL);
 
-      if (self->mode == TM_CLIENT)
-        self->ssl_ctx = SSL_CTX_new(SSLv23_client_method());
-      else
-        self->ssl_ctx = SSL_CTX_new(SSLv23_server_method());
-
-      if (!self->ssl_ctx)
-        goto error;
-#ifdef _WIN32
-      if (!load_all_trusted_ca_certificates(self->ssl_ctx))
-        goto error;
-      if (load_all_crls(self->ssl_ctx))
-        {
-          verify_flags |= X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
-        }
-
-      if (self->cert_subject)
-      {
-        if (!load_certificate(self->ssl_ctx, self->cert_subject))
-          goto error;
-        SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_TLSv1_2);
-      }
-#endif
-      if (file_exists(self->key_file) && !SSL_CTX_use_PrivateKey_file(self->ssl_ctx, self->key_file, SSL_FILETYPE_PEM))
-        goto error;
-
-      if (file_exists(self->cert_file) && !SSL_CTX_use_certificate_chain_file(self->ssl_ctx, self->cert_file))
-        goto error;
-      if (self->key_file && self->cert_file && !SSL_CTX_check_private_key(self->ssl_ctx))
-        goto error;
-
-      if (self->ca_dir_layout == CA_DIR_LAYOUT_DEFAULT)
-        tls_context_set_default_ca_dir_layout(self, cfg);
-
-      if (!tls_context_verify_locations(self, self->ca_dir))
-        goto error;
-
-      if (!tls_context_verify_locations(self, self->crl_dir))
-        goto error;
-
-      if (self->crl_dir)
-        verify_flags |= X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
-
-      X509_VERIFY_PARAM_set_flags(self->ssl_ctx->param, verify_flags);
-
-      switch ((int)self->verify_mode)
-        {
-        case TVM_NONE:
-          verify_mode = SSL_VERIFY_NONE;
-          break;
-        case TVM_OPTIONAL | TVM_UNTRUSTED:
-          verify_mode = SSL_VERIFY_NONE;
-          break;
-        case TVM_OPTIONAL | TVM_TRUSTED:
-          verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE;
-          break;
-        case TVM_REQUIRED | TVM_UNTRUSTED:
-          verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
-          break;
-        case TVM_REQUIRED | TVM_TRUSTED:
-          verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
-          break;
-        default:
-          g_assert_not_reached();
-        }
-
-      SSL_CTX_set_verify(self->ssl_ctx, verify_mode, tls_session_verify_callback);
-      SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_SSLv2);
-      if (self->allow_compress <= 0)
-        {
-          SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_COMPRESSION);
-        }
-      else
-        {
-          int n = 0;
-          STACK_OF(SSL_COMP) *ssl_comp_methods = NULL;
-          ssl_comp_methods = SSL_COMP_get_compression_methods();
-          n = sk_SSL_COMP_num(ssl_comp_methods);
-          if (n == 0)
-            {
-              msg_warning("Can't use compression, because there aren't any available methods",evt_tag_id(MSG_TLS_CANT_COMPRESS),NULL);
-              self->allow_compress = 0;
-              SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_COMPRESSION);
-            }
-        }
-      if (self->cipher_suite)
-        {
-          if (!SSL_CTX_set_cipher_list(self->ssl_ctx, self->cipher_suite))
-            goto error;
-        }
+      DH_free(dh);
+      return NULL;
     }
 
-  ssl = SSL_new(self->ssl_ctx);
+  return dh;
+}
+
+static DH *
+_load_dh_fallback(void)
+{
+  DH *dh = DH_new();
+
+  if (!dh)
+    return NULL;
+
+  /*
+   * The prime is: 2^4096 - 2^4032 - 1 + 2^64 * { [2^3966 pi] + 240904 }
+   * RFC3526 specifies a generator of 2.
+   */
+  dh->p = get_rfc3526_prime_4096(NULL);
+  BN_dec2bn(&dh->g, "2");
+
+  if (!dh->p || !dh->g)
+    {
+      DH_free(dh);
+      return NULL;
+    }
+
+  return dh;
+}
+
+static void
+tls_context_setup_verify_mode(TLSContext *self)
+{
+  gint verify_mode = 0;
+
+  switch ((int)self->verify_mode)
+    {
+    case TVM_NONE:
+      verify_mode = SSL_VERIFY_NONE;
+      break;
+    case TVM_OPTIONAL | TVM_UNTRUSTED:
+      verify_mode = SSL_VERIFY_NONE;
+      break;
+    case TVM_OPTIONAL | TVM_TRUSTED:
+      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE;
+      break;
+    case TVM_REQUIRED | TVM_UNTRUSTED:
+      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+      break;
+    case TVM_REQUIRED | TVM_TRUSTED:
+      verify_mode = SSL_VERIFY_PEER | SSL_VERIFY_CLIENT_ONCE | SSL_VERIFY_FAIL_IF_NO_PEER_CERT;
+      break;
+    default:
+      g_assert_not_reached();
+    }
+
+  SSL_CTX_set_verify(self->ssl_ctx, verify_mode, tls_session_verify_callback);
+}
+
+static gboolean
+tls_context_setup_ecdh(TLSContext *self)
+{
+  if (self->curve_list && !SSL_CTX_set1_curves_list(self->ssl_ctx, self->curve_list))
+    {
+      msg_error("Error setting up TLS session context, invalid curve name in list",
+                evt_tag_str("curve_list", self->curve_list),
+                NULL);
+      return FALSE;
+    }
+
+  SSL_CTX_set_ecdh_auto(self->ssl_ctx, 1);
+  return TRUE;
+}
+
+static gboolean
+tls_context_setup_dh(TLSContext *self)
+{
+  DH *dh = self->dhparam_file ? _load_dh_from_file(self->dhparam_file) : _load_dh_fallback();
+
+  if (!dh)
+    return FALSE;
+
+  gboolean ctx_dh_success = SSL_CTX_set_tmp_dh(self->ssl_ctx, dh);
+
+  DH_free(dh);
+  return ctx_dh_success;
+}
+
+static gboolean
+tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
+{
+  gint verify_flags = X509_V_FLAG_POLICY_CHECK;
+  gulong ssl_error;
 
   if (self->mode == TM_CLIENT)
-    SSL_set_connect_state(ssl);
+    self->ssl_ctx = SSL_CTX_new(SSLv23_client_method());
   else
-    SSL_set_accept_state(ssl);
+    self->ssl_ctx = SSL_CTX_new(SSLv23_server_method());
 
-  session = tls_session_new(ssl, self);
-  SSL_set_app_data(ssl, session);
-  return session;
+  if (!self->ssl_ctx)
+    goto error;
+#ifdef _WIN32
+  if (!load_all_trusted_ca_certificates(self->ssl_ctx))
+    goto error;
+  if (load_all_crls(self->ssl_ctx))
+    {
+      verify_flags |= X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
+    }
+
+  if (self->cert_subject)
+  {
+    if (!load_certificate(self->ssl_ctx, self->cert_subject))
+      goto error;
+    SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_TLSv1_2);
+  }
+#endif
+  if (file_exists(self->key_file) && !SSL_CTX_use_PrivateKey_file(self->ssl_ctx, self->key_file, SSL_FILETYPE_PEM))
+    goto error;
+
+  if (file_exists(self->cert_file) && !SSL_CTX_use_certificate_chain_file(self->ssl_ctx, self->cert_file))
+    goto error;
+  if (self->key_file && self->cert_file && !SSL_CTX_check_private_key(self->ssl_ctx))
+    goto error;
+
+  if (self->ca_dir_layout == CA_DIR_LAYOUT_DEFAULT)
+    tls_context_set_default_ca_dir_layout(self, cfg);
+
+  if (!tls_context_verify_locations(self, self->ca_dir))
+    goto error;
+
+  if (!tls_context_verify_locations(self, self->crl_dir))
+    goto error;
+
+  if (self->crl_dir)
+    verify_flags |= X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL;
+
+  X509_VERIFY_PARAM_set_flags(self->ssl_ctx->param, verify_flags);
+
+  tls_context_setup_verify_mode(self);
+
+  SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_SSLv2);
+
+  if (self->allow_compress <= 0)
+    {
+      SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_COMPRESSION);
+    }
+  else if (_get_number_of_available_compression_methods() == 0)
+    {
+      msg_warning("Can't use compression, because there aren't any available methods",evt_tag_id(MSG_TLS_CANT_COMPRESS),NULL);
+      self->allow_compress = 0;
+      SSL_CTX_set_options(self->ssl_ctx, SSL_OP_NO_COMPRESSION);
+    }
+  if (self->cipher_suite)
+    {
+      if (!SSL_CTX_set_cipher_list(self->ssl_ctx, self->cipher_suite))
+        goto error;
+    }
+
+  if (self->mode == TM_SERVER)
+    {
+      if (!tls_context_setup_ecdh(self))
+        {
+          SSL_CTX_free(self->ssl_ctx);
+          self->ssl_ctx = NULL;
+          return FALSE;
+        }
+
+      if (!tls_context_setup_dh(self))
+        goto error;
+    }
+
+  return TRUE;
 
  error:
   ssl_error = ERR_get_error();
@@ -456,7 +561,28 @@ tls_context_setup_session(TLSContext *self, GlobalConfig *cfg)
       SSL_CTX_free(self->ssl_ctx);
       self->ssl_ctx = NULL;
     }
-  return NULL;
+  return FALSE;
+}
+
+TLSSession *
+tls_context_setup_session(TLSContext *self, GlobalConfig *cfg)
+{
+  if (!self->ssl_ctx)
+    {
+      if (!tls_context_setup_context(self, cfg))
+        return NULL;
+    }
+
+  SSL *ssl = SSL_new(self->ssl_ctx);
+
+  if (self->mode == TM_CLIENT)
+    SSL_set_connect_state(ssl);
+  else
+    SSL_set_accept_state(ssl);
+
+  TLSSession *session = tls_session_new(ssl, self);
+  SSL_set_app_data(ssl, session);
+  return session;
 }
 
 TLSContext *
@@ -472,6 +598,20 @@ tls_context_new(TLSMode mode)
   return self;
 }
 
+void
+tls_context_set_curve_list(TLSContext *self, const gchar *curve_list)
+{
+  g_free(self->curve_list);
+  self->curve_list = g_strdup(curve_list);
+}
+
+void
+tls_context_set_dhparam_file(TLSContext *self, const gchar *dhparam_file)
+{
+  g_free(self->dhparam_file);
+  self->dhparam_file = g_strdup(dhparam_file);
+}
+
 static void
 tls_context_free(TLSContext *self)
 {
@@ -484,9 +624,11 @@ tls_context_free(TLSContext *self)
     }
   g_free(self->key_file);
   g_free(self->cert_file);
+  g_free(self->dhparam_file);
   g_free(self->ca_dir);
   g_free(self->crl_dir);
   g_free(self->cipher_suite);
+  g_free(self->curve_list);
   g_free(self);
 }
 
