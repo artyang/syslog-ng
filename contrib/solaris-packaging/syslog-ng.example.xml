@@ -7,7 +7,7 @@
     name='system/syslog-ng'
     type='service'
     version='1'>
-    <create_default_instance enabled='true' />
+    <create_default_instance enabled='false' />
     <dependency
             name='milestone'
             grouping='require_all'
