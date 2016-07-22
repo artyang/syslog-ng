@@ -347,14 +347,15 @@ main_loop_reload_config_apply(void)
         {
           main_loop_new_config->stats_reset = TRUE;
         }
-      if (main_loop_old_config->use_uniqid && !current_configuration->use_uniqid)
+      if (main_loop_old_config->use_uniqid && !main_loop_new_config->use_uniqid)
         {
           log_msg_deinit_rcptid();
         }
-      else if (!main_loop_old_config->use_uniqid && current_configuration->use_uniqid)
+      else if (!main_loop_old_config->use_uniqid && main_loop_new_config->use_uniqid)
         {
-          log_msg_init_rcptid(current_configuration->state);
+          log_msg_init_rcptid(main_loop_new_config->state);
         }
+
       cfg_free(main_loop_old_config);
       persist_config_free(main_loop_new_config->persist);
       main_loop_new_config->persist = NULL;
