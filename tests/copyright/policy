@@ -1,10 +1,12 @@
  ignore
+_build
 balabit-vs-build$
 ChangeLog(\.[0-1])?$
 DepsList.py
 install_dependencies.py
 installdeps.py
 lib/libsyslogng\.rc\.in$
+lib/libsyslogng.rc
 (.*/)?((Makefile|config\.h|config\.h-win32|dist\.conf|syslog-ng\.pc|syslog-ng\.spec)\.in|NEWS|SSB_VERSION|makefile\.msc)$
 modules/(afsqlsource|agent-config|confighash|diskq|eventlog|indexed_logstore|license|logstore|logstore-common|rltp-proto|snmp|windows-resource)
 persist-tool
