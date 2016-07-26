@@ -27,6 +27,18 @@
 #include <glib.h>
 
 guchar* g_string_list_find_first(GList *list, const char * str, int *result_length);
+
+static inline GString *
+g_string_append_unichar_optimized(GString *string, gunichar wc)
+{
+  if (wc < 0x80)
+    g_string_append_c(string, (gchar) wc);
+  else
+    g_string_append_unichar(string, wc);
+
+  return string;
+}
+
 gchar *normalize_key(const gchar* buffer);
 
 #endif

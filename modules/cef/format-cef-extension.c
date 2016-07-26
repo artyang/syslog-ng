@@ -25,6 +25,7 @@
 #include "value-pairs.h"
 #include "vptransform.h"
 #include "syslog-ng.h"
+#include "stringutils.h"
 #include "format-cef-extension.h"
 
 static gboolean
@@ -62,15 +63,6 @@ tf_cef_is_valid_key(const gchar *str)
 }
 
 static inline void
-tf_cef_append_unichar(GString *string, gunichar wc)
-{
-  if (wc < 0x80)
-    g_string_append_c(string, (gchar) wc);
-  else
-    g_string_append_unichar(string, wc);
-}
-
-static inline void
 tf_cef_append_escaped(GString *escaped_string, const gchar *str)
 {
   gunichar uchar;
@@ -103,7 +95,7 @@ tf_cef_append_escaped(GString *escaped_string, const gchar *str)
           if (uchar < 32)
             g_string_append_printf(escaped_string, "\\u%04x", uchar);
           else
-            tf_cef_append_unichar(escaped_string, uchar);
+            g_string_append_unichar_optimized(escaped_string, uchar);
           break;
         }
       str = g_utf8_next_char(str);

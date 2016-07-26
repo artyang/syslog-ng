@@ -23,6 +23,7 @@
  */
 #include "utf8utils.h"
 #include <string.h>
+#include "stringutils.h"
 
 static inline gboolean
 _is_character_unsafe(gunichar uchar, const gchar *unsafe_chars)
@@ -34,15 +35,6 @@ _is_character_unsafe(gunichar uchar, const gchar *unsafe_chars)
     return FALSE;
 
   return strchr(unsafe_chars, (gchar) uchar) != NULL;
-}
-
-static inline void
-_append_unichar(GString *string, gunichar wc)
-{
-  if (wc < 0x80)
-    g_string_append_c(string, (gchar) wc);
-  else
-    g_string_append_unichar(string, wc);
 }
 
 /**
@@ -102,7 +94,7 @@ _append_escaped_utf8_character(GString *escaped_output, const gchar **raw,
         else if (_is_character_unsafe(uchar, unsafe_chars))
           g_string_append_printf(escaped_output, "\\%c", (gchar) uchar);
         else
-          _append_unichar(escaped_output, uchar);
+          g_string_append_unichar_optimized(escaped_output, uchar);
         break;
     }
   *raw = g_utf8_next_char(char_ptr);
