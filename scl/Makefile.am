@@ -25,7 +25,7 @@ install-data-local:
 		fi; \
 	done
 	$(mkinstalldirs) $(DESTDIR)$(scldir)
-	(cd $(srcdir); tar cf - $(SCL_SUBDIRS)) | (cd $(DESTDIR)$(scldir) && tar xf -)
+	(cd $(srcdir); tar cfh - $(SCL_SUBDIRS)) | (cd $(DESTDIR)$(scldir) && tar xf -)
 
 uninstall-local:
 	for cfg in $(SCL_CONFIGS); do \
