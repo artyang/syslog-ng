@@ -10,7 +10,9 @@ SCL_CONFIGS = scl.conf                  \
               syslogconf/README         \
               syslogconf/convert-syslogconf.awk \
               system/plugin.conf        \
-              system/generate-system-source.sh
+              system/generate-system-source.sh \
+              snmp/plugin.conf \
+              sql/plugin.conf
 
 EXTRA_DIST = $(SCL_CONFIGS)
 
@@ -25,7 +27,7 @@ install-data-local:
 		fi; \
 	done
 	$(mkinstalldirs) $(DESTDIR)$(scldir)
-	(cd $(srcdir); tar cf - $(SCL_SUBDIRS)) | (cd $(DESTDIR)$(scldir) && tar xf -)
+	(cd $(srcdir); tar cfh - $(SCL_SUBDIRS)) | (cd $(DESTDIR)$(scldir) && tar xf -)
 
 uninstall-local:
 	for cfg in $(SCL_CONFIGS); do \
