@@ -10,7 +10,9 @@ SCL_CONFIGS = scl.conf                  \
               syslogconf/README         \
               syslogconf/convert-syslogconf.awk \
               system/plugin.conf        \
-              system/generate-system-source.sh
+              system/generate-system-source.sh \
+              snmp/plugin.conf \
+              sql/plugin.conf
 
 EXTRA_DIST = $(SCL_CONFIGS)
 
