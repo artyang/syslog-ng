@@ -22,7 +22,8 @@
 
 #include "format-welf.h"
 #include "utf8utils.h"
-#include "value-pairs.h"
+#include "value-pairs/value-pairs.h"
+#include "value-pairs/cmdline.h"
 
 static gboolean
 tf_format_welf_prepare(LogTemplateFunction *self, LogTemplate *parent,

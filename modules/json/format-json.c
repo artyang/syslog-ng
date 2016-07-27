@@ -27,8 +27,9 @@
 #include "filter.h"
 #include "filter-expr-parser.h"
 #include "cfg.h"
-#include "value-pairs.h"
-#include "vptransform.h"
+#include "value-pairs/value-pairs.h"
+#include "value-pairs/transforms.h"
+#include "value-pairs/cmdline.h"
 #include "syslog-ng.h"
 
 static gboolean

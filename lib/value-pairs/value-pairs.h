@@ -26,7 +26,7 @@
 #define VALUE_PAIRS_H_INCLUDED 1
 
 #include "syslog-ng.h"
-#include "logmsg/nvtable.h"
+#include "nvtable.h"
 #include "value-pairs/transforms.h"
 #include "type-hinting.h"
 #include "template/templates.h"

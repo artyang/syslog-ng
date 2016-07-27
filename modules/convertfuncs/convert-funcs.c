@@ -22,7 +22,7 @@
 #include "plugin.h"
 #include "cfg.h"
 #include "gsocket.h"
-#include "value-pairs.h"
+#include "value-pairs/value-pairs.h"
 #include "str-format.h"
 #include "misc.h"
 

@@ -25,7 +25,7 @@
 #include "transforms.h"
 #include "template/templates.h"
 #include "cfg-parser.h"
-#include "str-utils.h"
+#include "misc.h"
 #include "scratch-buffers.h"
 
 #include <string.h>

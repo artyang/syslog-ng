@@ -23,12 +23,11 @@
  */
 
 #include "value-pairs/value-pairs.h"
-#include "logmsg/logmsg.h"
+#include "logmsg.h"
 #include "template/templates.h"
-#include "template/macros.h"
 #include "type-hinting.h"
 #include "cfg-parser.h"
-#include "string-list.h"
+#include "misc.h"
 #include "scratch-buffers.h"
 #include "cfg.h"
 
