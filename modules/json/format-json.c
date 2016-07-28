@@ -31,28 +31,26 @@
 #include "syslog-ng.h"
 #include "utf8utils.h"
 
-typedef struct _TFJsonState
-{
-  TFSimpleFuncState super;
-  ValuePairs *vp;
-} TFJsonState;
-
 static gboolean
-tf_json_prepare(LogTemplateFunction *self, gpointer s, LogTemplate *parent,
-		gint argc, gchar *argv[],
-		GError **error)
+tf_json_prepare(LogTemplateFunction *self, LogTemplate *parent,
+                gint argc, gchar *argv[],
+                gpointer *state, GDestroyNotify *state_destroy,
+                GError **error)
 {
-  TFJsonState *state = (TFJsonState *)s;
+  ValuePairs *vp;
   ValuePairsTransformSet *vpts;
 
-  state->vp = value_pairs_new_from_cmdline (parent->cfg, argc, argv, error);
-  if (!state->vp)
+  vp = value_pairs_new_from_cmdline (parent->cfg, argc, argv, error);
+  if (!vp)
     return FALSE;
+
+  *state = vp;
+  *state_destroy = (GDestroyNotify) value_pairs_unref;
 
   /* Always replace a leading dot with an underscore. */
   vpts = value_pairs_transform_set_new(".*");
   value_pairs_transform_set_add_func(vpts, value_pairs_new_transform_replace_prefix(".", "_"));
-  value_pairs_add_transforms(state->vp, vpts);
+  value_pairs_add_transforms(vp, vpts);
 
   return TRUE;
 }
@@ -215,29 +213,20 @@ tf_json_append(GString *result, ValuePairs *vp, LogMessage *msg,
 }
 
 static void
-tf_json_call(LogTemplateFunction *self, gpointer s,
-	     const LogTemplateInvokeArgs *args, GString *result)
+tf_json_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
+             LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
+             gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
-  TFJsonState *state = (TFJsonState *)s;
   gint i;
   gboolean r = TRUE;
   gsize orig_size = result->len;
+  ValuePairs *vp = (ValuePairs *)state;
 
-  for (i = 0; i < args->num_messages; i++)
-    r &= tf_json_append(result, state->vp, args->messages[i], args->opts, args->seq_num, args->tz);
+  for (i = 0; i < num_messages; i++)
+    r &= tf_json_append(result, vp, messages[i], opts, seq_num, tz);
 
-  if (!r && (args->opts->on_error & ON_ERROR_DROP_MESSAGE))
+  if (!r && (opts->on_error & ON_ERROR_DROP_MESSAGE))
     g_string_set_size(result, orig_size);
 }
 
-static void
-tf_json_free_state(gpointer s)
-{
-  TFJsonState *state = (TFJsonState *)s;
-
-  value_pairs_unref(state->vp);
-  tf_simple_func_free_state(&state->super);
-}
-
-TEMPLATE_FUNCTION(TFJsonState, tf_json, tf_json_prepare, NULL, tf_json_call,
-		  tf_json_free_state, NULL);
+TEMPLATE_FUNCTION(tf_json, tf_json_prepare, NULL, tf_json_call, NULL);
