@@ -47,6 +47,20 @@ struct sockaddr_un
 
 gsize g_sockaddr_len(GSockAddr *a);
 
+GSockAddr *
+g_sockaddr_new_from_peer(gint fd)
+{
+  GSockAddr *result = NULL;
+  struct sockaddr_storage addr;
+  socklen_t len =  sizeof(addr);
+
+  if (getpeername(fd, (struct sockaddr*)&addr, &len) == 0)
+    {
+      result = g_sockaddr_new((struct sockaddr*)&addr, len);
+    }
+  return result;
+}
+
 /**
  * g_sockaddr_new:
  *  @sa: libc sockaddr * pointer to convert
