@@ -24,7 +24,7 @@
 #include "msg_parse_lib.h"
 #include "dot-notation.h"
 
-#include "json/json.h"
+#include <json.h>
 
 #define dot_notation_testcase_begin(func, args)             \
   do                                                            \
@@ -66,7 +66,7 @@ static void
 assert_json_equals(struct json_object *a, struct json_object *b, const gchar *subscript)
 {
   const gchar *a_str, *b_str;
-
+  
   a_str = json_object_to_json_string(a);
   b_str = json_object_to_json_string(b);
   assert_string(a_str, b_str, "extraction didn't return the expected subscript of the object: %s", subscript);
@@ -79,7 +79,7 @@ assert_dot_notation_eval_equals(const gchar *input_json, const gchar *subscript,
 
   input = compile_json(input_json);
   expected = compile_json(expected_json);
-
+  
   sub = json_extract(input, subscript);
   assert_json_equals(sub, expected, subscript);
   json_object_put(expected);
@@ -139,6 +139,18 @@ test_dot_notation_eval_object_subscript_extracts_the_child_object(void)
 }
 
 static void
+test_dot_notation_eval_object_succeeds_with_odd_or_invalid_js_identifier(void)
+{
+  assert_dot_notation_eval_equals("{'@foo': 'bar'}", "@foo", "'bar'");
+  assert_dot_notation_eval_equals("{'_foo': 'bar'}", "_foo", "'bar'");
+  assert_dot_notation_eval_equals("{'foo+4': 'bar'}", "foo+4", "'bar'");
+  assert_dot_notation_eval_equals("{'foo,bar': 'bar'}", "foo,bar", "'bar'");
+  assert_dot_notation_eval_equals("{'foo bar': 'bar'}", "foo bar", "'bar'");
+  assert_dot_notation_eval_equals("{'foo-bar': 'bar'}", "foo-bar", "'bar'");
+  assert_dot_notation_eval_equals("{'1': 'bar'}", "1", "'bar'");
+}
+
+static void
 test_dot_notation_eval_object_member_from_non_object_fails(void)
 {
   assert_dot_notation_eval_fails("[1, 2, 3]", "foo");
@@ -182,6 +194,7 @@ test_dot_notation_eval(void)
 {
   DOT_NOTATION_TESTCASE(test_dot_notation_eval_empty_subscript_returns_the_object);
   DOT_NOTATION_TESTCASE(test_dot_notation_eval_object_subscript_extracts_the_child_object);
+  DOT_NOTATION_TESTCASE(test_dot_notation_eval_object_succeeds_with_odd_or_invalid_js_identifier);
   DOT_NOTATION_TESTCASE(test_dot_notation_eval_fails_with_an_identifier_that_doesnt_start_with_a_letter);
   DOT_NOTATION_TESTCASE(test_dot_notation_eval_fails_with_an_identifier_that_contains_a_non_alnum_character);
   DOT_NOTATION_TESTCASE(test_dot_notation_eval_fails_with_an_incorrect_array_reference);

@@ -25,7 +25,7 @@
 
 #include "cfg-parser.h"
 #include "cfg-lexer.h"
-#include "logparser.h"
+#include "parser/parser-expr.h"
 
 extern CfgParser json_parser_parser;
 
