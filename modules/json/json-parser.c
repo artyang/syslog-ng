@@ -245,18 +245,18 @@ json_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_
 }
 
 static LogPipe *
-json_parser_clone(LogPipe *s)
+json_parser_clone(LogProcessPipe *s)
 {
   JSONParser *self = (JSONParser *) s;
   LogParser *cloned;
 
-  cloned = json_parser_new(s->cfg);
+  cloned = json_parser_new(s->super.cfg);
   json_parser_set_prefix(cloned, self->prefix);
   json_parser_set_marker(cloned, self->marker);
   json_parser_set_extract_prefix(cloned, self->extract_prefix);
   log_parser_set_template(cloned, log_template_ref(self->super.template));
 
-  return &cloned->super;
+  return &cloned->super.super;
 }
 
 static void
@@ -275,8 +275,8 @@ json_parser_new(GlobalConfig *cfg)
 {
   JSONParser *self = g_new0(JSONParser, 1);
 
-  log_parser_init_instance(&self->super, cfg);
-  self->super.super.free_fn = json_parser_free;
+  log_parser_init_instance(&self->super);
+  self->super.super.super.free_fn = json_parser_free;
   self->super.super.clone = json_parser_clone;
   self->super.process = json_parser_process;
 
