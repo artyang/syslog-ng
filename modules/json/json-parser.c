@@ -140,7 +140,7 @@ json_parser_process_single(struct json_object *jso,
       break;
     default:
       msg_error("JSON parser encountered an unknown type, skipping",
-                 evt_tag_str("key", obj_key));
+                 evt_tag_str("key", obj_key), NULL);
       break;
     }
 
@@ -225,7 +225,8 @@ json_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_
     {
       msg_error("Unparsable JSON stream encountered",
                 evt_tag_str ("input", input),
-                tok->err != json_tokener_success ? evt_tag_str ("error", json_tokener_error_desc(tok->err)) : NULL);
+                tok->err != json_tokener_success ? evt_tag_str ("error", json_tokener_error_desc(tok->err)) : NULL,
+                NULL);
       json_tokener_free (tok);
       return FALSE;
     }
@@ -235,7 +236,7 @@ json_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_
   if (!json_parser_extract(self, jso, *pmsg))
     {
       msg_error("Error extracting JSON members into LogMessage as the top-level JSON object is not an object",
-                evt_tag_str ("input", input));
+                evt_tag_str ("input", input), NULL);
       json_object_put(jso);
       return FALSE;
     }
