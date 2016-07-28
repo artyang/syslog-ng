@@ -75,12 +75,6 @@ create_empty_message(void)
   saddr = g_sockaddr_inet_new("10.11.12.13", 1010);
   msg = log_msg_new(msg_str, strlen(msg_str), saddr, &parse_options);
   g_sockaddr_unref(saddr);
-  log_msg_set_value(msg, log_msg_get_value_handle(".unix.uid"), "1000", -1);
-  log_msg_set_value(msg, log_msg_get_value_handle(".unix.gid"), "1000", -1);
-  log_msg_set_value(msg, log_msg_get_value_handle(".unix.cmd"), "command", -1);
-  log_msg_set_value(msg, log_msg_get_value_handle(".json.foo"), "bar", -1);
-  log_msg_set_value(msg, log_msg_get_value_handle(".json.sub.value1"), "subvalue1", -1);
-  log_msg_set_value(msg, log_msg_get_value_handle(".json.sub.value2"), "subvalue2", -1);
   log_msg_set_match(msg, 0, "whole-match", -1);
   log_msg_set_match(msg, 1, "first-match", -1);
   log_msg_set_tag_by_name(msg, "alma");
@@ -108,8 +102,16 @@ create_sample_message(void)
   log_msg_set_value(msg, log_msg_get_value_handle("APP.STRIP3"), "     value     ", -1);
   log_msg_set_value(msg, log_msg_get_value_handle("APP.STRIP4"), "value", -1);
   log_msg_set_value(msg, log_msg_get_value_handle("APP.STRIP5"), "", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle("APP.QVALUE"), "\"value\"", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle(".unix.uid"), "1000", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle(".unix.gid"), "1000", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle(".unix.cmd"), "command", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle(".json.foo"), "bar", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle(".json.sub.value1"), "subvalue1", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle(".json.sub.value2"), "subvalue2", -1);
   log_msg_set_value(msg, log_msg_get_value_handle("escaping"), "binary stuff follows \"\xad árvíztűrőtükörfúrógép", -1);
   log_msg_set_value(msg, log_msg_get_value_handle("escaping2"), "\xc3", -1);
+  log_msg_set_value(msg, log_msg_get_value_handle("null"), "binary\0stuff", 12);
 
   return msg;
 }
