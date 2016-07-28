@@ -22,7 +22,7 @@
 #ifndef FORMAT_JSON_H_INCLUDED
 #define FORMAT_JSON_H_INCLUDED
 
-#include "template/simple-function.h"
+#include "template/templates.h"
 #include "plugin.h"
 
 TEMPLATE_FUNCTION_DECLARE(tf_json);

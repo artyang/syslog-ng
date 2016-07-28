@@ -23,7 +23,7 @@
 #ifndef JSONPARSER_H_INCLUDED
 #define JSONPARSER_H_INCLUDED
 
-#include "parser/parser-expr.h"
+#include "logparser.h"
 
 void json_parser_set_extract_prefix(LogParser *s, const gchar *extract_prefix);
 void json_parser_set_prefix(LogParser *p, const gchar *prefix);

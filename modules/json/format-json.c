@@ -23,9 +23,9 @@
  */
 
 #include "plugin.h"
-#include "template/simple-function.h"
-#include "filter/filter-expr.h"
-#include "filter/filter-expr-parser.h"
+#include "template/templates.h"
+#include "filter.h"
+#include "filter-expr-parser.h"
 #include "cfg.h"
 #include "value-pairs/cmdline.h"
 #include "syslog-ng.h"
