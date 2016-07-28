@@ -189,7 +189,7 @@ tf_json_append_value(const gchar *name, const gchar *value,
 
 static gboolean
 tf_json_value(const gchar *name, const gchar *prefix,
-              TypeHint type, const gchar *value,
+              TypeHint type, const gchar *value, gsize value_len,
               gpointer *prefix_data, gpointer user_data)
 {
   json_state_t *state = (json_state_t *)user_data;

@@ -127,7 +127,7 @@ tf_cef_walk_cmp(const gchar *s1, const gchar *s2)
 
 static gboolean
 tf_cef_walker(const gchar *name, TypeHint type, const gchar *value,
-              gpointer user_data)
+              gsize value_len, gpointer user_data)
 {
   CefWalkerState *state = (CefWalkerState *)user_data;
   gint on_error = state->template_options->on_error;
