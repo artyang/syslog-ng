@@ -46,10 +46,10 @@ json_plugin_module_init(GlobalConfig *cfg, CfgArgs *args)
 
 const ModuleInfo module_info =
 {
-  .canonical_name = "json-plugin",
-  .version = SYSLOG_NG_VERSION,
+  .canonical_name = "json",
+  .version = VERSION,
   .description = "The json module provides JSON parsing & formatting support for syslog-ng.",
-  .core_revision = SYSLOG_NG_SOURCE_REVISION,
+  .core_revision = SOURCE_REVISION,
   .plugins = json_plugins,
   .plugins_len = G_N_ELEMENTS(json_plugins),
 };
