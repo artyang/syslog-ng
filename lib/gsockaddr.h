@@ -72,6 +72,7 @@ GSockAddr *g_sockaddr_new_from_peer(gint fd);
 gchar *g_sockaddr_format(GSockAddr *a, gchar *text, gulong n, gint format);
 GSockAddr *g_sockaddr_ref(GSockAddr *a);
 void g_sockaddr_unref(GSockAddr *a);
+guint8 *g_sockaddr_get_address(GSockAddr *self, guint8 *buffer, socklen_t buffer_size);
 
 gboolean g_sockaddr_inet_check(GSockAddr *a);
 void g_sockaddr_inet_free(GSockAddr *addr);
