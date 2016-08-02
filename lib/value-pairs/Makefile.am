@@ -1,15 +1,15 @@
 value_pairsincludedir			= ${pkgincludedir}/value-pairs
 
-value_pairsinclude_HEADERS = \
-	lib/value-pairs/value-pairs.h		\
-	lib/value-pairs/transforms.h		\
-	lib/value-pairs/cmdline.h		\
-	lib/value-pairs/evttag.h
+value_pairsinclude_HEADERS = 			\
+	value-pairs/value-pairs.h		\
+	value-pairs/transforms.h		\
+	value-pairs/cmdline.h			\
+	value-pairs/evttag.h
 
-value_pairs_sources = \
-	lib/value-pairs/value-pairs.c		\
-	lib/value-pairs/transforms.c		\
-	lib/value-pairs/cmdline.c		\
-	lib/value-pairs/evttag.c
+value_pairs_sources = 				\
+	value-pairs/value-pairs.c		\
+	value-pairs/transforms.c		\
+	value-pairs/cmdline.c			\
+	value-pairs/evttag.c
 
-include lib/value-pairs/tests/Makefile.am
+include value-pairs/tests/Makefile.am
