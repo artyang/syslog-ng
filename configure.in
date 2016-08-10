@@ -95,6 +95,7 @@ AM_INIT_AUTOMAKE($PACKAGE, $VERSION, [no-define subdir-objects])
 if test -n "$SNAPSHOT_VERSION"; then
     VERSION=$VERSION+$SNAPSHOT_VERSION
 fi
+_AM_PROG_TAR([ustar])
 
 _enable_ssl_default="auto"
 IS_WINDOWS=0
