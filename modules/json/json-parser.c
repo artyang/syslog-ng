@@ -232,7 +232,6 @@ json_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_
     }
   json_tokener_free(tok);
 
-  log_msg_make_writable(pmsg, path_options);
   if (!json_parser_extract(self, jso, *pmsg))
     {
       msg_error("Error extracting JSON members into LogMessage as the top-level JSON object is not an object",
