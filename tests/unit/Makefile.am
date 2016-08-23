@@ -28,8 +28,6 @@ check_PROGRAMS =			\
 	test_state \
 	test_buffered_proto_state \
 	test_serialize			\
-	test_value_pairs		\
-	test_value_pairs_walk   \
 	test_filereader			\
 	test_multiline			\
 	test_msgserialize_benchmark	\
@@ -103,8 +101,6 @@ test_nvtable_SOURCES = test_nvtable.c
 test_logwriter_SOURCES = test_logwriter.c
 test_resolve_pwgr_SOURCES = test_resolve_pwgr.c
 test_persist_state_SOURCES = test_persist_state.c
-test_value_pairs_SOURCES = test_value_pairs.c
-test_value_pairs_walk_SOURCES = test_value_pairs_walk.c
 test_filereader_SOURCES = test_filereader.c $(top_srcdir)/libtest/libtest_memreader.c $(top_srcdir)/libtest/libtest_memreader.h
 test_multiline_SOURCES = test_multiline.c $(top_srcdir)/libtest/libtest_memreader.c $(top_srcdir)/libtest/libtest_memreader.h
 test_csv_parser_flags_SOURCES = test_csv_parser_flags.c

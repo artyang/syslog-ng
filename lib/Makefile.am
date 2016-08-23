@@ -267,6 +267,7 @@ libsyslogng.rc: libsyslogng.rc.in
 
 CLEAN_FILES = $(BUILT_SOURCES)
 
+check_PROGRAMS = $(value_pairs_tests_TESTS)
 TESTS = $(check_PROGRAMS)
 
 # divert install/uninstall targets to avoid recursing into $(SUBDIRS)
