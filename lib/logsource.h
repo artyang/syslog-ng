@@ -85,12 +85,31 @@ struct _LogSource
   gboolean is_external_ack_required;
 
   void (*wakeup)(LogSource *s);
+  GAtomicCounter suspended;
 };
+
+static inline void
+log_source_suspend(LogSource *self)
+{
+  g_atomic_counter_set(&self->suspended, 1);
+}
+
+static inline gboolean
+log_source_is_suspended(LogSource *self)
+{
+  return g_atomic_counter_get(&self->suspended) == 1;
+}
+
+static inline gboolean
+log_source_is_window_full(LogSource *self)
+{
+  return g_atomic_counter_get(&self->window_size) <= 0;
+}
 
 static inline gboolean
 log_source_free_to_send(LogSource *self)
 {
-  return g_atomic_counter_get(&self->window_size) > 0;
+  return !(log_source_is_window_full(self) || log_source_is_suspended(self));
 }
 
 gboolean log_source_init(LogPipe *s);
