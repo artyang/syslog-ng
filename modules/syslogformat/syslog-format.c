@@ -468,16 +468,18 @@ __calculate_correct_time(LogStamp *stamp, gint normalized_hour,
    * might be skipped or played twice this is what the
    * (tm.tm_hour - * unnormalized_hour) part fixes up. */
 
+  long local_timezone_ofs = get_local_timezone_ofs(stamp->tv_sec);
+
   if (stamp->zone_offset == -1)
     {
       stamp->zone_offset = assume_timezone;
     }
   if (stamp->zone_offset == -1)
     {
-      stamp->zone_offset = get_local_timezone_ofs(stamp->tv_sec);
+      stamp->zone_offset = local_timezone_ofs;
     }
   return stamp->tv_sec
-      + get_local_timezone_ofs(stamp->tv_sec)
+      + local_timezone_ofs
       - (normalized_hour - unnormalized_hour) * 3600
       - stamp->zone_offset;
 }
