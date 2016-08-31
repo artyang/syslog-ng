@@ -225,7 +225,7 @@ tf_cond_prepare(LogTemplateFunction *self, LogTemplate *parent, gint argc, gchar
 }
 
 void
-tf_cond_eval(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id)
+tf_cond_eval(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, const LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id)
 {
   return;
 }
@@ -244,7 +244,7 @@ tf_grep_prepare(LogTemplateFunction *self, LogTemplate *parent, gint argc, gchar
 
 
 void
-tf_grep_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id, GString *result)
+tf_grep_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, const LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   gint i, msg_ndx;
   gboolean first = TRUE;
@@ -283,7 +283,7 @@ tf_if_prepare(LogTemplateFunction *self, LogTemplate *parent, gint argc, gchar *
 TEMPLATE_FUNCTION(tf_grep, tf_grep_prepare, tf_cond_eval, tf_grep_call, NULL);
 
 void
-tf_if_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id, GString *result)
+tf_if_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, const LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   TFCondState *args = (TFCondState *) state;
 
@@ -331,13 +331,13 @@ tf_context_length_prepare(LogTemplateFunction *self, LogTemplate *parent, gint a
 }
 
 void
-tf_context_length_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id, GString *result)
+tf_context_length_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, const LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   g_string_append_printf(result, "%d", num_messages);
 }
 
 void
-tf_context_length_eval(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id)
+tf_context_length_eval(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs, LogMessage **messages, gint num_messages, const LogTemplateOptions *opts, gint tz, gint seq_num, const gchar *context_id)
 {
   return;
 }

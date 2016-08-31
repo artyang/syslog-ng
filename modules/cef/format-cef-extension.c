@@ -22,9 +22,11 @@
 #include "filter.h"
 #include "filter-expr-parser.h"
 #include "cfg.h"
-#include "value-pairs.h"
-#include "vptransform.h"
+#include "value-pairs/value-pairs.h"
+#include "value-pairs/transforms.h"
+#include "value-pairs/cmdline.h"
 #include "syslog-ng.h"
+#include "stringutils.h"
 #include "format-cef-extension.h"
 
 static gboolean
@@ -62,15 +64,6 @@ tf_cef_is_valid_key(const gchar *str)
 }
 
 static inline void
-tf_cef_append_unichar(GString *string, gunichar wc)
-{
-  if (wc < 0xc0)
-    g_string_append_c(string, (gchar) wc);
-  else
-    g_string_append_unichar(string, wc);
-}
-
-static inline void
 tf_cef_append_escaped(GString *escaped_string, const gchar *str)
 {
   gunichar uchar;
@@ -103,7 +96,7 @@ tf_cef_append_escaped(GString *escaped_string, const gchar *str)
           if (uchar < 32)
             g_string_append_printf(escaped_string, "\\u%04x", uchar);
           else
-            tf_cef_append_unichar(escaped_string, uchar);
+            g_string_append_unichar_optimized(escaped_string, uchar);
           break;
         }
       str = g_utf8_next_char(str);
@@ -134,7 +127,7 @@ tf_cef_walk_cmp(const gchar *s1, const gchar *s2)
 
 static gboolean
 tf_cef_walker(const gchar *name, TypeHint type, const gchar *value,
-              gpointer user_data)
+              gsize value_len, gpointer user_data)
 {
   CefWalkerState *state = (CefWalkerState *)user_data;
   gint on_error = state->template_options->on_error;
@@ -159,7 +152,7 @@ tf_cef_walker(const gchar *name, TypeHint type, const gchar *value,
 
 static gboolean
 tf_cef_append(GString *result, ValuePairs *vp, LogMessage *msg,
-               LogTemplateOptions *template_options, gint time_zone_mode, gint seq_num)
+              const LogTemplateOptions *template_options, gint time_zone_mode, gint seq_num)
 {
   CefWalkerState state;
 
@@ -175,7 +168,7 @@ tf_cef_append(GString *result, ValuePairs *vp, LogMessage *msg,
 
 static void
 tf_cef_call(LogTemplateFunction *self, gpointer state, GPtrArray *arg_bufs,
-             LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+             LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
              gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   gint i;

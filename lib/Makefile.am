@@ -3,17 +3,9 @@ SUBDIRS = tests
 moduledir = @moduledir@
 pkgincludedir = @includedir@/syslog-ng
 
-template_headers = \
-	template/templates.h
-
-template_sources = \
-	template/templates.c
-
-stats_headers = \
-    stats/stats-counter.h
-
-stats_sources = \
-    stats/stats-counter.c
+include template/Makefile.am
+include stats/Makefile.am
+include value-pairs/Makefile.am
 
 YFLAGS=@YFLAGS@
 
@@ -107,9 +99,7 @@ pkginclude_HEADERS = 		\
 	utils.h			\
 	uuid.h			\
 	utf8utils.h			\
-	value-pairs.h		\
 	versioning.h	\
-	vptransform.h	\
 	reloc.h	\
 	ringbuffer.h	\
 	bookmark.h	\
@@ -212,9 +202,8 @@ libsyslog_ng_la_SOURCES = \
 	utils.c			\
 	uuid.c			\
 	utf8utils.c			\
-	value-pairs.c		\
+	$(value_pairs_sources)	\
 	versioning.c		\
-	vptransform.c		\
 	cfg-lex.l		\
 	cfg-grammar.y		\
 	filter-expr-grammar.y	\
@@ -278,6 +267,7 @@ libsyslogng.rc: libsyslogng.rc.in
 
 CLEAN_FILES = $(BUILT_SOURCES)
 
+check_PROGRAMS = $(value_pairs_tests_TESTS)
 TESTS = $(check_PROGRAMS)
 
 # divert install/uninstall targets to avoid recursing into $(SUBDIRS)

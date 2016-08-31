@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 Balabit
+ * Copyright (c) 2011-2015 Balabit
+ * Copyright (c) 2011-2014 Gergely Nagy <algernon@balabit.hu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,25 +21,13 @@
  * COPYING for details.
  *
  */
+#ifndef VALUE_PAIRS_CMDLINE_H_INCLUDED
+#define VALUE_PAIRS_CMDLINE_H_INCLUDED 1
 
-#ifndef STRINGUTILS_H_INCLUDED
-#define STRINGUTILS_H_INCLUDED
+#include "value-pairs/value-pairs.h"
 
-#include <glib.h>
-
-guchar* g_string_list_find_first(GList *list, const char * str, int *result_length);
-
-static inline GString *
-g_string_append_unichar_optimized(GString *string, gunichar wc)
-{
-  if (wc < 0x80)
-    g_string_append_c(string, (gchar) wc);
-  else
-    g_string_append_unichar(string, wc);
-
-  return string;
-}
-
-gchar *normalize_key(const gchar* buffer);
+ValuePairs *value_pairs_new_from_cmdline(GlobalConfig *cfg,
+					 gint argc, gchar **argv,
+					 GError **error);
 
 #endif

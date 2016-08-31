@@ -55,16 +55,16 @@ static gboolean
 _compile_dot_notation_array_ref(const gchar *level, JSONDotNotationElem *elem)
 {
   const gchar *p = level;
-  gint index = 0;
+  gint index_ = 0;
 
   g_assert(*p == '[');
 
   p++;
-  index = strtol(p, (gchar **) &p, 10);
+  index_ = strtol(p, (gchar **) &p, 10);
 
   if (*p != ']')
     return FALSE;
-  if (index < 0)
+  if (index_ < 0)
     return FALSE;
   p++;
 
@@ -72,7 +72,7 @@ _compile_dot_notation_array_ref(const gchar *level, JSONDotNotationElem *elem)
     return FALSE;
 
   elem->type = JS_ARRAY_REF;
-  elem->array_ref.index = index;
+  elem->array_ref.index = index_;
   return TRUE;
 }
 
@@ -81,10 +81,10 @@ _compile_dot_notation_member_ref(const gchar *level, JSONDotNotationElem *elem)
 {
   const gchar *p = level;
 
-  if (!g_ascii_isalnum(level[0]) && *p != '_')
+  if (!g_ascii_isprint(*p) || strchr(".[]", *p) != NULL)
     return FALSE;
 
-  while (g_ascii_isalnum(*p) || *p == '_')
+  while (g_ascii_isprint(*p) && strchr(".[]", *p) == NULL)
     p++;
 
   if (*p != 0)
@@ -202,11 +202,27 @@ json_dot_notation_compile(JSONDotNotation *self, const gchar *dot_notation)
   return self->compiled_elems != NULL;
 }
 
+#ifdef JSON_C_VERSION
+struct json_object *
+_json_object_object_get(struct json_object* obj, const char *key)
+{
+  struct json_object *value;
+
+  json_object_object_get_ex(obj, key, &value);
+  return value;
+}
+#else
+#define _json_object_object_get json_object_object_get
+#endif
+
 struct json_object *
 json_dot_notation_eval(JSONDotNotation *self, struct json_object *jso)
 {
   JSONDotNotationElem *compiled;
   gint i;
+
+  if (!jso)
+    goto error;
 
   compiled = self->compiled_elems;
   for (i = 0; compiled && compiled[i].used; i++)
@@ -224,7 +240,7 @@ json_dot_notation_eval(JSONDotNotation *self, struct json_object *jso)
                   jso = NULL;
                   goto error;
                 }
-              jso = json_object_object_get(jso, name);
+              jso = _json_object_object_get(jso, name);
             }
           else if (compiled[i].type == JS_ARRAY_REF)
             {

@@ -29,8 +29,9 @@ void
 test_format_json(void)
 {
   assert_template_format("$(format-json MSG=$MSG)", "{\"MSG\":\"árvíztűrőtükörfúrógép\"}");
-  assert_template_format("$(format-json MSG=$escaping)", "{\"MSG\":\"binary stuff follows \\\"\xad árvíztűrőtükörfúrógép\"}");
-  assert_template_format("$(format-json MSG=$escaping2)", "{\"MSG\":\"\xc3\"}");
+  assert_template_format("$(format-json MSG=$escaping)", "{\"MSG\":\"binary stuff follows \\\"\\\\xad árvíztűrőtükörfúrógép\"}");
+  assert_template_format("$(format-json MSG=$escaping2)", "{\"MSG\":\"\\\\xc3\"}");
+  assert_template_format("$(format-json MSG=$null)", "{\"MSG\":\"binary\\u0000stuff\"}");
   assert_template_format_with_context("$(format-json MSG=$MSG)", "{\"MSG\":\"árvíztűrőtükörfúrógép\"}{\"MSG\":\"árvíztűrőtükörfúrógép\"}");
   assert_template_format("$(format-json --scope rfc3164)", "{\"PROGRAM\":\"syslog-ng\",\"PRIORITY\":\"err\",\"PID\":\"23323\",\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\",\"FACILITY\":\"local3\",\"DATE\":\"Feb 11 10:34:56\"}");
   assert_template_format("$(format-json msg.text=$MSG msg.id=42 host=bzorp)", "{\"msg\":{\"text\":\"árvíztűrőtükörfúrógép\",\"id\":\"42\"},\"host\":\"bzorp\"}");
@@ -45,9 +46,16 @@ test_format_json(void)
 
   assert_template_format("$(format-json --scope selected_macros)", "{\"TAGS\":\"alma,korte,citrom\",\"SOURCEIP\":\"10.11.12.13\",\"SEQNUM\":\"999\",\"PROGRAM\":\"syslog-ng\",\"PRIORITY\":\"err\",\"PID\":\"23323\",\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\",\"FACILITY\":\"local3\",\"DATE\":\"Feb 11 10:34:56\"}");
   assert_template_format("$(format-json --scope rfc3164 --key *.* --exclude .SDATA.timeQuality*)",
-                        "{\"_unix\":{\"uid\":\"1000\",\"gid\":\"1000\",\"cmd\":\"command\"},\"_json\":{\"sub\":{\"value2\":\"subvalue2\",\"value1\":\"subvalue1\"},\"foo\":\"bar\"},\"PROGRAM\":\"syslog-ng\",\"PRIORITY\":\"err\",\"PID\":\"23323\",\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\",\"FACILITY\":\"local3\",\"DATE\":\"Feb 11 10:34:56\",\"APP\":{\"VALUE\":\"value\",\"STRIP4\":\"value\",\"STRIP3\":\"     value     \",\"STRIP2\":\"value     \",\"STRIP1\":\"     value\"}}");
+                         "{\"_unix\":{\"uid\":\"1000\",\"gid\":\"1000\",\"cmd\":\"command\"},\"_json\":{\"sub\":{\"value2\":\"subvalue2\",\"value1\":\"subvalue1\"},\"foo\":\"bar\"},\"PROGRAM\":\"syslog-ng\",\"PRIORITY\":\"err\",\"PID\":\"23323\",\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\",\"FACILITY\":\"local3\",\"DATE\":\"Feb 11 10:34:56\",\"APP\":{\"VALUE\":\"value\",\"STRIP5\":\"\",\"STRIP4\":\"value\",\"STRIP3\":\"     value     \",\"STRIP2\":\"value     \",\"STRIP1\":\"     value\",\"QVALUE\":\"\\\"value\\\"\"}}");
 
   assert_template_format("$(format-json --scope syslog-proto)", "{\"_SDATA\":{\"timeQuality\":{\"tzKnown\":\"1\",\"isSynced\":\"0\"}},\"PROGRAM\":\"syslog-ng\",\"PRIORITY\":\"err\",\"PID\":\"23323\",\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\",\"FACILITY\":\"local3\",\"DATE\":\"Feb 11 10:34:56\"}");
+
+  assert_template_format("$(format-json @program=${PROGRAM})", "{\"@program\":\"syslog-ng\"}");
+  assert_template_format("$(format-json @program.123=${PROGRAM})", "{\"@program\":{\"123\":\"syslog-ng\"}}");
+  assert_template_format("$(format-json .@program.123=${PROGRAM})", "{\"_@program\":{\"123\":\"syslog-ng\"}}");
+  assert_template_format("$(format-json @.program=${PROGRAM})", "{\"@\":{\"program\":\"syslog-ng\"}}");
+  assert_template_format("$(format-json .program.n@me=${PROGRAM})", "{\"_program\":{\"n@me\":\"syslog-ng\"}}");
+  assert_template_format("$(format-json .program.@name=${PROGRAM})", "{\"_program\":{\"@name\":\"syslog-ng\"}}");
 }
 
 void
@@ -57,8 +65,6 @@ test_format_json_key(void)
   assert_template_format("$(format-json --key HOST)", "{\"HOST\":\"bzorp\"}");
   assert_template_format("$(format-json --key MESSAGE)", "{\"MESSAGE\":\"árvíztűrőtükörfúrógép\"}");
   assert_template_format("$(format-json --key HOST --key MESSAGE)", "{\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\"}");
-  assert_template_format("$(format-json --key .SDATA.timeQuality.tzKnown)", "{\"_SDATA\":{\"timeQuality\":{\"tzKnown\":\"1\"}}}");
-  assert_template_format("$(format-json --key HOST --key MESSAGE --key .SDATA.timeQuality.tzKnown)", "{\"_SDATA\":{\"timeQuality\":{\"tzKnown\":\"1\"}},\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\"}");
 
   assert_template_format("$(format-json --scope selected-macros --key MSG)", "{\"TAGS\":\"alma,korte,citrom\",\"SOURCEIP\":\"10.11.12.13\",\"SEQNUM\":\"999\",\"PROGRAM\":\"syslog-ng\",\"PRIORITY\":\"err\",\"PID\":\"23323\",\"MSG\":\"árvíztűrőtükörfúrógép\",\"MESSAGE\":\"árvíztűrőtükörfúrógép\",\"HOST\":\"bzorp\",\"FACILITY\":\"local3\",\"DATE\":\"Feb 11 10:34:56\"}");
 
@@ -118,6 +124,19 @@ test_format_json_on_error(void)
 
 }
 
+void
+test_format_json_with_utf8(void)
+{
+  LogMessage *msg = create_empty_message();
+  log_msg_set_value_by_name(msg, "UTF8-C2", "\xc2\xbf \xc2\xb6 \xc2\xa9 \xc2\xb1", -1); // ¿ ¶ © ±
+  log_msg_set_value_by_name(msg, "UTF8-C3", "\xc3\x88 \xc3\x90", -1); // È Ð
+
+  assert_template_format_msg("$(format-json MSG=\"${UTF8-C2}\")", "{\"MSG\":\"\xc2\xbf \xc2\xb6 \xc2\xa9 \xc2\xb1\"}", msg);
+  assert_template_format_msg("$(format-json MSG=\"${UTF8-C3}\")", "{\"MSG\":\"\xc3\x88 \xc3\x90\"}", msg);
+
+  log_msg_unref(msg);
+}
+
 int
 main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 {
@@ -132,6 +151,7 @@ main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
   test_format_json_rekey();
   test_format_json_with_type_hints();
   test_format_json_on_error();
+  test_format_json_with_utf8();
 
   deinit_template_tests();
   app_shutdown();

@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2011-2013 Balabit
- * Copyright (c) 2011-2013 Gergely Nagy <algernon@balabit.hu>
+ * Copyright (c) 2011-2014 Balabit
+ * Copyright (c) 2011-2014 Gergely Nagy <algernon@balabit.hu>
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 as published
@@ -27,8 +27,8 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "json/json.h"
-#include "json/json_object_private.h"
+#include <json.h>
+#include <json_object_private.h>
 
 typedef struct _JSONParser
 {
@@ -62,7 +62,7 @@ void
 json_parser_set_extract_prefix(LogParser *s, const gchar *extract_prefix)
 {
   JSONParser *self = (JSONParser *) s;
-
+  
   g_free(self->extract_prefix);
   self->extract_prefix = g_strdup(extract_prefix);
 }
@@ -150,14 +150,14 @@ json_parser_process_single(struct json_object *jso,
         {
           g_string_assign(sb_gstring_string(key), prefix);
           g_string_append(sb_gstring_string(key), obj_key);
-          log_msg_set_value(msg,
-                             log_msg_get_value_handle(sb_gstring_string(key)->str),
+          log_msg_set_value_by_name(msg,
+                             sb_gstring_string(key)->str,
                              sb_gstring_string(value)->str,
                              sb_gstring_string(value)->len);
         }
       else
-        log_msg_set_value(msg,
-                           log_msg_get_value_handle(obj_key),
+        log_msg_set_value_by_name(msg,
+                           obj_key,
                            sb_gstring_string(value)->str,
                            sb_gstring_string(value)->len);
     }
@@ -189,10 +189,18 @@ json_parser_extract(JSONParser *self, struct json_object *jso, LogMessage *msg)
     {
       return FALSE;
     }
-
+  
   json_parser_process_object(jso, self->prefix, msg);
   return TRUE;
 }
+
+#ifndef JSON_C_VERSION
+const char *
+json_tokener_error_desc(enum json_tokener_error err)
+{
+  return json_tokener_errors[err];
+}
+#endif
 
 static gboolean
 json_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_options, const gchar *input, gsize input_len)
@@ -217,19 +225,17 @@ json_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_
     {
       msg_error("Unparsable JSON stream encountered",
                 evt_tag_str ("input", input),
-                tok->err != json_tokener_success ? evt_tag_str ("error", json_tokener_errors[tok->err]) : NULL,
+                tok->err != json_tokener_success ? evt_tag_str ("error", json_tokener_error_desc(tok->err)) : NULL,
                 NULL);
       json_tokener_free (tok);
       return FALSE;
     }
   json_tokener_free(tok);
 
-  *pmsg = log_msg_clone_cow(*pmsg, path_options);
   if (!json_parser_extract(self, jso, *pmsg))
     {
       msg_error("Error extracting JSON members into LogMessage as the top-level JSON object is not an object",
-                evt_tag_str ("input", input),
-                NULL);
+                evt_tag_str ("input", input), NULL);
       json_object_put(jso);
       return FALSE;
     }
@@ -248,6 +254,7 @@ json_parser_clone(LogProcessPipe *s)
   json_parser_set_prefix(cloned, self->prefix);
   json_parser_set_marker(cloned, self->marker);
   json_parser_set_extract_prefix(cloned, self->extract_prefix);
+  log_parser_set_template(cloned, log_template_ref(self->super.template));
 
   return &cloned->super.super;
 }

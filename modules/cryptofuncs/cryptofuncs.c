@@ -122,7 +122,7 @@ tf_hash_prepare(LogTemplateFunction *self, LogTemplate *parent, gint argc, gchar
 
 static void
 tf_hash_call(LogTemplateFunction *self, gpointer s, GPtrArray *arg_bufs,
-             LogMessage **messages, gint num_messages, LogTemplateOptions *opts,
+             LogMessage **messages, gint num_messages, const LogTemplateOptions *opts,
              gint tz, gint seq_num, const gchar *context_id, GString *result)
 {
   TFHashState *state = (TFHashState *) s;

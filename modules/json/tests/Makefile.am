@@ -4,7 +4,7 @@ export top_srcdir
 if !IS_WINDOWS
 if ENABLE_JSON
 
-AM_CPPFLAGS = -I$(top_srcdir)/libtest -I$(top_srcdir)/lib -I../../lib -I$(top_srcdir)/modules/json
+AM_CPPFLAGS = -I$(top_srcdir)/libtest -I$(top_srcdir)/lib -I../../lib -I$(top_srcdir)/modules/json $(JSON_CFLAGS)
 
 AM_LDFLAGS = -dlpreopen ../../syslogformat/libsyslogformat.la -dlpreopen $(top_builddir)/modules/json/libjson-plugin.la
 

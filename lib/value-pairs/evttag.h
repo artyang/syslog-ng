@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 Balabit
+ * Copyright (c) 2011-2015 Balabit
+ * Copyright (c) 2011-2014 Gergely Nagy <algernon@balabit.hu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,25 +21,12 @@
  * COPYING for details.
  *
  */
+#ifndef VALUE_PAIRS_EVTTAG_H_INCLUDED
+#define VALUE_PAIRS_EVTTAG_H_INCLUDED 1
 
-#ifndef STRINGUTILS_H_INCLUDED
-#define STRINGUTILS_H_INCLUDED
+#include "value-pairs.h"
+#include "messages.h"
 
-#include <glib.h>
-
-guchar* g_string_list_find_first(GList *list, const char * str, int *result_length);
-
-static inline GString *
-g_string_append_unichar_optimized(GString *string, gunichar wc)
-{
-  if (wc < 0x80)
-    g_string_append_c(string, (gchar) wc);
-  else
-    g_string_append_unichar(string, wc);
-
-  return string;
-}
-
-gchar *normalize_key(const gchar* buffer);
+EVTTAG *evt_tag_value_pairs(const char* key, ValuePairs *vp, LogMessage *msg, gint32 seq_num, gint time_zone_mode, LogTemplateOptions *template_options);
 
 #endif

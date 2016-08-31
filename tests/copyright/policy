@@ -61,7 +61,7 @@ autogen\.sh$
 sub-configure\.sh$
 configure\.in$
 Makefile\.am$
-lib/(compat|control|debugger|filter|logproto|parser|rewrite|stats|template|tests|transport|[^/]*$)
+lib/(compat|control|debugger|filter|logproto|parser|rewrite|stats|template|tests|transport|value-pairs|[^/]*$)
 libtest
 syslog-ng(-ctl)?
 modules/java-modules/common

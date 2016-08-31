@@ -1,5 +1,6 @@
 /*
- * Copyright (c) 2015 Balabit
+ * Copyright (c) 2011-2015 Balabit
+ * Copyright (c) 2011-2014 Gergely Nagy <algernon@balabit.hu>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,25 +21,26 @@
  * COPYING for details.
  *
  */
+#include "value-pairs/evttag.h"
 
-#ifndef STRINGUTILS_H_INCLUDED
-#define STRINGUTILS_H_INCLUDED
-
-#include <glib.h>
-
-guchar* g_string_list_find_first(GList *list, const char * str, int *result_length);
-
-static inline GString *
-g_string_append_unichar_optimized(GString *string, gunichar wc)
+static gboolean
+_append_pair_to_debug_string(const gchar *name, TypeHint type, const gchar *value, gsize value_len, gpointer user_data)
 {
-  if (wc < 0x80)
-    g_string_append_c(string, (gchar) wc);
-  else
-    g_string_append_unichar(string, wc);
-
-  return string;
+  GString *text = (GString *) user_data;
+  g_string_append_printf(text, "%s=%s ",name, value);
+  return FALSE;
 }
 
-gchar *normalize_key(const gchar* buffer);
+EVTTAG *
+evt_tag_value_pairs(const char* key, ValuePairs *vp, LogMessage *msg, gint32 seq_num, gint time_zone_mode, LogTemplateOptions *template_options)
+{
+   GString *debug_text = g_string_new("");
+   EVTTAG* result;
 
-#endif
+   value_pairs_foreach(vp, _append_pair_to_debug_string, msg, seq_num, time_zone_mode, template_options, debug_text);
+
+   result = evt_tag_str(key, debug_text->str);
+
+   g_string_free(debug_text, TRUE);
+   return result;
+}

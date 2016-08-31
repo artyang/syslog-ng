@@ -24,7 +24,7 @@
 
 #include "json-parser.h"
 
-#include "json/json.h"
+#include <json.h>
 
 struct json_object *
 json_extract(struct json_object *jso, const gchar *subscript);

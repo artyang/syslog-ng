@@ -42,6 +42,7 @@
 #include "mainloop-call.h"
 #include "service-management.h"
 #include "hds.h"
+#include "value-pairs/value-pairs.h"
 
 #include <iv.h>
 #include <iv_work.h>
@@ -114,7 +115,7 @@ app_fatal(const char *msg)
   fprintf(stderr, "%s\n", msg);
 }
 
-void 
+void
 app_startup(void)
 {
 #ifdef _WIN32
@@ -138,6 +139,7 @@ app_startup(void)
   log_source_global_init();
   log_template_global_init();
   state_handler_register_default_constructors();
+  value_pairs_global_init();
   service_management_init();
 }
 
@@ -159,10 +161,11 @@ app_post_config_loaded(void)
   run_application_hook(AH_POST_CONFIG_LOADED);
 }
 
-void 
+void
 app_shutdown(void)
 {
   run_application_hook(AH_SHUTDOWN);
+  value_pairs_global_deinit();
   log_tags_deinit();
   stats_destroy();
   child_manager_deinit();
