@@ -390,11 +390,15 @@ _load_dh_fallback(void)
   if (!dh)
     return NULL;
 
-  /*
-   * The prime is: 2^4096 - 2^4032 - 1 + 2^64 * { [2^3966 pi] + 240904 }
+  /*-
+   * "2048-bit MODP Group" from RFC3526, Section 3.
+   *
+   * The prime is: 2^2048 - 2^1984 - 1 + 2^64 * { [2^1918 pi] + 124476 }
+   *
    * RFC3526 specifies a generator of 2.
    */
-  dh->p = get_rfc3526_prime_4096(NULL);
+
+  dh->p = get_rfc3526_prime_2048(NULL);
   BN_dec2bn(&dh->g, "2");
 
   if (!dh->p || !dh->g)
