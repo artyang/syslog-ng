@@ -314,6 +314,15 @@ affile_file_monitor_stop(AFFileSourceDriver *self)
 /*nop*/
 }
 
+static inline gboolean
+_is_inotify_enabled(void)
+{
+  gchar *disable_inotify = getenv("DISABLE_INOTIFY");
+  gboolean is_disabled = disable_inotify &&
+                         (strcmp(disable_inotify, "1") == 0);
+  return !(is_disabled);
+}
+
 void
 affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
@@ -321,6 +330,10 @@ affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
     {
       self->file_monitor = file_monitor_new();
       self->file_monitor->privileged = !!(self->flags & AFFILE_PRIVILEGED);
+      if (!_is_inotify_enabled())
+        {
+          self->file_monitor->monitor_type = MONITOR_POLL;
+        }
       self->file_list = uniq_queue_new();
     }
   else
