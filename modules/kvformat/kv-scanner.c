@@ -25,7 +25,8 @@
 
 #include <string.h>
 
-enum {
+enum
+{
   KV_QUOTE_INITIAL = 0,
   KV_QUOTE_STRING,
   KV_QUOTE_BACKSLASH,
@@ -75,11 +76,11 @@ _kv_scanner_extract_key(KVScanner *self)
   separator = strchr(input_ptr, self->value_separator);
   do
     {
-  if (!separator)
-    return FALSE;
-  start_of_key = separator;
-  while (start_of_key > input_ptr && _is_valid_key_character(*(start_of_key - 1)))
-    start_of_key--;
+      if (!separator)
+        return FALSE;
+      start_of_key = separator;
+      while (start_of_key > input_ptr && _is_valid_key_character(*(start_of_key - 1)))
+        start_of_key--;
       len = separator - start_of_key;
       if (len < 1)
         separator = strchr(separator + 1, self->value_separator);
@@ -96,32 +97,32 @@ _decode_backslash_escape(KVScanner *self, gchar ch)
 {
   gchar control;
   switch (ch)
-            {
-            case 'b':
-              control = '\b';
-              break;
-            case 'f':
-              control = '\f';
-              break;
-            case 'n':
-              control = '\n';
-              break;
-            case 'r':
-              control = '\r';
-              break;
-            case 't':
-              control = '\t';
-              break;
-            case '\\':
-              control = '\\';
-              break;
-            default:
+    {
+    case 'b':
+      control = '\b';
+      break;
+    case 'f':
+      control = '\f';
+      break;
+    case 'n':
+      control = '\n';
+      break;
+    case 'r':
+      control = '\r';
+      break;
+    case 't':
+      control = '\t';
+      break;
+    case '\\':
+      control = '\\';
+      break;
+    default:
       if (self->quote_char != ch)
-                g_string_append_c(self->value, '\\');
+        g_string_append_c(self->value, '\\');
       control = ch;
-              break;
-            }
-          g_string_append_c(self->value, control);
+      break;
+    }
+  g_string_append_c(self->value, control);
 }
 
 static gboolean
