@@ -321,8 +321,36 @@ __has_iso_timezone(const guchar *src, gint length)
          !isdigit(*(src+6));
 }
 
+static void
+_parse_date_tz(LogMessage *self, guint parse_flags, const guchar **src, gint *length)
+{
+  const gchar *found_tz = "0";
+  if (*length > 0 && **src == 'Z')
+    {
+      /* Z is special, it means UTC */
+      self->timestamps[LM_TS_STAMP].zone_offset = 0;
+      (*src)++;
+      (*length)--;
+      found_tz = "1";
+    }
+  else if (__has_iso_timezone(*src, *length))
+    {
+      self->timestamps[LM_TS_STAMP].zone_offset = __parse_iso_timezone(src, length);
+      found_tz = "1";
+    }
+
+  if (!(parse_flags & LP_NO_PARSE_DATE))
+    {
+      static NVHandle tz_known = 0;
+      if (!tz_known)
+        tz_known = log_msg_get_value_handle(".SDATA.timeQuality.tzKnown");
+
+      log_msg_set_value(self, tz_known, found_tz, 1);
+    }
+}
+
 static gboolean
-__parse_iso_stamp(const GTimeVal *now, LogMessage *self, struct tm* tm, const guchar **data, gint *length, NVHandle tz_known)
+__parse_iso_stamp(const GTimeVal *now, LogMessage *self, struct tm* tm, const guchar **data, gint *length, guint parse_flags)
 {
   /* RFC3339 timestamp, expected format: YYYY-MM-DDTHH:MM:SS[.frac]<+/->ZZ:ZZ */
   time_t now_tv_sec = (time_t) now->tv_sec;
@@ -343,25 +371,8 @@ __parse_iso_stamp(const GTimeVal *now, LogMessage *self, struct tm* tm, const gu
 
   self->timestamps[LM_TS_STAMP].tv_usec = __parse_usec(&src, length);
 
-  if (*length > 0 && *src == 'Z')
-    {
-      /* Z is special, it means UTC */
-      self->timestamps[LM_TS_STAMP].zone_offset = 0;
-      src++;
-      (*length)--;
-      log_msg_set_value(self, tz_known, "1", 1);
-    }
-  else if (__has_iso_timezone(src, *length))
-    {
+  _parse_date_tz(self, parse_flags, &src, length);
 
-      self->timestamps[LM_TS_STAMP].zone_offset = __parse_iso_timezone(&src, length);
-      log_msg_set_value(self, tz_known, "1", 1);
-    }
-  else
-    {
-      /* no time zone information found */
-      log_msg_set_value(self, tz_known, "0", 1);
-    }
   *data = src;
   return TRUE;
 }
@@ -445,7 +456,7 @@ __parse_bsd_timestamp(const guchar **data, gint *length, const GTimeVal *now, st
 }
 
 static time_t
-__calculate_correct_time(LogMessage *self, gint normalized_hour,
+__calculate_correct_time(LogStamp *stamp, gint normalized_hour,
     gint unnormalized_hour, glong assume_timezone)
 {
   /* NOTE: mktime() returns the time assuming that the timestamp we
@@ -457,18 +468,18 @@ __calculate_correct_time(LogMessage *self, gint normalized_hour,
    * might be skipped or played twice this is what the
    * (tm.tm_hour - * unnormalized_hour) part fixes up. */
 
-  if (self->timestamps[LM_TS_STAMP].zone_offset == -1)
+  if (stamp->zone_offset == -1)
     {
-      self->timestamps[LM_TS_STAMP].zone_offset = assume_timezone;
+      stamp->zone_offset = assume_timezone;
     }
-  if (self->timestamps[LM_TS_STAMP].zone_offset == -1)
+  if (stamp->zone_offset == -1)
     {
-      self->timestamps[LM_TS_STAMP].zone_offset = get_local_timezone_ofs(self->timestamps[LM_TS_STAMP].tv_sec);
+      stamp->zone_offset = get_local_timezone_ofs(stamp->tv_sec);
     }
-  return self->timestamps[LM_TS_STAMP].tv_sec
-      + get_local_timezone_ofs(self->timestamps[LM_TS_STAMP].tv_sec)
+  return stamp->tv_sec
+      + get_local_timezone_ofs(stamp->tv_sec)
       - (normalized_hour - unnormalized_hour) * 3600
-      - self->timestamps[LM_TS_STAMP].zone_offset;
+      - stamp->zone_offset;
 }
 
 static gint
@@ -490,52 +501,55 @@ __calculate_unnormalized_hour(const struct tm *unnormalized_tm, const struct tm 
   return result;
 }
 
+static void
+_parse_date_is_synced(LogMessage *self, guint parse_flags, const guchar **src, gint *left)
+{
+  /* Cisco timestamp extensions, the first '*' indicates that the clock is
+   * unsynced, '.' if it is known to be synced */
+  const gchar *found_synced = "0";
+  if (G_UNLIKELY((*src)[0] == '*'))
+    {
+      (*src)++;
+      (*left)--;
+    }
+  else if (G_UNLIKELY((*src)[0] == '.'))
+    {
+      found_synced = "1";
+      (*src)++;
+      (*left)--;
+    }
+
+  if (!(parse_flags & LP_NO_PARSE_DATE))
+    {
+      static NVHandle is_synced = 0;
+      if (!is_synced)
+        is_synced = log_msg_get_value_handle(".SDATA.timeQuality.isSynced");
+
+      log_msg_set_value(self, is_synced, found_synced, 1);
+    }
+}
+
 static gboolean
-log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint parse_flags, glong assume_timezone)
+log_msg_parse_date_unnormalized(LogMessage *self, const guchar **data, gint *length, guint parse_flags, struct tm *tm)
 {
   const guchar *src = *data;
   gint left = *length;
-  static NVHandle is_synced = 0;
-  static NVHandle tz_known = 0;
   GTimeVal now;
-  struct tm tm, unnormalized_tm;
-  gint unnormalized_hour;
 
-  if (!is_synced)
-    is_synced = log_msg_get_value_handle(".SDATA.timeQuality.isSynced");
-  if (!tz_known)
-    tz_known = log_msg_get_value_handle(".SDATA.timeQuality.tzKnown");
-
+  _parse_date_is_synced(self, parse_flags, &src, &left);
 
   cached_g_current_time(&now);
-
-  if (G_UNLIKELY(src[0] == '*'))
-    {
-      log_msg_set_value(self, is_synced, "0", 1);
-      src++;
-      left--;
-    }
-  else if (G_UNLIKELY(src[0] == '.'))
-    {
-      log_msg_set_value(self, is_synced, "1", 1);
-      src++;
-      left--;
-    }
-  else
-    {
-      log_msg_set_value(self, is_synced, "0", 1);
-    }
 
   /* If the next chars look like a date, then read them as a date. */
   if (__is_iso_stamp((const gchar *)src, left))
     {
-      if (!__parse_iso_stamp(&now, self, &tm, &src, &left, tz_known))
+      if (!__parse_iso_stamp(&now, self, tm, &src, &left, parse_flags))
         goto error;
     }
   else if ((parse_flags & LP_SYSLOG_PROTOCOL) == 0)
     {
       glong usec = 0;
-      if (!__parse_bsd_timestamp(&src, &left, &now, &tm, &usec))
+      if (!__parse_bsd_timestamp(&src, &left, &now, tm, &usec))
         goto error;
       self->timestamps[LM_TS_STAMP].tv_usec = usec;
     }
@@ -543,12 +557,6 @@ log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint pa
     {
       return FALSE;
     }
-
-  tm.tm_isdst = -1;
-  unnormalized_tm = tm;
-  self->timestamps[LM_TS_STAMP].tv_sec = cached_mktime(&tm);
-  unnormalized_hour = __calculate_unnormalized_hour(&unnormalized_tm, &tm);
-  self->timestamps[LM_TS_STAMP].tv_sec = __calculate_correct_time(self, tm.tm_hour, unnormalized_hour, assume_timezone);
 
   *data = src;
   *length = left;
@@ -558,6 +566,39 @@ log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint pa
 
   self->timestamps[LM_TS_STAMP] = self->timestamps[LM_TS_RECVD];
   return FALSE;
+}
+
+static void
+_normalize_time(LogStamp *stamp, struct tm *tm, glong assume_timezone)
+{
+  tm->tm_isdst = -1;
+  struct tm unnormalized_tm = *tm;
+
+  stamp->tv_sec = cached_mktime(tm);
+  gint unnormalized_hour = __calculate_unnormalized_hour(&unnormalized_tm, tm);
+  stamp->tv_sec = __calculate_correct_time(stamp, tm->tm_hour, unnormalized_hour, assume_timezone);
+}
+
+static gboolean
+log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint parse_flags, glong assume_timezone)
+{
+  struct tm tm;
+  if (!log_msg_parse_date_unnormalized(self, data, length, parse_flags, &tm))
+    return FALSE;
+
+  LogStamp *stamp = &self->timestamps[LM_TS_STAMP];
+  if (parse_flags & LP_NO_PARSE_DATE)
+    {
+      *stamp = (const LogStamp) {};
+      stamp->tv_sec = -1;
+      stamp->zone_offset = -1;
+    }
+  else
+    {
+      _normalize_time(stamp, &tm, assume_timezone);
+    }
+
+  return TRUE;
 }
 
 static gboolean
