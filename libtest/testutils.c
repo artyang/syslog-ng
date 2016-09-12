@@ -91,7 +91,7 @@ stop_stopwatch_and_display_result(gchar *message_template, ...)
   va_end(args);
 
   diff = (end_time_val.tv_sec - start_time_val.tv_sec) * 1000000 + end_time_val.tv_usec - start_time_val.tv_usec;
-  printf("; runtime=%" G_GUINT64_FORMAT ".%" G_GUINT64_FORMAT " s\n", diff / 1000000, diff % 1000000);
+  printf("; runtime=%" G_GUINT64_FORMAT ".%06" G_GUINT64_FORMAT " s\n", diff / 1000000, diff % 1000000);
 }
 #pragma GCC diagnostic warning "-Wformat"
 
