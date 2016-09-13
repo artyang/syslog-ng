@@ -37,9 +37,6 @@
 /* Enable SQL support */
 #undef ENABLE_SQL
 
-/* Enable SSL support */
-#define ENABLE_SSL 1
-
 /* have Solaris door support */
 #undef ENABLE_SUN_DOOR
 

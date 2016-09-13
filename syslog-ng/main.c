@@ -59,10 +59,8 @@
 #include <iv.h>
 #include <iv_signal.h>
 
-#if ENABLE_SSL
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#endif
 
 static gchar *install_dat_filename;
 static gchar *installer_version = NULL;
@@ -178,7 +176,7 @@ setup_caps (void)
 
 #endif
 
-#if ENABLE_SSL && ENABLE_FIPS
+#if ENABLE_FIPS
 static gboolean
 check_random_source_for_fips_selftest()
 {
@@ -261,7 +259,7 @@ main(int argc, char *argv[])
       return 0;
     }
 
-#if ENABLE_SSL && ENABLE_FIPS
+#if ENABLE_FIPS
   if (!check_random_source_for_fips_selftest())
     return 1;
   if (!FIPS_mode_set (1))

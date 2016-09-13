@@ -27,9 +27,7 @@
 #include "driver.h"
 #include "logreader.h"
 #include "logwriter.h"
-#if ENABLE_SSL
 #include "tlscontext.h"
-#endif
 
 #include <iv.h>
 
@@ -107,11 +105,7 @@ struct _AFSocketSourceDriver
 void afsocket_sd_set_transport(LogDriver *s, const gchar *transport);
 void afsocket_sd_set_keep_alive(LogDriver *self, gint enable);
 void afsocket_sd_set_max_connections(LogDriver *self, gint max_connections);
-#if ENABLE_SSL
 void afsocket_sd_set_tls_context(LogDriver *s, TLSContext *tls_context);
-#else
-#define afsocket_sd_set_tls_context(s, t)
-#endif
 
 static inline gboolean
 afsocket_sd_acquire_socket(AFSocketSourceDriver *s, gint *fd)
@@ -175,11 +169,7 @@ struct _AFSocketDestDriver
 
 
 void afsocket_dd_add_failovers(LogDriver *s, GList *failover_list);
-#if ENABLE_SSL
 void afsocket_dd_set_tls_context(LogDriver *s, TLSContext *tls_context);
-#else
-#define afsocket_dd_set_tls_context(s, t)
-#endif
 
 static inline gboolean
 afsocket_dd_apply_transport(AFSocketDestDriver *s)

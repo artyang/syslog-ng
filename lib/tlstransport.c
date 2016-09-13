@@ -23,8 +23,6 @@
 
 #include "tlstransport.h"
 
-#if ENABLE_SSL
-
 #include "messages.h"
 
 #include <openssl/ssl.h>
@@ -183,5 +181,3 @@ log_transport_tls_free_method(LogTransport *s)
   tls_session_free(self->tls_session);
   log_transport_free_method(s);
 }
-
-#endif

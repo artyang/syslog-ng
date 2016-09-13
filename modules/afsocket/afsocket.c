@@ -27,9 +27,7 @@
 #include "misc.h"
 #include "logwriter.h"
 #include "hostname.h"
-#if ENABLE_SSL
 #include "tlstransport.h"
-#endif
 #include "gprocess.h"
 #include "gsocket.h"
 #include "stats.h"
@@ -236,7 +234,6 @@ afsocket_sc_init(LogPipe *s)
     {
       if (self->owner->proto_factory->construct_transport == NULL)
         {
-#if ENABLE_SSL
           if (self->owner->tls_context)
             {
               TLSSession *tls_session = tls_context_setup_session(self->owner->tls_context, cfg);
@@ -245,7 +242,6 @@ afsocket_sc_init(LogPipe *s)
               transport = log_transport_tls_new(tls_session, self->sock, read_flags);
             }
           else
-#endif
             transport = log_transport_plain_new(self->sock, read_flags);
         }
       else
@@ -448,7 +444,6 @@ afsocket_sd_set_max_connections(LogDriver *s, gint max_connections)
   self->max_connections = max_connections;
 }
 
-#if ENABLE_SSL
 void
 afsocket_sd_set_tls_context(LogDriver *s, TLSContext *tls_context)
 {
@@ -456,7 +451,6 @@ afsocket_sd_set_tls_context(LogDriver *s, TLSContext *tls_context)
 
   self->tls_context = tls_context;
 }
-#endif
 
 static inline gchar *
 afsocket_sd_format_persist_name(AFSocketSourceDriver *self, gboolean listener_name)
@@ -880,12 +874,10 @@ afsocket_sd_free(LogPipe *s)
   g_sockaddr_unref(self->bind_addr);
   self->bind_addr = NULL;
   g_free(self->transport);
-#if ENABLE_SSL
   if(self->tls_context)
     {
       tls_context_unref(self->tls_context);
     }
-#endif
 
   log_src_driver_free(s);
 }
@@ -956,7 +948,6 @@ afsocket_dd_set_transport(LogDriver *s, const gchar *transport)
     }
 }
 
-#if ENABLE_SSL
 void
 afsocket_dd_set_tls_context(LogDriver *s, TLSContext *tls_context)
 {
@@ -964,7 +955,6 @@ afsocket_dd_set_tls_context(LogDriver *s, TLSContext *tls_context)
 
   self->tls_context = tls_context;
 }
-#endif
 
 gchar *
 afsocket_dd_get_next_dest(AFSocketDestDriver *self)
@@ -1090,7 +1080,6 @@ afsocket_dd_stats_instance(AFSocketDestDriver *self)
     }
 }
 
-#if ENABLE_SSL
 static gint
 afsocket_dd_tls_verify_callback(gint ok, X509_STORE_CTX *ctx, gpointer user_data)
 {
@@ -1103,7 +1092,6 @@ afsocket_dd_tls_verify_callback(gint ok, X509_STORE_CTX *ctx, gpointer user_data
 
   return ok;
 }
-#endif
 
 static void afsocket_dd_connected(AFSocketDestDriver *self);
 static void afsocket_dd_reconnect(AFSocketDestDriver *self);
@@ -1199,7 +1187,6 @@ afsocket_dd_connected(AFSocketDestDriver *self)
     }
   else
     {
-#if ENABLE_SSL
       if (self->tls_context)
         {
           TLSSession *tls_session;
@@ -1215,7 +1202,6 @@ afsocket_dd_connected(AFSocketDestDriver *self)
           transport = log_transport_tls_new(tls_session, self->fd, transport_flags);
         }
       else
-#endif
         transport = log_transport_plain_new(self->fd, transport_flags);
     }
   if (!transport)
@@ -1358,11 +1344,7 @@ afsocket_dd_init(LogPipe *s)
        * even while the connection is not established */
 
         self->writer = log_writer_new(LW_FORMAT_PROTO | LW_KEEP_ONE_PENDING |
-#if ENABLE_SSL
                                     (((self->flags & AFSOCKET_STREAM) && !self->tls_context) ? LW_DETECT_EOF : 0) |
-#else
-                                    ((self->flags & AFSOCKET_STREAM) ? LW_DETECT_EOF : 0) |
-#endif
                                     (self->flags & AFSOCKET_SYSLOG_DRIVER ? LW_SYSLOG_PROTOCOL : 0));
 
     }
@@ -1509,12 +1491,10 @@ afsocket_dd_free(LogPipe *s)
   log_pipe_unref(self->writer);
   g_free(self->dest_name);
   g_free(self->transport);
-#if ENABLE_SSL
   if(self->tls_context)
     {
       tls_context_unref(self->tls_context);
     }
-#endif
   log_dest_driver_free(s);
 }
 

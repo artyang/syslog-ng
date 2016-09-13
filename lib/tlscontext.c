@@ -25,7 +25,6 @@
 #include "misc.h"
 #include "messages.h"
 
-#if ENABLE_SSL
 #include <openssl/ssl.h>
 #include <openssl/x509_vfy.h>
 #include <openssl/x509v3.h>
@@ -879,4 +878,3 @@ tls_verify_certificate_name(X509 *cert, const gchar *host_name)
   return result;
 }
 
-#endif

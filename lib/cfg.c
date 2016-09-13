@@ -101,7 +101,7 @@ static void config_show_start_message(GlobalConfig *self)
   msg_notice("syslog-ng starting up",
              evt_tag_str("version", get_version()),
              evt_tag_printf("cfg-fingerprint","%s", self->cfg_fingerprint),
-#if ENABLE_SSL && ENABLE_FIPS
+#if ENABLE_FIPS
              evt_tag_printf("FIPS-mode","%s", (FIPS_mode() ? "enabled" : "disabled")),
 #endif
              evt_tag_id(MSG_APPLICATION_STARTED),
@@ -118,11 +118,7 @@ static void config_show_shutdown_message(GlobalConfig *self)
   return;
 }
 
-#if ENABLE_SSL
 static gchar *cfg_calculate_hash(GlobalConfig *self);
-#endif
-
-
 
 gint
 cfg_ts_format_value(gchar *format)
@@ -508,12 +504,7 @@ cfg_new(gint version)
   self->keep_timestamp = TRUE;
   self->cfg_fingerprint = NULL;
   self->stats_reset = FALSE;
-#if ENABLE_SSL
   self->calculate_hash = cfg_calculate_hash;
-#else
-  /* No OpenSSL no hash calculation. see below - folti */
-  self->calculate_hash = NULL;
-#endif
   self->show_reload_message = config_show_reload_message;
   self->show_start_message = config_show_start_message;
   self->show_shutdown_message = config_show_shutdown_message;
@@ -800,10 +791,6 @@ cfg_generate_persist_file(GlobalConfig *cfg)
   g_hash_table_foreach(cfg->sources, cfg_group_generate_persist, cfg);
 }
 
-#if ENABLE_SSL
-/* WARNING: This code uses OpenSSL, it won't compile without it. It's not a
- * problem in PE, but OSE is a different matter. - folti */
-
 static gchar *
 cfg_calculate_hash(GlobalConfig *cfg)
 {
@@ -834,7 +821,6 @@ cfg_calculate_hash(GlobalConfig *cfg)
   return cfg->cfg_fingerprint;
 }
 
-#endif /* ENABLE_SSL */
 
 void
 cfg_persist_names_add(GlobalConfig *cfg, const gchar *persist_name, gpointer value)
