@@ -35,6 +35,8 @@
 #include "tlswincrypt.h"
 #include "cfg.h"
 
+extern gboolean is_fips_enabled;
+
 typedef struct _load_cert_param
 {
   char *subject;
@@ -315,13 +317,16 @@ tls_context_set_default_ca_dir_layout(TLSContext *self, GlobalConfig *cfg)
 {
   if (cfg->version < 0x500)
     {
-#if ! ENABLE_FIPS
-      msg_warning("WARNING: The default value of type of the hash used for the CA certificates is changed in version 5.0 from MD5 to SHA1, please rehash the directory when you upgrade your configuration", NULL);
-      self->ca_dir_layout = CA_DIR_LAYOUT_MD5;
-#else
-      msg_warning("WARNING: The MD5 hash is disabled in FIPS version thus the SHA1 hash algorithm is used for the CA certificates, please rehash the directory if you encounter problems with the hashing", NULL);
-      self->ca_dir_layout = CA_DIR_LAYOUT_SHA1;
-#endif
+      if (is_fips_enabled)
+        {
+          msg_warning("WARNING: The MD5 hash is disabled in FIPS version thus the SHA1 hash algorithm is used for the CA certificates, please rehash the directory if you encounter problems with the hashing", NULL);
+          self->ca_dir_layout = CA_DIR_LAYOUT_SHA1;
+        }
+      else
+        {
+          msg_warning("WARNING: The default value of type of the hash used for the CA certificates is changed in version 5.0 from MD5 to SHA1, please rehash the directory when you upgrade your configuration", NULL);
+          self->ca_dir_layout = CA_DIR_LAYOUT_MD5;
+        }
     }
   else
     {
@@ -681,20 +686,29 @@ tls_lookup_ca_dir_layout(const gchar *layout_str)
 {
   if (strcasecmp(layout_str, "sha1-based") == 0 || strcasecmp(layout_str, "sha1_based") == 0 ||
       strcasecmp(layout_str, "sha1") == 0)
-    return CA_DIR_LAYOUT_SHA1;
-#if ! ENABLE_FIPS
-  else if (strcasecmp(layout_str, "md5-based") == 0 || strcasecmp(layout_str, "md5_based") == 0 ||
-           strcasecmp(layout_str, "md5") == 0 || strcasecmp(layout_str, "" ) == 0)
-    return CA_DIR_LAYOUT_MD5;
-  else
-    msg_warning("CA directory layout must be either 'md5-based', 'sha1-based' (default) or empty. Falling back to default.", NULL);
-#else
-  else
     {
-      msg_warning("CA directory layout must be 'sha1-based' or empty. Using 'sha1-based'.", NULL);
       return CA_DIR_LAYOUT_SHA1;
     }
-#endif
+  else
+    {
+      if (!is_fips_enabled)
+        {
+          if (strcasecmp(layout_str, "md5-based") == 0 || strcasecmp(layout_str, "md5_based") == 0 ||
+              strcasecmp(layout_str, "md5") == 0 || strcasecmp(layout_str, "" ) == 0)
+            {
+              return CA_DIR_LAYOUT_MD5;
+            }
+          else
+            {
+              msg_warning("CA directory layout must be either 'md5-based', 'sha1-based' (default) or empty. Falling back to default.", NULL);
+            }
+        }
+      else
+        {
+          msg_warning("CA directory layout must be 'sha1-based' or empty. Using 'sha1-based'.", NULL);
+          return CA_DIR_LAYOUT_SHA1;
+        }
+    }
 
   return CA_DIR_LAYOUT_DEFAULT;
 }

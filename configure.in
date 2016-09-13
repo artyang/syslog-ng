@@ -1436,7 +1436,6 @@ AC_DEFINE_UNQUOTED(ENABLE_STATIC_MODULES, `enable_value $enable_static_modules`,
 
 AC_DEFINE_UNQUOTED(WITH_COMPILE_DATE, $wcmp_date, [Include the compile date in the binary])
 AC_DEFINE_UNQUOTED(ENABLE_DEBUG, `enable_value $enable_debug`, [Enable debugging])
-AC_DEFINE_UNQUOTED(ENABLE_FIPS, `enable_value $enable_fips`, [Enable FIPS support])
 AC_DEFINE_UNQUOTED(ENABLE_GPROF, `enable_value $enable_gprof`, [Enable gcc profiling])
 AC_DEFINE_UNQUOTED(ENABLE_MEMTRACE, `enable_value $enable_memtrace`, [Enable memtrace])
 AC_DEFINE_UNQUOTED(ENABLE_SPOOF_SOURCE, `enable_value $enable_spoof_source`, [Enable spoof source support])
@@ -1452,7 +1451,6 @@ AM_CONDITIONAL(ENABLE_STATIC_MODULES, [test "$enable_static_modules" = "yes"], [
 AM_CONDITIONAL(ENABLE_ENV_WRAPPER, [test "$enable_env_wrapper" = "yes"])
 AM_CONDITIONAL(ENABLE_SYSTEMD, [test "$enable_systemd" = "yes"])
 AM_CONDITIONAL(ENABLE_SYSTEMD_UNIT_INSTALL, [test "$systemdsystemunitdir" != ""])
-AM_CONDITIONAL(ENABLE_FIPS, [test "$enable_fips" = "yes"])
 AM_CONDITIONAL(ENABLE_SQL, [test "$enable_sql" = "yes"])
 AM_CONDITIONAL(ENABLE_SUN_STREAMS, [test "$enable_sun_streams" = "yes"])
 AM_CONDITIONAL(ENABLE_PACCT, [test "$enable_pacct" = "yes"])
@@ -1673,7 +1671,6 @@ echo "  Module search path          : ${module_path}"
 echo "  Default module list         : ${default_modules}"
 echo "  Builtin modules             : ${static_modules}"
 echo "  Sun STREAMS support (module): ${enable_sun_streams:=no}"
-echo "  FIPS support                : ${enable_fips:=no}"
 echo "  SQL support (module)        : ${enable_sql:=no}"
 echo "  PACCT module (EXPERIMENTAL) : ${enable_pacct:=no}"
 echo "  MongoDB destination (module): ${enable_mongodb:=no}"

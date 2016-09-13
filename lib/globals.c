@@ -24,6 +24,7 @@
 
 #include "syslog-ng.h"
 #include "reloc.h"
+#include "gmodule.h"
 
 GlobalConfig *configuration;
 int cfg_parser_debug;
@@ -69,4 +70,14 @@ INITIALIZER(init_paths)
   persist_file = get_reloc_string(PATH_PERSIST_CONFIG);
   ctlfilename = get_reloc_string(PATH_CONTROL_SOCKET);
   module_path = get_reloc_string(MODULE_PATH);
+}
+
+gboolean is_fips_enabled;
+
+INITIALIZER(check_fips)
+{
+  gpointer fips_selftest_func;
+  GModule *mod = g_module_open("libcrypto.so", G_MODULE_BIND_LAZY);
+  if (mod)
+    is_fips_enabled =  g_module_symbol(mod, "FIPS_selftest", (gpointer *) &fips_selftest_func);
 }
