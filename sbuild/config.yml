@@ -1,0 +1,19 @@
+name: syslog-ng-premium-edition
+builder:
+  name: AutotoolsBuilder
+  configure_options: --disable-debug --with-ivykis=system --enable-stmp --with-libmongo-client=system
+platforms:
+  - aix-6.1/powerpc
+  - hpux-11v2/ia64
+  - linux-glibc2.3.6/amd64
+  - linux-glibc2.3.6/i386
+  - solaris-10/amd64
+  - solaris-10/sparc
+  - solaris-10/sparc64
+  - windows-2012/amd64
+  - windows-2012/i386
+  - linux-glibc2.11/amd64
+  - linux-glibc2.11/i386
+  - solaris-11/amd64
+  - solaris-11/sparc64
+  - freebsd-10.1/amd64
