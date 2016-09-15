@@ -1,6 +1,6 @@
 name: syslog-ng-premium-edition
 builder:
-  name: AutotoolsBuilder
+  name: SyslogNgBuilder
   configure_options: --disable-debug --with-ivykis=system --enable-stmp --with-libmongo-client=system
 platforms:
   - aix-6.1/powerpc
