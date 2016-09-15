@@ -17,6 +17,10 @@ libkvformat_la_SOURCES = \
   kv-parser.h \
   kv-scanner.c \
   kv-scanner.h \
+  kv-scanner-generic.c \
+  kv-scanner-generic.h \
+  kv-scanner-simple.c \
+  kv-scanner-simple.h \
   linux-audit-scanner.c \
   linux-audit-scanner.h \
   kv-parser-grammar.y \
