@@ -40,7 +40,7 @@ struct _LogQueue
   /* this object is reference counted, but it is _not_ thread safe to
      acquire/release references in code executing in parallel */
   QueueType type;
-  gint ref_cnt;
+  GAtomicCounter ref_cnt;
   gboolean use_backlog;
   gboolean is_persistent;
 
@@ -158,10 +158,11 @@ log_queue_ack_backlog(LogQueue *self, guint rewind_count)
 static inline LogQueue *
 log_queue_ref(LogQueue *self)
 {
+  g_assert(!self || g_atomic_counter_get(&self->ref_cnt) > 0);
+
   if (self)
     {
-      g_assert(self->ref_cnt > 0);
-      ++self->ref_cnt;
+      g_atomic_counter_inc(&self->ref_cnt);
     }
   return self;
 }
@@ -169,10 +170,11 @@ log_queue_ref(LogQueue *self)
 static inline void
 log_queue_unref(LogQueue *self)
 {
-  if (self)
+  g_assert(!self || g_atomic_counter_get(&self->ref_cnt));
+
+  if (self && (g_atomic_counter_dec_and_test(&self->ref_cnt)))
     {
-      g_assert(self->ref_cnt > 0);
-      if (--self->ref_cnt == 0)
+      if (self->free_fn)
         self->free_fn(self);
     }
 }

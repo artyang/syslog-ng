@@ -237,6 +237,7 @@ log_queue_fifo_move_input(gpointer user_data)
   log_queue_push_notify(&self->super);
   g_static_mutex_unlock(&self->super.lock);
   self->qoverflow_input[thread_id].finish_cb_registered = FALSE;
+  log_queue_unref(&self->super);
   return NULL;
 }
 
@@ -281,6 +282,7 @@ log_queue_fifo_push_tail(LogQueue *s, LogMessage *msg, const LogPathOptions *pat
 
           main_loop_worker_register_batch_callback(&self->qoverflow_input[thread_id].cb);
           self->qoverflow_input[thread_id].finish_cb_registered = TRUE;
+          log_queue_ref(s);
         }
 
       node = log_msg_alloc_queue_node(msg, path_options);
