@@ -191,9 +191,8 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
 #endif
 
           hname = NULL;
-          if (usedns)
-            {
-              if ((!use_dns_cache || !dns_cache_lookup(saddr->sa.sa_family, addr, (const gchar **) &hname, &positive)) && usedns != 2)
+              if ((!use_dns_cache || !dns_cache_lookup(saddr->sa.sa_family, addr, (const gchar **) &hname, &positive)) &&
+                  (usedns && usedns != 2))
                 {
 #ifdef HAVE_GETNAMEINFO
                   if (getnameinfo(&saddr->sa, saddr->salen, buf, sizeof(buf), NULL, 0, NI_NAMEREQD) == 0)
@@ -219,7 +218,6 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
                       dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, TRUE);
                     }
                 }
-            }
 
           if (!hname)
             {
@@ -229,7 +227,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
                         NULL);
 
               hname = ip_addr;
-              if (usedns && use_dns_cache)
+              if (use_dns_cache)
                 dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, FALSE);
             }
           else
