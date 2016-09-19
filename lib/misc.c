@@ -191,33 +191,31 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
 #endif
 
           hname = NULL;
-          if (usedns)
+          if ((!use_dns_cache || !dns_cache_lookup(saddr->sa.sa_family, addr, (const gchar **) &hname, &positive)) &&
+              (usedns && usedns != 2))
             {
-              if ((!use_dns_cache || !dns_cache_lookup(saddr->sa.sa_family, addr, (const gchar **) &hname, &positive)) && usedns != 2)
-                {
 #ifdef HAVE_GETNAMEINFO
-                  if (getnameinfo(&saddr->sa, saddr->salen, buf, sizeof(buf), NULL, 0, NI_NAMEREQD) == 0)
-                    hname = buf;
+              if (getnameinfo(&saddr->sa, saddr->salen, buf, sizeof(buf), NULL, 0, NI_NAMEREQD) == 0)
+                hname = buf;
 #else
-                  struct hostent *hp;
-                  G_LOCK(resolv_lock);
-                  hp = gethostbyaddr(addr, addr_len, saddr->sa.sa_family);
-                  if (hp && hp->h_name)
-                    {
-                      strncpy(hostent_buf, hp->h_name, sizeof(hostent_buf));
-                      hname = hostent_buf;
-                    }
-                  G_UNLOCK(resolv_lock);
+              struct hostent *hp;
+              G_LOCK(resolv_lock);
+              hp = gethostbyaddr(addr, addr_len, saddr->sa.sa_family);
+              if (hp && hp->h_name)
+                {
+                  strncpy(hostent_buf, hp->h_name, sizeof(hostent_buf));
+                  hname = hostent_buf;
+                }
+              G_UNLOCK(resolv_lock);
 #endif
 
-                  if (hname)
-                    positive = TRUE;
+              if (hname)
+                positive = TRUE;
 
-                  if (use_dns_cache && hname)
-                    {
-                      /* resolution success, store this as a positive match in the cache */
-                      dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, TRUE);
-                    }
+              if (use_dns_cache && hname)
+                {
+                  /* resolution success, store this as a positive match in the cache */
+                  dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, TRUE);
                 }
             }
 
@@ -229,7 +227,7 @@ resolve_sockaddr(gchar *result, gsize *result_len, GSockAddr *saddr, gboolean us
                         NULL);
 
               hname = ip_addr;
-              if (usedns && use_dns_cache)
+              if (use_dns_cache)
                 dns_cache_store(FALSE, saddr->sa.sa_family, addr, hname, FALSE);
             }
           else
