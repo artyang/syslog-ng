@@ -78,6 +78,7 @@ start_stopwatch(void)
 }
 
 #pragma GCC diagnostic ignored "-Wformat"
+#pragma GCC diagnostic ignored "-Wformat-extra-args"
 void
 stop_stopwatch_and_display_result(gchar *message_template, ...)
 {
@@ -93,6 +94,7 @@ stop_stopwatch_and_display_result(gchar *message_template, ...)
   diff = (end_time_val.tv_sec - start_time_val.tv_sec) * 1000000 + end_time_val.tv_usec - start_time_val.tv_usec;
   printf("; runtime=%" G_GUINT64_FORMAT ".%06" G_GUINT64_FORMAT " s\n", diff / 1000000, diff % 1000000);
 }
+#pragma GCC diagnostic warning "-Wformat-extra-args"
 #pragma GCC diagnostic warning "-Wformat"
 
 static void
