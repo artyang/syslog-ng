@@ -27,6 +27,8 @@
 
 #include "logreader.c"
 
+#define PERSIST_FILENAME "test.persist"
+
 LogProto *
 create_logproto(gchar *name,LogTransport *transport,LogProtoOptions *options)
 {
@@ -344,6 +346,14 @@ log_reader_new_memory_source(LogReaderOptions *options, guint32 read_buffer_leng
   return reader;
 }
 
+static void
+_free(LogPipe *s)
+{
+  LogReader *self = (LogReader *)s;
+  log_reader_free(self);
+  unlink(PERSIST_FILENAME);
+}
+
 LogReader *
 log_reader_new_file_source(LogReaderOptions *options, guint32 read_buffer_length, LogReaderNotifyMethod notif, LogReaderQueueMethod queue, LogTransport **new_transport, GlobalConfig *cfg)
 {
@@ -355,7 +365,7 @@ log_reader_new_file_source(LogReaderOptions *options, guint32 read_buffer_length
   proto_options->super.size = 8192;
   proto_options->super.flags = LPBS_NOMREAD;
   LogProto *proto = create_logproto("stream-newline",*new_transport,proto_options);
-  PersistState *state = persist_state_new("test.persist");
+  PersistState *state = persist_state_new(PERSIST_FILENAME);
   persist_state_start(state);
   log_proto_restart_with_state(proto,state,"test_state");
   LogReader *reader = (LogReader*)log_reader_new(proto);
@@ -364,6 +374,7 @@ log_reader_new_file_source(LogReaderOptions *options, guint32 read_buffer_length
   log_reader_set_options((LogPipe *)reader, (LogPipe *)reader, options, 0, SCS_FILE, "test","test_file_queue", proto_options);
   ((LogPipe *)reader)->queue = queue;
   ((LogPipe *)reader)->notify = notif;
+  ((LogPipe *)reader)->free_fn = _free;
   log_pipe_init((LogPipe *)reader, cfg);
   reader->size = 1;
   return reader;

@@ -32,9 +32,9 @@ main() {
   return 1
  fi
 
- REPO="$1"
- BUILDDIR="$2"
- DATADIR="`dirname "$0"`"
+ REPO=`absdir "$1"`
+ BUILDDIR=`absdir "$2"`
+ DATADIR="$(absdir `dirname "$0"`)"
  POLICY="$DATADIR/${3-policy}"
  local WORKDIR="`tempfile -p "cpy-" -s ".check_copyright.tmp"`"
  rm "$WORKDIR" &&
@@ -89,6 +89,20 @@ main() {
  [ 0$ERRORCNT -eq 0 ]
 }
 
+absdir() {
+  local DIR="$1"
+  local PREV=`pwd`
+
+  cd "$DIR"
+  local S=$?
+  if [ $S -eq 0 ]; then
+    pwd
+  fi
+
+  cd "$PREV"
+  return $S
+}
+
 main_logged() {
  rm --recursive "$WORKDIR" 2>/dev/null
  mkdir --parents "$WORKDIR" || return 1
@@ -100,7 +114,7 @@ main_logged() {
 
  LICENSES="$WORKDIR/licenses.txt"
  HOLDERS="$WORKDIR/holders.txt"
- MISSING="$BUILDDIR/missing.txt"
+ MISSING="$WORKDIR/missing.txt"
 
  find \
   -L \
@@ -486,7 +500,7 @@ prune_ignored_paths() {
 sort_holders_licenses() {
  {
   for FILE in $LICENSES $HOLDERS; do
-   local DEST="$BUILDDIR/`basename $FILE`"
+   local DEST="$WORKDIR/`basename $FILE`.sorted"
    if [ -f "$FILE" ]; then
     cat "$FILE" |
     sort |
@@ -501,7 +515,7 @@ sort_holders_licenses() {
   done
 
   if [ -f "$HOLDERS" ]; then
-   local DEST="$BUILDDIR/holders.name.txt"
+   local DEST="$WORKDIR/holders.name.txt"
    cat "$HOLDERS" |
    sed --regexp-extended "s~^ \* Copyright \(c\) [0-9, -]*~~" |
    sort |

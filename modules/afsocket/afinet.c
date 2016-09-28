@@ -347,7 +347,6 @@ afinet_sd_apply_transport(AFSocketSourceDriver *s)
       afinet_set_port(self->super.bind_addr, self->bind_port ? : default_bind_port, self->super.flags & AFSOCKET_DGRAM ? "udp" : "tcp");
     }
   resolve_hostname(&self->super.bind_addr, self->bind_ip ? : default_bind_ip);
-#if ENABLE_SSL
   if (self->super.flags & AFSOCKET_REQUIRE_TLS && !self->super.tls_context)
     {
       msg_error("transport(tls) was specified, but tls() options missing",
@@ -356,7 +355,6 @@ afinet_sd_apply_transport(AFSocketSourceDriver *s)
                 NULL);
       return FALSE;
     }
-#endif
 
   return TRUE;
 }
@@ -611,7 +609,6 @@ afinet_dd_apply_transport(AFSocketDestDriver *s)
                                             );
 
 
-#if ENABLE_SSL
   if (self->super.flags & AFSOCKET_REQUIRE_TLS && !self->super.tls_context)
     {
       msg_error("transport(tls) was specified, but tls() options missing",
@@ -620,7 +617,6 @@ afinet_dd_apply_transport(AFSocketDestDriver *s)
                 NULL);
       return FALSE;
     }
-#endif
 
   return TRUE;
 }

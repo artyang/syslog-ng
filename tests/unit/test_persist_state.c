@@ -28,6 +28,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define PERSIST_FILENAME "test_values.persist"
+
 void
 test_values(void)
 {
@@ -35,8 +37,8 @@ test_values(void)
   gint i, j;
   gchar *data;
 
-  unlink("test_values.persist");
-  state = persist_state_new("test_values.persist");
+  unlink(PERSIST_FILENAME);
+  state = persist_state_new(PERSIST_FILENAME);
   if (!persist_state_start(state))
     {
       fprintf(stderr, "Error starting persist_state object\n");
@@ -88,7 +90,7 @@ test_values(void)
   persist_state_free(state);
 
   /* reopen */
-  state = persist_state_new("test_values.persist");
+  state = persist_state_new(PERSIST_FILENAME);
   if (!persist_state_start(state))
     {
       fprintf(stderr, "Error starting persist_state object\n");
@@ -123,7 +125,10 @@ test_values(void)
         }
       persist_state_unmap_entry(state, handle);
     }
+
+  persist_state_commit(state);
   persist_state_free(state);
+  unlink(PERSIST_FILENAME);
 }
 
 int

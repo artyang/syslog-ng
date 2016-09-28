@@ -220,7 +220,6 @@ send_plain(void *user_data, void *buf, size_t length)
   return res;
 }
 
-#if ENABLE_SSL
 static ssize_t
 send_ssl(void *user_data, void *buf, size_t length)
 {
@@ -255,7 +254,6 @@ send_ssl(void *user_data, void *buf, size_t length)
     }
   return res;
 }
-#endif
 
 static unsigned long
 time_val_diff_in_usec(struct timeval *t1, struct timeval *t2)
@@ -677,7 +675,6 @@ gen_messages(send_data_t send_func, void *send_func_ud, int thread_id, FILE *rea
   return count;
 }
 
-#if ENABLE_SSL
 static void
 release_ssl_transport(void *ssl_connect)
 {
@@ -738,20 +735,6 @@ gen_messages_ssl(ActiveThreadContext *ctx, int id, FILE *readfrom)
 
   return ret;
 }
-#else
-#define gen_messages_ssl gen_messages_plain
-static void*
-set_ssl_transport(int sock)
-{
-  return NULL;
-}
-
-static void
-release_ssl_transport(void *ssl_connect)
-{
-  return;
-}
-#endif
 
 static guint64
 gen_messages_plain(ActiveThreadContext *ctx, int id, FILE *readfrom)
@@ -926,7 +909,6 @@ active_thread(gpointer st)
               fprintf(stderr,"Can't create ssl connection\n");
               exit(1);
             }
-#if ENABLE_SSL
           g_string_sprintf(ehlo,"EHLO\n");
           SSL_write(ssl_transport, ehlo->str, ehlo->len);
           SSL_read(ssl_transport, cbuf, 256);
@@ -947,7 +929,6 @@ active_thread(gpointer st)
             {
               fprintf(stderr,"EXIT BAD SERVER REPLY: %s\n",cbuf);
             }
-#endif
         }
       else if (allow_compress && use_zlib)
         {
@@ -1007,7 +988,6 @@ use_plain_transport:
     {
       count = (usessl ? gen_messages_ssl : gen_messages_plain)(ctx, id, readfrom);
     }
-#if ENABLE_SSL
   else if (usessl)
     {
       count = gen_messages(send_ssl, ssl_transport, id, readfrom);
@@ -1016,7 +996,6 @@ use_plain_transport:
     {
       count = gen_messages_plain(ctx, id, readfrom);
     }
-#endif
   if (rltp && rltp_chunk_counters[id])
     {
       char cbuf[256];
@@ -1063,9 +1042,7 @@ static GOptionEntry loggen_options[] = {
   { "no-framing", 'F', G_OPTION_FLAG_REVERSE, G_OPTION_ARG_NONE, &framing, "Don't use syslog-protocol style framing, even if syslog-proto is set", NULL },
   { "active-connections", 0, 0, G_OPTION_ARG_INT, &active_connections, "Number of active connections to the server (default = 1)", "<number>" },
   { "idle-connections", 0, 0, G_OPTION_ARG_INT, &idle_connections, "Number of inactive connections to the server (default = 0)", "<number>" },
-#if ENABLE_SSL
   { "use-ssl", 'U', 0, G_OPTION_ARG_NONE, &usessl, "Use ssl layer", NULL },
-#endif
   { "read-file", 'R', 0, G_OPTION_ARG_STRING, &read_file, "Read log messages from file", "<filename>" },
   { "loop-reading", 'l', 0, G_OPTION_ARG_NONE, &loop_reading, "Read the file specified in read-file option in loop (it will restart the reading if reached the end of the file)", NULL },
   { "skip-tokens", 0, 0, G_OPTION_ARG_INT, &skip_tokens, "Skip the given number of tokens (delimined by a space) at the beginning of each line (default value: 3)", "<number>" },
@@ -1158,7 +1135,6 @@ main(int argc, char *argv[])
       message_length = MAX_MESSAGE_LENGTH;
     }
 
-#if ENABLE_SSL
   if (usessl)
     {
       /* Initialize SSL library */
@@ -1168,7 +1144,6 @@ main(int argc, char *argv[])
     }
     SSL_load_error_strings();
     ERR_load_crypto_strings();
-#endif
   if (syslog_proto || rltp)
     framing = 1;
 
@@ -1265,9 +1240,7 @@ main(int argc, char *argv[])
       fprintf(stderr, "Loggen doesn't support more than 10k threads.\n");
       return 2;
     }
-#if ENABLE_SSL
   thread_setup();
-#endif
   /* used for startup & to signal inactive threads to exit */
   thread_cond = g_cond_new();
   /* active threads signal when they are ready */

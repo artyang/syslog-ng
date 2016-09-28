@@ -39,6 +39,7 @@
 #include "mainloop.h"
 #include "plugin.h"
 #include "reloc.h"
+#include "gmodule.h"
 
 #include <sys/types.h>
 #include <stdio.h>
@@ -59,10 +60,8 @@
 #include <iv.h>
 #include <iv_signal.h>
 
-#if ENABLE_SSL
 #include <openssl/ssl.h>
 #include <openssl/err.h>
-#endif
 
 static gchar *install_dat_filename;
 static gchar *installer_version = NULL;
@@ -73,6 +72,8 @@ static gboolean dummy = FALSE;
 #ifdef YYDEBUG
 extern int cfg_parser_debug;
 #endif
+
+extern gboolean is_fips_enabled;
 
 static GOptionEntry syslogng_options[] = 
 {
@@ -147,7 +148,7 @@ version(void)
   printf("Enable-TCP-Wrapper: %s\n",  ON_OFF_STR(ENABLE_TCP_WRAPPER));
   printf("Enable-Linux-Caps: %s\n",   ON_OFF_STR(ENABLE_LINUX_CAPS));
   printf("Enable-Pcre: %s\n",         ON_OFF_STR(ENABLE_PCRE));
-  printf("Enable-FIPS: %s\n",         ON_OFF_STR(ENABLE_FIPS));
+  printf("Enable-FIPS: %s\n",         ON_OFF_STR(is_fips_enabled));
   printf("Enable-Systemd: %s\n",      ON_OFF_STR(ENABLE_SYSTEMD));
 }
 
@@ -178,7 +179,6 @@ setup_caps (void)
 
 #endif
 
-#if ENABLE_SSL && ENABLE_FIPS
 static gboolean
 check_random_source_for_fips_selftest()
 {
@@ -208,12 +208,11 @@ check_random_source_for_fips_selftest()
     {
       if (i > 0)
         fprintf(stderr, ", ");
-      fprintf(stderr, randomfiles[i]);
+      fprintf(stderr, "%s", randomfiles[i]);
     }
   fprintf(stderr, ")\n");
   return FALSE;
 }
-#endif
 
 int 
 main(int argc, char *argv[])
@@ -261,17 +260,18 @@ main(int argc, char *argv[])
       return 0;
     }
 
-#if ENABLE_SSL && ENABLE_FIPS
-  if (!check_random_source_for_fips_selftest())
-    return 1;
-  if (!FIPS_mode_set (1))
+  if (is_fips_enabled)
     {
-      ERR_load_crypto_strings();
-      ERR_print_errors_fp(stderr);
-      fprintf(stderr, "FIPS-mode could not be enabled\n");
-      return 1;
+      if (!check_random_source_for_fips_selftest())
+        return 1;
+      if (!FIPS_mode_set (1))
+        {
+          ERR_load_crypto_strings();
+          ERR_print_errors_fp(stderr);
+          fprintf(stderr, "FIPS-mode could not be enabled\n");
+          return 1;
+        }
     }
-#endif
 
   if (debug_flag)
     {

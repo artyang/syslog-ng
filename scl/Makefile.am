@@ -33,4 +33,5 @@ uninstall-local:
 	for cfg in $(SCL_CONFIGS); do \
 		rm -f $(DESTDIR)$(sysconfdir)/$${cfg}; \
 	done
+	chmod +w -R $(DESTDIR)$(scldir)
 	rm -rf $(DESTDIR)$(scldir)

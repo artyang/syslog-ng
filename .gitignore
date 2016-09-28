@@ -67,5 +67,7 @@ windows-binaries
 *.pyc
 compile
 test-driver
-sbuild/build
+sbuild/*
+!sbuild/config.yml
 sbuild.py
+srelease/dist

@@ -1,26 +1,11 @@
-apply plugin: 'java'
-apply plugin: 'eclipse'
-
 project.buildDir = syslogBuildDir+'/hdfs/gradle'
 
-repositories {
-maven {
-       url "http://archiva.syslog-ng.balabit:8080/repository/internal"
-       credentials {
-                        username "testbot"
-                        password "titkos12"
-       }
-    }
-   flatDir {
-       dirs syslogDepsDir
-       dirs syslogBuildDir + '/common/gradle/libs'
-   }
-}
-
 dependencies {
+    compile fileTree(dir: "/usr/lib/syslog-ng-java-module-dependency-jars/jars", includes: ['*.jar'])
     compile 'org.apache.hadoop:hadoop-hdfs:2.7.1'
     compile 'org.apache.hadoop:hadoop-common:2.7.1'
     compile name: 'syslog-ng-common'
     compile name: 'syslog-ng-core'
     compile 'log4j:log4j:1.2.17'
 }
+

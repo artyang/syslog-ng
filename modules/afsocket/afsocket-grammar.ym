@@ -77,18 +77,13 @@ fallback_journald_if_required(LogDriver *sd)
 #endif
 #endif
 
-#if ENABLE_SSL /* BEGIN MARK: tls */
 #include "tlscontext.h"
-#endif         /* END MARK */
 
 
 static SocketOptions *last_sock_options;
 static gint last_addr_family = AF_INET;
 
-#if ENABLE_SSL
 TLSContext *last_tls_context;
-#endif
-
 
 #if ! ENABLE_IPV6
 #undef AF_INET6
@@ -328,20 +323,14 @@ source_afinet_tcp_options
 
 source_afinet_tcp_option
         : source_afinet_option
-/* BEGIN MARK: tls */
 	| KW_TLS
 	  {
-#if ENABLE_SSL
 	    last_tls_context = tls_context_new(TM_SERVER);
-#endif
 	  }
 	  '(' tls_options ')'
 	  {
-#if ENABLE_SSL
 	    afsocket_sd_set_tls_context(last_driver, last_tls_context);
-#endif
           }
-/* END MARK */
 	| source_afsocket_stream_params		{}
 	;
 
@@ -422,15 +411,11 @@ source_afsyslog_option
           } ')'
       | KW_TLS
           {
-            #if ENABLE_SSL
             last_tls_context = tls_context_new(TM_SERVER);
-            #endif
           }
         '(' tls_options ')'
           {
-            #if ENABLE_SSL
               afsocket_sd_set_tls_context(last_driver, last_tls_context);
-            #endif
           }
 	| source_afsocket_stream_params		{}
 	;
@@ -565,15 +550,11 @@ dest_afinet_tcp_option
 	: dest_afinet_option
 	| KW_TLS
 	  {
-#if ENABLE_SSL
 	    last_tls_context = tls_context_new(TM_CLIENT);
-#endif
 	  }
 	  '(' tls_options ')'
 	  {
-#if ENABLE_SSL
 	    afsocket_dd_set_tls_context(last_driver, last_tls_context);
-#endif
           }
 	;
 
@@ -649,15 +630,11 @@ dest_afsyslog_option
 	| KW_SPOOF_IF '(' string ')'		{ afinet_dd_set_spoof_if(last_driver, $3); free($3); }
 	| KW_TLS
 	  {
-#if ENABLE_SSL
 	    last_tls_context = tls_context_new(TM_CLIENT);
-#endif
 	  }
 	  '(' tls_options ')'
 	  {
-#if ENABLE_SSL
 	    afsocket_dd_set_tls_context(last_driver, last_tls_context);
-#endif
           }
 	;
 
@@ -688,11 +665,7 @@ tls_options
 	;
 
 tls_option
-        : KW_IFDEF {
-#if ENABLE_SSL
-}
-
-	| KW_PEER_VERIFY '(' string ')'
+	: KW_PEER_VERIFY '(' string ')'
 	  {
 	    last_tls_context->verify_mode = tls_lookup_verify_mode($3);
             free($3);
@@ -754,9 +727,6 @@ tls_option
 	    last_tls_context->cert_subject = g_strdup($3);
 	    free($3);
 	  }
-        | KW_ENDIF {
-#endif
-}
         ;
 
 

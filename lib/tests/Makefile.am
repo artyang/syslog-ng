@@ -9,9 +9,7 @@ LDADD = $(top_builddir)/lib/libsyslog-ng.la $(top_builddir)/libtest/libsyslog-ng
 
 export top_srcdir
 
-check_PROGRAMS =			\
-    test_compat \
-	test_utf8utils
+check_PROGRAMS = test_compat test_utf8utils
 
 test_utf8utils_SOURCES = test_utf8utils.c
 test_compat_SOURCES = test_compat.c

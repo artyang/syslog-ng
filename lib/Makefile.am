@@ -40,7 +40,7 @@ pkginclude_HEADERS = 		\
 	filter-expr-parser.h	\
 	filter-in-list.h	\
 	filter.h		\
-    groupset.h      \
+	groupset.h  \
 	gsocket.h		\
 	gsockaddr.h		\
   hostname.h  \

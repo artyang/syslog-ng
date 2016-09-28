@@ -45,6 +45,8 @@
 #define DATA_SIZE 64
 #define INITIAL_ENTRY_NUM 1000
 
+#define PERSIST_FILENAME "test_values.persist"
+
 gint NUMBER_OF_ENTRIES = INITIAL_ENTRY_NUM;
 gint NUMBER_OF_ENTRIES_TO_BE_ADDED = 1e03;
 gint RUN = 1;
@@ -123,8 +125,8 @@ void
 setup()
 {
   int i;
-  unlink("test_values.persist");
-  state = persist_state_new("test_values.persist");
+  unlink(PERSIST_FILENAME);
+  state = persist_state_new(PERSIST_FILENAME);
   if (!persist_state_start(state))
     {
       fprintf(stderr, "Error starting persist_state object\n");
@@ -139,7 +141,9 @@ setup()
 void
 teardown()
 {
+  persist_state_commit(state);
   persist_state_free(state);
+  unlink(PERSIST_FILENAME);
 }
 
 void*

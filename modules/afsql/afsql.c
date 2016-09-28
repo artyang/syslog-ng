@@ -519,7 +519,6 @@ afsql_dd_create_index(AFSqlDestDriver *self, const gchar *table, const gchar *co
       if ((strlen(table) + strlen(column)) > 25)
         {
 
-#if ENABLE_SSL
           guchar hash[MD5_DIGEST_LENGTH];
           gchar hash_str[31];
           gchar *cat = g_strjoin("_", table, column, NULL);
@@ -532,12 +531,6 @@ afsql_dd_create_index(AFSqlDestDriver *self, const gchar *table, const gchar *co
           hash_str[0] = 'i';
           g_string_printf(query_string, "CREATE INDEX %s ON %s (%s)",
               hash_str, table, column);
-#else
-          msg_warning("The name of the index would be too long for Oracle to handle and OpenSSL was not detected which would be used to generate a shorter name. Please enable SSL support in order to use this combination.",
-                      evt_tag_str("table", table),
-                      evt_tag_str("column", column),
-                      NULL);
-#endif
         }
       else
         g_string_printf(query_string, "CREATE INDEX %s_%s_idx ON %s (%s)",
@@ -1407,23 +1400,26 @@ afsql_dd_init(LogPipe *s)
   if (!dbi_initialized)
     {
       gint rc = dbi_initialize_r(dbi_driver_dir, &dbi_instance);
-
-      if (rc < 0)
+      if (rc <= 0)
         {
-          /* NOTE: errno might be unreliable, but that's all we have */
-          msg_error("Unable to initialize database access (DBI)",
-                    evt_tag_int("rc", rc),
-                    evt_tag_errno("error", errno),
-                    NULL);
-          goto error;
+          rc = dbi_initialize_r(NULL, &dbi_instance);
+          if (rc < 0)
+            {
+              /* NOTE: errno might be unreliable, but that's all we have */
+              msg_error("Unable to initialize database access (DBI)",
+                        evt_tag_int("rc", rc),
+                        evt_tag_errno("error", errno),
+                        NULL);
+              goto error;
+            }
+          else if (rc == 0)
+            {
+              msg_error("The database access library (DBI) reports no usable SQL drivers, perhaps DBI drivers are not installed properly",
+                        NULL);
+              goto error;
+            }
         }
-      else if (rc == 0)
-        {
-          msg_error("The database access library (DBI) reports no usable SQL drivers, perhaps DBI drivers are not installed properly",
-                    NULL);
-          goto error;
-        }
-      else
+      if (rc > 0)
         {
           dbi_initialized = TRUE;
         }

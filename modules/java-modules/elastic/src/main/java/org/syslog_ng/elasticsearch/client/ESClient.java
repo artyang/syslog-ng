@@ -24,8 +24,11 @@
 package org.syslog_ng.elasticsearch.client;
 
 import java.io.File;
+import java.net.URI;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.nio.file.Paths;
+
 import org.apache.log4j.Logger;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequestBuilder;
