@@ -1,7 +1,7 @@
 name: syslog-ng-premium-edition
 builder:
   name: SyslogNgBuilder
-  configure_options: --disable-debug --with-ivykis=system --enable-stmp --with-libmongo-client=system
+  configure_options: --disable-debug --enable-stmp
 platforms:
   - aix-6.1/powerpc
   - hpux-11v2/ia64

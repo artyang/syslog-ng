@@ -42,6 +42,8 @@ gchar *ctlfilename;
 
 gchar *qdisk_dir = NULL;
 
+gboolean is_fips_enabled;
+
 INITIALIZER(init_paths)
 {
   /* initialize the SYSLOGNG_PREFIX-related variables */
@@ -72,12 +74,11 @@ INITIALIZER(init_paths)
   module_path = get_reloc_string(MODULE_PATH);
 }
 
-gboolean is_fips_enabled;
 
 INITIALIZER(check_fips)
 {
   gpointer fips_selftest_func;
   GModule *mod = g_module_open("libcrypto.so", G_MODULE_BIND_LAZY);
   if (mod)
-    is_fips_enabled =  g_module_symbol(mod, "FIPS_selftest", (gpointer *) &fips_selftest_func);
+    is_fips_enabled =  g_module_symbol(mod, "FIPS_selftest", &fips_selftest_func);
 }
