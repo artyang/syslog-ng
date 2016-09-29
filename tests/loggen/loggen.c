@@ -425,7 +425,7 @@ gen_next_message(FILE *source, char *buf, int buflen)
 
   if (dont_parse)
     {
-      linelen = strnlen(buf, buflen);
+      linelen = strlen(buf);
       return linelen;
     }
 
