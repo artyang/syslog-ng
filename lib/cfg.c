@@ -101,8 +101,10 @@ static void config_show_start_message(GlobalConfig *self)
   msg_notice("syslog-ng starting up",
              evt_tag_str("version", get_version()),
              evt_tag_printf("cfg-fingerprint","%s", self->cfg_fingerprint),
-             evt_tag_printf("FIPS-mode","%s", (FIPS_mode() ? "enabled" : "disabled")),
              evt_tag_id(MSG_APPLICATION_STARTED),
+             NULL);
+  msg_notice("Fips information",
+             evt_tag_printf("FIPS-mode","%s", (FIPS_mode() ? "enabled" : "disabled")),
              NULL);
   return;
 }
