@@ -103,7 +103,7 @@ static void config_show_start_message(GlobalConfig *self)
              evt_tag_printf("cfg-fingerprint","%s", self->cfg_fingerprint),
              evt_tag_id(MSG_APPLICATION_STARTED),
              NULL);
-  msg_notice("Fips information",
+  msg_notice("FIPS information",
              evt_tag_printf("FIPS-mode","%s", (FIPS_mode() ? "enabled" : "disabled")),
              NULL);
   return;
