@@ -5,8 +5,8 @@ configurations {
 }
 
 dependencies {
-    compile 'org.elasticsearch:elasticsearch:2.2.0'
-    compile 'org.elasticsearch.plugin:shield:2.2.0'
+    compile 'org.elasticsearch:elasticsearch:2.4.0'
+    compile 'org.elasticsearch.plugin:shield:2.4.0'
     compile 'io.searchbox:jest:2.0.2'
     compile name: 'syslog-ng-common'
     compile name: 'syslog-ng-core'
