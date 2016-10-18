@@ -238,6 +238,7 @@ libsyslog_ng_la_SOURCES += hostname_win.c \
                            tlswincrypt.c  \
                            control_server_windows.c
 
+libsyslog_ng_la_LIBADD += -lcrypt32
 endif
 
 
