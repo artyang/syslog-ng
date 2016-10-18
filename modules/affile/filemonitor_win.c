@@ -219,14 +219,6 @@ file_monitor_free(FileMonitor *s)
   return;
 }
 
-void
-file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data)
-{
-  self->file_callback = file_callback;
-  self->user_data = user_data;
-  return;
-}
-
 gboolean
 file_monitor_start_monitoring(FileMonitorWindows* self)
 {

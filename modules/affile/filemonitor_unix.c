@@ -251,26 +251,6 @@ monitor_inotify_new(FileMonitor *monitor)
 
 #endif
 
-void
-file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data)
-{
-  self->file_callback = file_callback;
-  self->user_data = user_data;
-}
-
-void
-file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data)
-{
-  self->destroy_callback = destroy_callback;
-  self->user_data = user_data;
-}
-
-void
-file_monitor_set_poll_freq(FileMonitor *self, gint poll_freq)
-{
-  self->poll_freq = poll_freq;
-}
-
 /**
  *  Problem: g_file_test(filename, G_FILE_TEST_EXISTS) invokes access(),
  *  that would check against real UID, not the effective UID.
