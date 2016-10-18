@@ -956,6 +956,12 @@ affile_sd_set_multi_line_garbage(LogDriver *s, gchar *garbage)
   return TRUE;
 }
 
+void
+affile_sd_set_force_directory_polling(LogDriver *s, gboolean force_directory_polling)
+{
+  AFFileSourceDriver *self = (AFFileSourceDriver *) s;
+  self->force_directory_polling = force_directory_polling;
+}
 
 
 /*
