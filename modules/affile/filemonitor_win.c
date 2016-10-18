@@ -320,12 +320,6 @@ file_monitor_stop(FileMonitor *s)
 }
 
 void
-file_monitor_start(FileMonitor *s)
-{
-  return;
-}
-
-void
 file_monitor_deinit(FileMonitor *s)
 {
   file_monitor_stop(s);
