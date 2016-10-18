@@ -52,7 +52,6 @@ void file_monitor_free(FileMonitor *self);
 void file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data);
 void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data);
 void file_monitor_set_poll_freq(FileMonitor *self, gint poll_freq);
-gboolean file_monitor_use_timeout(FileMonitor *self);
 gboolean file_monitor_watch_directory(FileMonitor *self, const gchar *filename);
 gboolean file_monitor_stop(FileMonitor *self);
 void file_monitor_deinit(FileMonitor *self);
