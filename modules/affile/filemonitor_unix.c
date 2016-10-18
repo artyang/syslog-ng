@@ -621,12 +621,10 @@ file_monitor_watch_directory(FileMonitor *self, const gchar *filename)
       /* Setup inotify, if supported */
 #if ENABLE_MONITOR_INOTIFY
       case MONITOR_INOTIFY:
-        msg_debug("Using inotiy based filemonitor", NULL);
         source = file_monitor_create_inotify(self, base_dir);
         break;
 #endif
       case MONITOR_POLL:
-        msg_debug("Using poll based filemonitor", NULL);
         source = file_monitor_create_poll(self, base_dir);
         break;
       default:
