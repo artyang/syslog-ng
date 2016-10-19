@@ -349,8 +349,7 @@ log_reader_new_memory_source(LogReaderOptions *options, guint32 read_buffer_leng
 static void
 _free(LogPipe *s)
 {
-  LogReader *self = (LogReader *)s;
-  log_reader_free(self);
+  log_reader_free(s);
   unlink(PERSIST_FILENAME);
 }
 
