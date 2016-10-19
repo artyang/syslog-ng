@@ -30,7 +30,7 @@
 #include "gprocess.h"
 #include "stats.h"
 #include "mainloop.h"
-#include "filemonitor.h"
+#include "filemonitor/filemonitor.h"
 #include "versioning.h"
 #include "state.h"
 #include "cfg.h"

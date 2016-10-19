@@ -32,7 +32,7 @@
 #include "mainloop.h"
 #include "mainloop-call.h"
 #include "mainloop-io-worker.h"
-#include "filemonitor.h"
+#include "filemonitor/filemonitor.h"
 #include "versioning.h"
 #include <sys/types.h>
 #include <sys/stat.h>

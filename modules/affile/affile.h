@@ -27,7 +27,7 @@
 #include "driver.h"
 #include "logreader.h"
 #include "logwriter.h"
-#include "filemonitor.h"
+#include "filemonitor/filemonitor.h"
 #include "uniq_queue.h"
 
 #define AFFILE_PIPE        0x00000001
