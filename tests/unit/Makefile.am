@@ -60,7 +60,8 @@ check_PROGRAMS =			\
 	test_hashtree \
 	test_hds \
 	test_stats \
-	test_query_cmds
+	test_query_cmds \
+	test_logmsg_ack
 
 if IS_HPUX
 check_PROGRAMS += test_zone
@@ -154,5 +155,7 @@ test_hashtree_SOURCES = test_hashtree.c
 test_hds_SOURCES = test_hds.c
 test_stats_SOURCES = test_stats.c
 test_query_cmds_SOURCES = test_query_cmds.c
+
+test_logmsg_ack_SOURCES = test_logmsg_ack.c
 
 TESTS = $(check_PROGRAMS)
