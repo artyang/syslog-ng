@@ -119,7 +119,7 @@ _file_is_regular(const gchar *filename)
  *
  * This function checks if the given filename matches the filters.
  **/
-static gboolean
+gboolean
 file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *filename)
 {
   gboolean ret = FALSE;
@@ -149,13 +149,21 @@ _raise_read_permissions(FileMonitor *self)
     raise_read_permissions();
 }
 
+cap_t
+file_monitor_raise_caps(FileMonitor *self)
+{
+  cap_t old = g_process_cap_save();
+  _raise_read_permissions(self);
+  return old;
+}
+
 /**
  *
  * This function performs the initial iteration of a monitored directory.
  * Once this finishes we closely watch all events that change the directory
  * contents.
  **/
-static gboolean
+gboolean
 file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar *basedir)
 {
   GDir *dir = NULL;
