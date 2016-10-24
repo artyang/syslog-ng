@@ -34,7 +34,9 @@ typedef gboolean (*FileMonitorCallbackFunc)(const gchar *filename, gpointer user
 
 typedef enum { MONITOR_NONE, MONITOR_POLL, MONITOR_INOTIFY, MONITOR_WINDOWS } MonitorType;
 
-typedef struct  _FileMonitor
+typedef struct _FileMonitor FileMonitor;
+
+struct _FileMonitor
 {
   GSList *sources;
   GPatternSpec *compiled_pattern;
@@ -45,15 +47,58 @@ typedef struct  _FileMonitor
   MonitorType monitor_type;
   gint poll_freq;
   gboolean privileged;
-} FileMonitor;
+
+  gboolean (*watch_directory)(FileMonitor *self, const gchar *filename);
+  gboolean (*stop)(FileMonitor *self);
+  void (*deinit)(FileMonitor *self);
+  void (*free_fn)(FileMonitor *self);
+};
+
+typedef struct _MonitorBase
+{
+  gchar *base_dir;
+  FileMonitor *file_monitor;
+  gboolean (* callback)(FileMonitor *,struct _MonitorBase *);
+} MonitorBase;
 
 FileMonitor *file_monitor_new();
-void file_monitor_free(FileMonitor *self);
+
+static inline gboolean
+file_monitor_watch_directory(FileMonitor *self, const gchar *filename)
+{
+  if (self->watch_directory)
+    return self->watch_directory(self, filename);
+
+  return FALSE;
+}
+
+static inline gboolean
+file_monitor_stop(FileMonitor *self)
+{
+  if (self->stop)
+    return self->stop(self);
+
+  return FALSE;
+}
+
+static inline void
+file_monitor_deinit(FileMonitor *self)
+{
+  if (self->deinit)
+    self->deinit(self);
+}
+
+static inline void
+file_monitor_free(FileMonitor *self)
+{
+  if (self->free_fn)
+    self->free_fn(self);
+
+  g_free(self);
+}
+
 void file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data);
 void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data);
 void file_monitor_set_poll_freq(FileMonitor *self, gint poll_freq);
-gboolean file_monitor_watch_directory(FileMonitor *self, const gchar *filename);
-gboolean file_monitor_stop(FileMonitor *self);
-void file_monitor_deinit(FileMonitor *self);
 cap_t file_monitor_raise_caps(FileMonitor *self);
 #endif

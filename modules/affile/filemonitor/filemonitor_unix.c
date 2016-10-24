@@ -96,13 +96,6 @@ resolve_to_absolute_path(const gchar *path, const gchar *basedir)
 
 
 /**************************************************************************/
-typedef struct _MonitorBase
-{
-  gchar *base_dir;
-  FileMonitor *file_monitor;
-  gboolean (* callback)(FileMonitor *,struct _MonitorBase *);
-} MonitorBase;
-
 
 static gboolean file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *filename);
 
