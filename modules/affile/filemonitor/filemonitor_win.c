@@ -70,12 +70,12 @@ resolve_to_absolute_path(const gchar *path, const gchar *basedir)
 
 
 /**
- * file_monitor_chk_file:
+ * _file_monitor_chk_file:
  *
  * This function checks if the given filename matches the filters.
  **/
 static gboolean
-file_monitor_chk_file(FileMonitorWindows * monitor, const gchar *base_dir, const gchar *filename, FileActionType action_type)
+_file_monitor_chk_file(FileMonitorWindows * monitor, const gchar *base_dir, const gchar *filename, FileActionType action_type)
 {
   gboolean ret = FALSE;
   gchar *path = g_build_filename(base_dir, filename, NULL);
@@ -91,7 +91,7 @@ file_monitor_chk_file(FileMonitorWindows * monitor, const gchar *base_dir, const
     {
       /* FIXME: resolve symlink */
       /* callback to affile */
-      msg_debug("file_monitor_chk_file filter passed", evt_tag_str("file",path),NULL);
+      msg_debug("_file_monitor_chk_file filter passed", evt_tag_str("file",path),NULL);
       monitor->super.file_callback(path, monitor->super.user_data, action_type);
       ret = TRUE;
     }
@@ -100,7 +100,7 @@ file_monitor_chk_file(FileMonitorWindows * monitor, const gchar *base_dir, const
 }
 
 static gboolean
-file_monitor_list_directory(FileMonitorWindows *self, const gchar *basedir)
+_file_monitor_list_directory(FileMonitorWindows *self, const gchar *basedir)
 {
   GDir *dir = NULL;
   GError *error = NULL;
@@ -122,17 +122,17 @@ file_monitor_list_directory(FileMonitorWindows *self, const gchar *basedir)
         {
           /* Recursion is enabled */
           if (self->super.recursion)
-            file_monitor_list_directory(self, path); /* construct a new source to monitor the directory */
+            _file_monitor_list_directory(self, path); /* construct a new source to monitor the directory */
         }
       else
         {
           /* if file or symlink, match with the filter pattern */
-          file_monitor_chk_file(self, basedir, file_name, ACTION_NONE);
+          _file_monitor_chk_file(self, basedir, file_name, ACTION_NONE);
         }
       files_count++;
       g_free(path);
     }
-  msg_trace("file_monitor_list_directory directory scanning has been finished", evt_tag_int("Sum of file(s) found in directory", files_count), NULL);
+  msg_trace("_file_monitor_list_directory directory scanning has been finished", evt_tag_int("Sum of file(s) found in directory", files_count), NULL);
   g_dir_close(dir);
   if (self->super.file_callback != NULL)
     self->super.file_callback(END_OF_LIST, self->super.user_data,ACTION_NONE);
@@ -160,7 +160,7 @@ completition_routine(FileMonitorWindows *self, DWORD dwErrorCode, DWORD dwNumber
         action_type = ACTION_DELETED;
       else if (pNotify->Action == FILE_ACTION_MODIFIED)
         action_type = ACTION_MODIFIED;
-      file_monitor_chk_file(self, self->base_dir, szFile, action_type);
+      _file_monitor_chk_file(self, self->base_dir, szFile, action_type);
     }
   while(pNotify->NextEntryOffset != 0);
   if (ReadDirectoryChangesW(self->hDir, self->buffer, FILE_MONITOR_BUFFER_SIZE, self->super.recursion, self->notify_flags, NULL, &self->ol, NULL) == 0)
@@ -200,7 +200,7 @@ static gboolean
 file_monitor_windows_start_monitoring(FileMonitorWindows* self)
 {
 
-  file_monitor_list_directory(self,self->base_dir);
+  _file_monitor_list_directory(self,self->base_dir);
   self->hDir = CreateFile(self->base_dir, FILE_LIST_DIRECTORY, FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED, NULL);
   if (self->hDir == INVALID_HANDLE_VALUE)
     {
