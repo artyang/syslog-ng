@@ -26,8 +26,5 @@
 
 gchar *resolve_to_absolute_path(const gchar *path, const gchar *basedir);
 cap_t file_monitor_unix_raise_caps(FileMonitor *self);
-gboolean file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *filename);
-gboolean file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar *basedir);
-gboolean file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename);
 
 #endif

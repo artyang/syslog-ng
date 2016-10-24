@@ -105,5 +105,8 @@ FileMonitor *file_monitor_create_instance(gint poll_freq, gboolean force_poll);
 
 void file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data);
 void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data);
+gboolean file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *filename);
+gboolean file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar *basedir);
+gboolean file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename);
 
 #endif
