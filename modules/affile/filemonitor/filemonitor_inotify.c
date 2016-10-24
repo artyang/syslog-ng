@@ -1,3 +1,41 @@
+/*
+ * Copyright (c) 2016 Balabit
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ * As an additional exemption you are allowed to compile & link against the
+ * OpenSSL libraries as published by the OpenSSL project. See the file
+ * COPYING for details.
+ *
+ */
+
+#include "filemonitor_inotify.h"
+#include "filemonitor_unix.h"
+
+#include "messages.h"
+#include "mainloop.h"
+#include "timeutils.h"
+#include "misc.h"
+#include <unistd.h>
+#include <string.h>
+#include <stdio.h>
+#include <errno.h>
+#include <iv.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+
 #if ENABLE_MONITOR_INOTIFY
 # ifdef HAVE_SYS_INOTIFY_H
 #  include <sys/inotify.h>
@@ -78,7 +116,6 @@ monitor_inotify_process_input(gpointer s)
 static void
 monitor_inotify_init_watches(MonitorInotify *self)
 {
-
   IV_FD_INIT(&self->fd_watch);
   self->fd_watch.cookie = self;
   self->fd_watch.handler_in = monitor_inotify_process_input;
@@ -142,7 +179,7 @@ monitor_inotify_new(FileMonitor *monitor)
   return &self->super;
 }
 
-MonitorBase *
+static MonitorBase *
 file_monitor_create_inotify(FileMonitor *self, const gchar *base_dir)
 {
   MonitorBase *source = monitor_inotify_new(self);
@@ -157,13 +194,7 @@ file_monitor_create_inotify(FileMonitor *self, const gchar *base_dir)
   return source;
 }
 
-void
-file_monitor_start_inotify(FileMonitor *self, MonitorBase *source, const gchar *base_dir)
-{
-  file_monitor_list_directory(self, source, base_dir);
-}
-
-void
+static void
 file_monitor_inotify_destroy(gpointer source,gpointer monitor)
 {
   MonitorInotify *self = (MonitorInotify *)source;
@@ -182,4 +213,131 @@ file_monitor_inotify_destroy(gpointer source,gpointer monitor)
   if (self->super.base_dir)
     g_free(self->super.base_dir);
 }
+
+static void
+file_monitor_inotify_start(FileMonitor *self, MonitorBase *source, const gchar *base_dir)
+{
+  file_monitor_list_directory(self, source, base_dir);
+}
+
+static gboolean
+file_monitor_inotify_watch_directory(FileMonitor *self, const gchar *filename)
+{
+  MonitorBase *source = NULL;
+  gchar *base_dir;
+  g_assert(self);
+  g_assert(filename);
+
+  if (!g_file_test(filename, G_FILE_TEST_IS_DIR))
+    {
+      /* if the filename is not a directory then remove the file part and try only the directory part */
+      gchar *dir_part = g_path_get_dirname (filename);
+
+      if (g_path_is_absolute (dir_part))
+        {
+          base_dir = resolve_to_absolute_path(dir_part, G_DIR_SEPARATOR_S);
+        }
+      else
+        {
+          gchar *wd = g_get_current_dir();
+          base_dir = resolve_to_absolute_path(dir_part, wd);
+          g_free(wd);
+        }
+
+      g_free(dir_part);
+
+      if (!self->compiled_pattern)
+        {
+          gchar *pattern = g_path_get_basename(filename);
+          self->compiled_pattern = g_pattern_spec_new(pattern);
+          g_free(pattern);
+        }
+    }
+  else
+    {
+       base_dir = g_strdup(filename);
+    }
+
+  if (base_dir == NULL || !g_path_is_absolute (base_dir))
+    {
+      msg_error("Can't monitor directory, because it can't be resolved as absolute path", evt_tag_str("base_dir", base_dir), NULL);
+      return FALSE;
+    }
+
+  if (file_monitor_is_dir_monitored(self, base_dir))
+    {
+      /* We are monitoring this directory already, so ignore it */
+      g_free(base_dir);
+      return TRUE;
+    }
+  else
+    {
+      msg_debug("Monitoring new directory", evt_tag_str("basedir", base_dir), NULL);
+    }
+
+  source = file_monitor_create_inotify(self, base_dir);
+
+  if (source == NULL)
+    {
+      msg_error("Failed to initialize file monitoring", evt_tag_str("basedir", base_dir), NULL);
+      g_free(base_dir);
+      return FALSE;
+    }
+
+  self->sources = g_slist_append(self->sources, source);
+  file_monitor_inotify_start(self, source, base_dir);
+  g_free(base_dir);
+  return TRUE;
+}
+
+static void
+file_monitor_inotify_deinit(FileMonitor *self)
+{
+  if (self->sources)
+    g_slist_foreach(self->sources, file_monitor_inotify_destroy, NULL);
+}
+
+static void
+file_monitor_inotify_free(FileMonitor *self)
+{
+  if (self->compiled_pattern)
+    {
+      g_pattern_spec_free(self->compiled_pattern);
+      self->compiled_pattern = NULL;
+    }
+  if (self->sources)
+    {
+      GSList *source_list = self->sources;
+      while(source_list)
+        {
+          g_free(source_list->data);
+          source_list = source_list->next;
+        }
+      g_slist_free(self->sources);
+      self->sources = NULL;
+    }
+}
+
+/**
+ * file_monitor_new:
+ *
+ * This function constructs a new FileMonitor object.
+ **/
+FileMonitor *
+file_monitor_inotify_new(void)
+{
+  FileMonitor *self = g_new0(FileMonitor, 1);
+
+  self->sources = NULL;
+  self->file_callback = NULL;
+  self->recursion = FALSE;
+  self->privileged = FALSE;
+
+  self->watch_directory = file_monitor_inotify_watch_directory;
+  self->deinit = file_monitor_inotify_deinit;
+  self->free_fn = file_monitor_inotify_free;
+
+  return self;
+}
+
 #endif
