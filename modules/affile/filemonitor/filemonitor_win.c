@@ -50,7 +50,7 @@ typedef struct _FileMonitorWindows
  Resolve symlinks
  Resolve tricki symlinks like a -> ../a/../a/./b
 */
-static gchar*
+gchar*
 resolve_to_absolute_path(const gchar *path, const gchar *basedir)
 {
   gchar *path_name = NULL;

@@ -109,4 +109,6 @@ gboolean file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const
 gboolean file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar *basedir);
 gboolean file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename);
 
+gchar *resolve_to_absolute_path(const gchar *path, const gchar *basedir);
+
 #endif
