@@ -169,17 +169,24 @@ file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename)
 }
 
 FileMonitor *
-file_monitor_create_instance(gint poll_freq, gboolean force_poll)
+file_monitor_create_instance(gint poll_freq, gboolean force_poll, gboolean recursion)
 {
+  FileMonitor *file_monitor;
+
+  if (!force_poll)
+    {
 #if ENABLE_MONITOR_INOTIFY
-  if (!force_poll)
-    return file_monitor_inotify_new();
+      file_monitor = file_monitor_inotify_new();
 #endif
-
 #ifdef G_OS_WIN32
-  if (!force_poll)
-    return file_monitor_windows_new();
+      file_monitor = file_monitor_windows_new();
 #endif
+    }
+  else
+    {
+      file_monitor = file_monitor_poll_new(poll_freq);
+    }
 
-  return file_monitor_poll_new(poll_freq);
+  file_monitor->recursion = recursion;
+  return file_monitor;
 }

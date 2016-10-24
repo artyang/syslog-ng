@@ -174,7 +174,9 @@ void affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
   if (!self->file_monitor)
   {
-    self->file_monitor = file_monitor_create_instance(self->reader_options.follow_freq, self->force_directory_polling);
+    self->file_monitor = file_monitor_create_instance(self->reader_options.follow_freq,
+                                                      self->force_directory_polling,
+                                                      self->recursion);
     self->file_list = uniq_queue_new();
   }
 }

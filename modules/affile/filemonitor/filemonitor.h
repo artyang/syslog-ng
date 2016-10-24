@@ -101,7 +101,7 @@ file_monitor_free(FileMonitor *self)
   g_free(self);
 }
 
-FileMonitor *file_monitor_create_instance(gint poll_freq, gboolean force_poll);
+FileMonitor *file_monitor_create_instance(gint poll_freq, gboolean force_poll, gboolean recursion);
 
 void file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data);
 void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data);

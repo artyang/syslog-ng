@@ -908,8 +908,7 @@ void
 affile_sd_set_recursion(LogDriver *s, const gint recursion)
 {
   AFFileSourceDriver *self = (AFFileSourceDriver *) s;
-  if (self->file_monitor)
-    self->file_monitor->recursion = recursion;
+  self->recursion = recursion;
 }
 
 

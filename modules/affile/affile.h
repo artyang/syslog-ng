@@ -52,6 +52,7 @@ typedef struct _AFFileSourceDriver
   FileMonitor *file_monitor;
   UniqQueue *file_list;
   gboolean is_regular;
+  gboolean recursion;
   gboolean force_directory_polling;
 } AFFileSourceDriver;
 
