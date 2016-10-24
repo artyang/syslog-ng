@@ -46,6 +46,7 @@ struct _FileMonitor
 
   gboolean (*watch_directory)(FileMonitor *self, const gchar *filename);
   gboolean (*stop)(FileMonitor *self);
+  cap_t (*raise_caps)(FileMonitor *self);
   void (*deinit)(FileMonitor *self);
   void (*free_fn)(FileMonitor *self);
 };
@@ -75,6 +76,15 @@ file_monitor_stop(FileMonitor *self)
   return FALSE;
 }
 
+static inline cap_t
+file_monitor_raise_caps(FileMonitor *self)
+{
+  if (self->raise_caps)
+    return self->raise_caps(self);
+
+  return NULL;
+}
+
 static inline void
 file_monitor_deinit(FileMonitor *self)
 {
@@ -95,5 +105,5 @@ FileMonitor *file_monitor_create_instance(gint poll_freq, gboolean force_poll);
 
 void file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data);
 void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data);
-cap_t file_monitor_raise_caps(FileMonitor *self);
+
 #endif

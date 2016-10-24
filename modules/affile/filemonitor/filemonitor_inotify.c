@@ -334,6 +334,7 @@ file_monitor_inotify_new(void)
   self->privileged = FALSE;
 
   self->watch_directory = file_monitor_inotify_watch_directory;
+  self->raise_caps = file_monitor_unix_raise_caps;
   self->deinit = file_monitor_inotify_deinit;
   self->free_fn = file_monitor_inotify_free;
 

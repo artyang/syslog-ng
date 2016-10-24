@@ -150,7 +150,7 @@ _raise_read_permissions(FileMonitor *self)
 }
 
 cap_t
-file_monitor_raise_caps(FileMonitor *self)
+file_monitor_unix_raise_caps(FileMonitor *self)
 {
   cap_t old = g_process_cap_save();
   _raise_read_permissions(self);

@@ -259,6 +259,9 @@ file_monitor_poll_new(gint poll_freq)
   self->poll_freq = poll_freq;
 
   self->super.watch_directory = file_monitor_poll_watch_directory;
+#ifndef G_OS_WIN32
+  self->super.raise_caps = file_monitor_unix_raise_caps;
+#endif
   self->super.deinit = file_monitor_poll_deinit;
   self->super.free_fn = file_monitor_poll_free;
 
