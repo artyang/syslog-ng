@@ -2,6 +2,7 @@ filemonitor_headers = filemonitor/filemonitor.h
 filemonitor_sources = filemonitor/filemonitor.c
 
 if IS_WINDOWS
+filemonitor_headers += filemonitor/filemonitor_win.h
 filemonitor_sources += filemonitor/filemonitor_win.c
 else
 filemonitor_headers += \

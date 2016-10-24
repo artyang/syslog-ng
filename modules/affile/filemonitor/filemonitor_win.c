@@ -21,7 +21,7 @@
  *
  */
 
-#include "filemonitor.h"
+#include "filemonitor_win.h"
 #include "messages.h"
 #include <stdio.h>
 #include <evtlog.h>
@@ -31,7 +31,7 @@
 #define FILE_MONITOR_BUFFER 64*1024
 #define FILE_MONITOR_BUFFER_SIZE 64*1024*sizeof(BYTE)
 
-typedef struct  _FileMonitorWindows
+typedef struct _FileMonitorWindows
 {
   FileMonitor super;
   gchar *base_dir;
@@ -50,7 +50,7 @@ typedef struct  _FileMonitorWindows
  Resolve symlinks
  Resolve tricki symlinks like a -> ../a/../a/./b
 */
-gchar*
+static gchar*
 resolve_to_absolute_path(const gchar *path, const gchar *basedir)
 {
   gchar *path_name = NULL;
@@ -140,7 +140,7 @@ file_monitor_list_directory(FileMonitorWindows *self, const gchar *basedir)
 }
 
 
-VOID CALLBACK
+static VOID CALLBACK
 completition_routine(FileMonitorWindows *self, DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered, LPOVERLAPPED lpOverlapped)
 {
   DWORD offset = 0;
@@ -171,7 +171,7 @@ completition_routine(FileMonitorWindows *self, DWORD dwErrorCode, DWORD dwNumber
   return;
 }
 
-void
+static void
 fd_handler(void *user_data)
 {
   FileMonitorWindows *self = (FileMonitorWindows *)user_data;
@@ -183,29 +183,8 @@ fd_handler(void *user_data)
     }
 }
 
-void check_dir_exists(void *user_data);
-
-FileMonitor *
-file_monitor_new()
-{
-  FileMonitorWindows *self = g_new0(FileMonitorWindows, 1);
-  self->buffer = (BYTE *)g_malloc0( FILE_MONITOR_BUFFER_SIZE);
-  self->buffer_size =  FILE_MONITOR_BUFFER_SIZE;
-  self->notify_flags = FILE_NOTIFY_CHANGE_SIZE|FILE_NOTIFY_CHANGE_LAST_ACCESS|FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION;
-  IV_HANDLE_INIT(&self->monitor_handler);
-  self->monitor_handler.handle = CreateEvent(NULL, FALSE, FALSE, NULL);
-  self->monitor_handler.handler = fd_handler;
-  self->monitor_handler.cookie = self;
-
-  IV_TIMER_INIT(&self->check_dir_timer);
-  self->check_dir_timer.cookie = self;
-  self->check_dir_timer.handler = check_dir_exists;
-
-  return &self->super;
-}
-
-void
-file_monitor_free(FileMonitor *s)
+static void
+file_monitor_windows_free(FileMonitor *s)
 {
   FileMonitorWindows *self = (FileMonitorWindows *)s;
   if (self->super.compiled_pattern)
@@ -215,12 +194,10 @@ file_monitor_free(FileMonitor *s)
   CloseHandle(self->monitor_handler.handle);
   free(self->buffer);
   free(self->base_dir);
-  free(self);
-  return;
 }
 
-gboolean
-file_monitor_start_monitoring(FileMonitorWindows* self)
+static gboolean
+file_monitor_windows_start_monitoring(FileMonitorWindows* self)
 {
 
   file_monitor_list_directory(self,self->base_dir);
@@ -241,11 +218,11 @@ file_monitor_start_monitoring(FileMonitorWindows* self)
   return TRUE;
 }
 
-void
+static void
 check_dir_exists(void *user_data)
 {
   FileMonitorWindows *self = (FileMonitorWindows *)user_data;
-  if (g_file_test(self->base_dir,G_FILE_TEST_IS_DIR) && file_monitor_start_monitoring(self))
+  if (g_file_test(self->base_dir,G_FILE_TEST_IS_DIR) && file_monitor_windows_start_monitoring(self))
     {
       return;
     }
@@ -256,8 +233,8 @@ check_dir_exists(void *user_data)
   msg_trace("Directory still does not exist", evt_tag_str("directory", self->base_dir), NULL);
 }
 
-gboolean
-file_monitor_watch_directory(FileMonitor *s, const gchar *filename)
+static gboolean
+file_monitor_windows_watch_directory(FileMonitor *s, const gchar *filename)
 {
   gchar *base_dir;
   FileMonitorWindows *self = (FileMonitorWindows *)s;
@@ -285,7 +262,7 @@ file_monitor_watch_directory(FileMonitor *s, const gchar *filename)
 
   msg_debug("Monitoring new directory", evt_tag_str("basedir", base_dir), NULL);
 
-  if (!file_monitor_start_monitoring(self))
+  if (!file_monitor_windows_start_monitoring(self))
     {
       iv_validate_now();
       self->check_dir_timer.expires = iv_now;
@@ -295,8 +272,8 @@ file_monitor_watch_directory(FileMonitor *s, const gchar *filename)
   return TRUE;
 }
 
-gboolean
-file_monitor_stop(FileMonitor *s)
+static gboolean
+file_monitor_windows_stop(FileMonitor *s)
 {
   FileMonitorWindows *self = (FileMonitorWindows *)s;
   if (iv_handle_registered(&self->monitor_handler))
@@ -311,15 +288,34 @@ file_monitor_stop(FileMonitor *s)
   return TRUE;
 }
 
-void
-file_monitor_deinit(FileMonitor *s)
+static void
+file_monitor_windows_deinit(FileMonitor *s)
 {
   file_monitor_stop(s);
   return;
 }
 
-cap_t
-file_monitor_raise_caps(FileMonitor *self)
+FileMonitor *
+file_monitor_windows_new(void)
 {
-  return NULL;
+  FileMonitorWindows *self = g_new0(FileMonitorWindows, 1);
+
+  self->super.watch_directory = file_monitor_windows_watch_directory;
+  self->super.stop = file_monitor_windows_stop;
+  self->super.deinit = file_monitor_windows_deinit;
+  self->super.free_fn = file_monitor_windows_free;
+
+  self->buffer = (BYTE *)g_malloc0( FILE_MONITOR_BUFFER_SIZE);
+  self->buffer_size =  FILE_MONITOR_BUFFER_SIZE;
+  self->notify_flags = FILE_NOTIFY_CHANGE_SIZE|FILE_NOTIFY_CHANGE_LAST_ACCESS|FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_CREATION;
+  IV_HANDLE_INIT(&self->monitor_handler);
+  self->monitor_handler.handle = CreateEvent(NULL, FALSE, FALSE, NULL);
+  self->monitor_handler.handler = fd_handler;
+  self->monitor_handler.cookie = self;
+
+  IV_TIMER_INIT(&self->check_dir_timer);
+  self->check_dir_timer.cookie = self;
+  self->check_dir_timer.handler = check_dir_exists;
+
+  return &self->super;
 }
