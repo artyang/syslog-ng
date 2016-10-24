@@ -22,6 +22,8 @@
  */
 
 #include "filemonitor.h"
+#include "filemonitor_inotify.h"
+#include "filemonitor_poll.h"
 
 void
 file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data)
@@ -37,8 +39,13 @@ file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callbac
   self->user_data = user_data;
 }
 
-void
-file_monitor_set_poll_freq(FileMonitor *self, gint poll_freq)
+FileMonitor *
+file_monitor_create_instance(gint poll_freq, gboolean force_poll)
 {
-  self->poll_freq = poll_freq;
+#if ENABLE_MONITOR_INOTIFY
+  if (!force_poll)
+    return file_monitor_inotify_new();
+#endif
+
+  return file_monitor_poll_new(poll_freq);
 }

@@ -839,8 +839,6 @@ affile_sd_init(LogPipe *s)
       /* watch_directory will use the callback, so set it first */
       file_monitor_set_file_callback(self->file_monitor, affile_sd_monitor_callback, self);
 
-      file_monitor_set_poll_freq(self->file_monitor, self->reader_options.follow_freq);
-
       if (!file_monitor_watch_directory(self->file_monitor, self->filename_pattern->str))
         {
           msg_error("Error starting filemonitor",

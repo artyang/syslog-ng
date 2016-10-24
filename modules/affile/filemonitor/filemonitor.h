@@ -42,7 +42,6 @@ struct _FileMonitor
   GSourceFunc destroy_callback;
   gpointer user_data;
   gboolean recursion;
-  gint poll_freq;
   gboolean privileged;
 
   gboolean (*watch_directory)(FileMonitor *self, const gchar *filename);
@@ -57,8 +56,6 @@ typedef struct _MonitorBase
   FileMonitor *file_monitor;
   gboolean (* callback)(FileMonitor *,struct _MonitorBase *);
 } MonitorBase;
-
-FileMonitor *file_monitor_new();
 
 static inline gboolean
 file_monitor_watch_directory(FileMonitor *self, const gchar *filename)
@@ -94,8 +91,9 @@ file_monitor_free(FileMonitor *self)
   g_free(self);
 }
 
+FileMonitor *file_monitor_create_instance(gint poll_freq, gboolean force_poll);
+
 void file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data);
 void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data);
-void file_monitor_set_poll_freq(FileMonitor *self, gint poll_freq);
 cap_t file_monitor_raise_caps(FileMonitor *self);
 #endif
