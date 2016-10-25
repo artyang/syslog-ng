@@ -36,12 +36,6 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
-typedef struct _FileMonitorPoll
-{
-  FileMonitor super;
-  gint poll_freq;
-} FileMonitorPoll;
-
 typedef struct _MonitorPoll
 {
   MonitorBase super;
@@ -65,17 +59,17 @@ file_monitor_poll_destroy(gpointer source,gpointer monitor)
 }
 
 static MonitorPoll *
-monitor_source_poll_new(FileMonitorPoll *monitor)
+monitor_source_poll_new(FileMonitor *monitor)
 {
   MonitorPoll *self = g_new0(MonitorPoll,1);
   self->super.base_dir = NULL;
   self->dir = NULL;
-  self->poll_freq = monitor->poll_freq;
+  self->poll_freq = monitor->options->poll_freq;
   IV_TIMER_INIT(&self->poll_timer);
   self->poll_timer.cookie = self;
   self->poll_timer.handler = file_monitor_poll_timer_callback;
 
-  self->super.file_monitor = (FileMonitor *)monitor;
+  self->super.file_monitor = monitor;
   return self;
 }
 
@@ -91,10 +85,10 @@ static void
 file_monitor_poll_timer_callback(gpointer s)
 {
   MonitorPoll *self = (MonitorPoll *)s;
-  FileMonitorPoll *file_monitor = (FileMonitorPoll *)self->super.file_monitor;
+  FileMonitor *file_monitor = self->super.file_monitor;
 
-  self->poll_freq = file_monitor->poll_freq;
-  file_monitor_process_poll_event(self->super.file_monitor, self);
+  self->poll_freq = file_monitor->options->poll_freq;
+  file_monitor_process_poll_event(file_monitor, self);
   if(iv_timer_registered(&self->poll_timer))
     iv_timer_unregister(&self->poll_timer);
   iv_validate_now();
@@ -122,7 +116,7 @@ monitor_poll_free(MonitorPoll *self)
 }
 
 static MonitorBase *
-file_monitor_create_poll(FileMonitorPoll *self, const gchar *base_dir)
+file_monitor_create_poll(FileMonitor *self, const gchar *base_dir)
 {
   MonitorPoll *source = monitor_source_poll_new(self);
 
@@ -203,7 +197,7 @@ file_monitor_poll_watch_directory(FileMonitor *self, const gchar *filename)
       msg_debug("Monitoring new directory", evt_tag_str("basedir", base_dir), NULL);
     }
 
-  source = file_monitor_create_poll((FileMonitorPoll *)self, base_dir);
+  source = file_monitor_create_poll(self, base_dir);
 
   if (source == NULL)
     {
@@ -252,18 +246,17 @@ file_monitor_poll_free(FileMonitor *self)
  * This function constructs a new FileMonitor object.
  **/
 FileMonitor *
-file_monitor_poll_new(gint poll_freq)
+file_monitor_poll_new(FileMonitorOptions *options)
 {
-  FileMonitorPoll *self = g_new0(FileMonitorPoll, 1);
+  FileMonitor *self = g_new0(FileMonitor, 1);
 
-  self->poll_freq = poll_freq;
-
-  self->super.watch_directory = file_monitor_poll_watch_directory;
+  self->options = options;
+  self->watch_directory = file_monitor_poll_watch_directory;
 #ifndef G_OS_WIN32
-  self->super.raise_caps = file_monitor_unix_raise_caps;
+  self->raise_caps = file_monitor_unix_raise_caps;
 #endif
-  self->super.deinit = file_monitor_poll_deinit;
-  self->super.free_fn = file_monitor_poll_free;
+  self->deinit = file_monitor_poll_deinit;
+  self->free_fn = file_monitor_poll_free;
 
-  return &self->super;
+  return self;
 }

@@ -26,6 +26,6 @@
 
 #include "filemonitor.h"
 
-FileMonitor *file_monitor_poll_new(gint poll_freq);
+FileMonitor *file_monitor_poll_new(FileMonitorOptions *options);
 
 #endif

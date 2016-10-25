@@ -124,7 +124,7 @@ file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar 
       if (g_file_test(path, G_FILE_TEST_IS_DIR))
         {
           /* Recursion is enabled */
-          if (self->recursion)
+          if (self->options->recursion)
             file_monitor_watch_directory(self, path); /* construct a new source to monitor the directory */
         }
       else
@@ -169,32 +169,31 @@ file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename)
 }
 
 static FileMonitor *
-_create_platform_specific_async_file_monitor(void)
+_create_platform_specific_async_file_monitor(FileMonitorOptions *options)
 {
 #if ENABLE_MONITOR_INOTIFY
-  return file_monitor_inotify_new();
+  return file_monitor_inotify_new(options);
 #endif
 
 #ifdef G_OS_WIN32
-  return file_monitor_windows_new();
+  return file_monitor_windows_new(options);
 #endif
 
   return NULL;
 }
 
 FileMonitor *
-file_monitor_create_instance(gint poll_freq, gboolean force_poll, gboolean recursion)
+file_monitor_create_instance(FileMonitorOptions *options)
 {
   FileMonitor *file_monitor = NULL;
 
-  if (!force_poll)
-    file_monitor = _create_platform_specific_async_file_monitor();
+  if (!options->force_directory_polling)
+    file_monitor = _create_platform_specific_async_file_monitor(options);
 
   if (!file_monitor)
-    file_monitor = file_monitor_poll_new(poll_freq);
+    file_monitor = file_monitor_poll_new(options);
 
   g_assert(file_monitor != NULL);
 
-  file_monitor->recursion = recursion;
   return file_monitor;
 }

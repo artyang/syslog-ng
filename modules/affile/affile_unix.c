@@ -317,13 +317,13 @@ affile_file_monitor_stop(AFFileSourceDriver *self)
 void
 affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
+  self->monitor_options.poll_freq = self->reader_options.follow_freq;
+
   if (is_wildcard_filename(filename))
     {
       if (!self->file_monitor)
         {
-          self->file_monitor = file_monitor_create_instance(self->reader_options.follow_freq,
-                                                            self->force_directory_polling,
-                                                            self->recursion);
+          self->file_monitor = file_monitor_create_instance(&self->monitor_options);
           self->file_monitor->privileged = !!(self->flags & AFFILE_PRIVILEGED);
           self->file_list = uniq_queue_new();
         }

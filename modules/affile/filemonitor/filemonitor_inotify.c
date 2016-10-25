@@ -87,7 +87,7 @@ file_monitor_process_inotify_event(FileMonitor *monitor, MonitorInotify *self)
           path = resolve_to_absolute_path(events[i].name, self->super.base_dir);
           if (g_file_test(path, G_FILE_TEST_IS_DIR))
             {
-              if (monitor->recursion)
+              if (monitor->options->recursion)
                 file_monitor_watch_directory(monitor, path);
             }
           else
@@ -324,15 +324,11 @@ file_monitor_inotify_free(FileMonitor *self)
  * This function constructs a new FileMonitor object.
  **/
 FileMonitor *
-file_monitor_inotify_new(void)
+file_monitor_inotify_new(FileMonitorOptions *options)
 {
   FileMonitor *self = g_new0(FileMonitor, 1);
 
-  self->sources = NULL;
-  self->file_callback = NULL;
-  self->recursion = FALSE;
-  self->privileged = FALSE;
-
+  self->options = options;
   self->watch_directory = file_monitor_inotify_watch_directory;
   self->raise_caps = file_monitor_unix_raise_caps;
   self->deinit = file_monitor_inotify_deinit;

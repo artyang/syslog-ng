@@ -27,7 +27,7 @@
 #include "filemonitor.h"
 
 #if ENABLE_MONITOR_INOTIFY
-FileMonitor *file_monitor_inotify_new(void);
+FileMonitor *file_monitor_inotify_new(FileMonitorOptions *options);
 #endif
 
 #endif

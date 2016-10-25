@@ -121,7 +121,7 @@ _file_monitor_list_directory(FileMonitorWindows *self, const gchar *basedir)
       if (g_file_test(path, G_FILE_TEST_IS_DIR))
         {
           /* Recursion is enabled */
-          if (self->super.recursion)
+          if (self->super.options->recursion)
             _file_monitor_list_directory(self, path); /* construct a new source to monitor the directory */
         }
       else
@@ -163,7 +163,7 @@ completition_routine(FileMonitorWindows *self, DWORD dwErrorCode, DWORD dwNumber
       _file_monitor_chk_file(self, self->base_dir, szFile, action_type);
     }
   while(pNotify->NextEntryOffset != 0);
-  if (ReadDirectoryChangesW(self->hDir, self->buffer, FILE_MONITOR_BUFFER_SIZE, self->super.recursion, self->notify_flags, NULL, &self->ol, NULL) == 0)
+  if (ReadDirectoryChangesW(self->hDir, self->buffer, FILE_MONITOR_BUFFER_SIZE, self->super.options->recursion, self->notify_flags, NULL, &self->ol, NULL) == 0)
   {
     fprintf(stderr,"FAILED TO READ NEXT CHANGES OF DIRECTORY!\n");
     abort();
@@ -209,7 +209,7 @@ file_monitor_windows_start_monitoring(FileMonitorWindows* self)
   // The hEvent member is not used when there is a completion
   // function, so it's ok to use it to point to the object.
   self->ol.hEvent = self->monitor_handler.handle;
-  if (ReadDirectoryChangesW(self->hDir, self->buffer, FILE_MONITOR_BUFFER_SIZE, self->super.recursion, self->notify_flags, NULL, &self->ol, NULL) == 0)
+  if (ReadDirectoryChangesW(self->hDir, self->buffer, FILE_MONITOR_BUFFER_SIZE, self->super.options->recursion, self->notify_flags, NULL, &self->ol, NULL) == 0)
     {
       msg_error("Can't monitor directory",evt_tag_win32_error("error",GetLastError()), evt_tag_id(MSG_CANT_MONITOR_DIRECTORY), NULL);
       return FALSE;
@@ -296,10 +296,11 @@ file_monitor_windows_deinit(FileMonitor *s)
 }
 
 FileMonitor *
-file_monitor_windows_new(void)
+file_monitor_windows_new(FileMonitorOptions *options)
 {
   FileMonitorWindows *self = g_new0(FileMonitorWindows, 1);
 
+  self->super.options = options;
   self->super.watch_directory = file_monitor_windows_watch_directory;
   self->super.stop = file_monitor_windows_stop;
   self->super.deinit = file_monitor_windows_deinit;

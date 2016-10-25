@@ -32,6 +32,13 @@ typedef enum { ACTION_NONE, ACTION_CREATED, ACTION_MODIFIED, ACTION_DELETED} Fil
 
 typedef gboolean (*FileMonitorCallbackFunc)(const gchar *filename, gpointer user_data, FileActionType action_type);
 
+typedef struct _FileMonitorOptions
+{
+  gint poll_freq;
+  gboolean force_directory_polling;
+  gboolean recursion;
+} FileMonitorOptions;
+
 typedef struct _FileMonitor FileMonitor;
 
 struct _FileMonitor
@@ -41,8 +48,8 @@ struct _FileMonitor
   FileMonitorCallbackFunc file_callback;
   GSourceFunc destroy_callback;
   gpointer user_data;
-  gboolean recursion;
   gboolean privileged;
+  FileMonitorOptions *options;
 
   gboolean (*watch_directory)(FileMonitor *self, const gchar *filename);
   gboolean (*stop)(FileMonitor *self);
@@ -101,7 +108,7 @@ file_monitor_free(FileMonitor *self)
   g_free(self);
 }
 
-FileMonitor *file_monitor_create_instance(gint poll_freq, gboolean force_poll, gboolean recursion);
+FileMonitor *file_monitor_create_instance(FileMonitorOptions *options);
 
 void file_monitor_set_file_callback(FileMonitor *self, FileMonitorCallbackFunc file_callback, gpointer user_data);
 void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_callback, gpointer user_data);

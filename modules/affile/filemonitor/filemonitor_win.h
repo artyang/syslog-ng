@@ -26,6 +26,6 @@
 
 #include "filemonitor.h"
 
-FileMonitor *file_monitor_windows_new(void);
+FileMonitor *file_monitor_windows_new(FileMonitorOptions *options);
 
 #endif

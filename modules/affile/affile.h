@@ -47,13 +47,12 @@ typedef struct _AFFileSourceDriver
   LogReaderOptions reader_options;
   LogProtoOptions proto_options;
   LogProtoFactory *proto_factory;
+  FileMonitorOptions monitor_options;
   guint32 flags;
   /* state information to follow a set of files using a wildcard expression */
   FileMonitor *file_monitor;
   UniqQueue *file_list;
   gboolean is_regular;
-  gboolean recursion;
-  gboolean force_directory_polling;
 } AFFileSourceDriver;
 
 LogDriver *affile_sd_new(gchar *filename, guint32 flags);
