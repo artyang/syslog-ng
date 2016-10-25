@@ -168,24 +168,32 @@ file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename)
   return FALSE;
 }
 
+static FileMonitor *
+_create_platform_specific_async_file_monitor(void)
+{
+#if ENABLE_MONITOR_INOTIFY
+  return file_monitor_inotify_new();
+#endif
+
+#ifdef G_OS_WIN32
+  return file_monitor_windows_new();
+#endif
+
+  return NULL;
+}
+
 FileMonitor *
 file_monitor_create_instance(gint poll_freq, gboolean force_poll, gboolean recursion)
 {
-  FileMonitor *file_monitor;
+  FileMonitor *file_monitor = NULL;
 
   if (!force_poll)
-    {
-#if ENABLE_MONITOR_INOTIFY
-      file_monitor = file_monitor_inotify_new();
-#endif
-#ifdef G_OS_WIN32
-      file_monitor = file_monitor_windows_new();
-#endif
-    }
-  else
-    {
-      file_monitor = file_monitor_poll_new(poll_freq);
-    }
+    file_monitor = _create_platform_specific_async_file_monitor();
+
+  if (!file_monitor)
+    file_monitor = file_monitor_poll_new(poll_freq);
+
+  g_assert(file_monitor != NULL);
 
   file_monitor->recursion = recursion;
   return file_monitor;
