@@ -42,8 +42,15 @@ build_filename(const gchar *basedir, const gchar *path)
   if (!path)
     return NULL;
 
-  result = (gchar *)g_malloc(strlen(basedir) + strlen(path) + 2);
-  sprintf(result, "%s/%s", basedir, path);
+  if (basedir)
+    {
+      result = (gchar *)g_malloc(strlen(basedir) + strlen(path) + 2);
+      sprintf(result, "%s/%s", basedir, path);
+    }
+  else
+    {
+      result = g_strdup(path);
+    }
 
   return result;
 }

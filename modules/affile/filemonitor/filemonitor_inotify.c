@@ -235,7 +235,7 @@ file_monitor_inotify_watch_directory(FileMonitor *self, const gchar *filename)
 
       if (g_path_is_absolute (dir_part))
         {
-          base_dir = resolve_to_absolute_path(dir_part, G_DIR_SEPARATOR_S);
+          base_dir = resolve_to_absolute_path(dir_part, NULL);
         }
       else
         {
