@@ -143,48 +143,15 @@ file_monitor_poll_start(FileMonitor *self, MonitorBase *source, const gchar *bas
 }
 
 static gboolean
-file_monitor_poll_watch_directory(FileMonitor *self, const gchar *filename)
+file_monitor_poll_watch_directory(FileMonitor *self, const gchar *filename_pattern)
 {
   MonitorBase *source = NULL;
-  gchar *base_dir;
   g_assert(self);
-  g_assert(filename);
 
-  if (!g_file_test(filename, G_FILE_TEST_IS_DIR))
-    {
-      /* if the filename is not a directory then remove the file part and try only the directory part */
-      gchar *dir_part = g_path_get_dirname (filename);
+  gchar *base_dir = file_monitor_resolve_base_directory_from_pattern(self, filename_pattern);
 
-      if (g_path_is_absolute (dir_part))
-        {
-          base_dir = resolve_to_absolute_path(dir_part, NULL);
-        }
-      else
-        {
-          gchar *wd = g_get_current_dir();
-          base_dir = resolve_to_absolute_path(dir_part, wd);
-          g_free(wd);
-        }
-
-      g_free(dir_part);
-
-      if (!self->compiled_pattern)
-        {
-          gchar *pattern = g_path_get_basename(filename);
-          self->compiled_pattern = g_pattern_spec_new(pattern);
-          g_free(pattern);
-        }
-    }
-  else
-    {
-       base_dir = g_strdup(filename);
-    }
-
-  if (base_dir == NULL || !g_path_is_absolute (base_dir))
-    {
-      msg_error("Can't monitor directory, because it can't be resolved as absolute path", evt_tag_str("base_dir", base_dir), NULL);
-      return FALSE;
-    }
+  if (!base_dir)
+    return FALSE;
 
   if (file_monitor_is_dir_monitored(self, base_dir))
     {

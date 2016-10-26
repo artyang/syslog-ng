@@ -115,6 +115,7 @@ void file_monitor_set_destroy_callback(FileMonitor *self, GSourceFunc destroy_ca
 gboolean file_monitor_chk_file(FileMonitor * monitor, MonitorBase *source, const gchar *filename);
 gboolean file_monitor_list_directory(FileMonitor *self, MonitorBase *source, const gchar *basedir);
 gboolean file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename);
+gchar *file_monitor_resolve_base_directory_from_pattern(FileMonitor *self, const gchar *filename_pattern);
 
 gchar *resolve_to_absolute_path(const gchar *path, const gchar *basedir);
 
