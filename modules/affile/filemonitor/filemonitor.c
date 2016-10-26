@@ -242,3 +242,24 @@ file_monitor_create_instance(FileMonitorOptions *options)
 
   return file_monitor;
 }
+
+void
+file_monitor_free_method(FileMonitor *self)
+{
+  if (self->compiled_pattern)
+    {
+      g_pattern_spec_free(self->compiled_pattern);
+      self->compiled_pattern = NULL;
+    }
+  if (self->sources)
+    {
+      GSList *source_list = self->sources;
+      while(source_list)
+        {
+          g_free(source_list->data);
+          source_list = source_list->next;
+        }
+      g_slist_free(self->sources);
+      self->sources = NULL;
+    }
+}

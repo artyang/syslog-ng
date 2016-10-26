@@ -187,13 +187,12 @@ static void
 file_monitor_windows_free(FileMonitor *s)
 {
   FileMonitorWindows *self = (FileMonitorWindows *)s;
-  if (self->super.compiled_pattern)
-    {
-      g_pattern_spec_free(self->super.compiled_pattern);
-    }
+
   CloseHandle(self->monitor_handler.handle);
   free(self->buffer);
   free(self->base_dir);
+
+  file_monitor_free_method(s);
 }
 
 static gboolean

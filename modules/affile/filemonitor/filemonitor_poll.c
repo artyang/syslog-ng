@@ -186,27 +186,6 @@ file_monitor_poll_deinit(FileMonitor *self)
     g_slist_foreach(self->sources, file_monitor_poll_destroy, NULL);
 }
 
-static void
-file_monitor_poll_free(FileMonitor *self)
-{
-  if (self->compiled_pattern)
-    {
-      g_pattern_spec_free(self->compiled_pattern);
-      self->compiled_pattern = NULL;
-    }
-  if (self->sources)
-    {
-      GSList *source_list = self->sources;
-      while(source_list)
-        {
-          g_free(source_list->data);
-          source_list = source_list->next;
-        }
-      g_slist_free(self->sources);
-      self->sources = NULL;
-    }
-}
-
 /**
  * file_monitor_new:
  *
@@ -223,7 +202,7 @@ file_monitor_poll_new(FileMonitorOptions *options)
   self->raise_caps = file_monitor_unix_raise_caps;
 #endif
   self->deinit = file_monitor_poll_deinit;
-  self->free_fn = file_monitor_poll_free;
+  self->free_fn = file_monitor_free_method;
 
   return self;
 }
