@@ -319,10 +319,13 @@ affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
   if (is_wildcard_filename(filename))
     {
-      self->file_monitor = file_monitor_create_instance(self->reader_options.follow_freq,
-                                                        self->force_directory_polling);
-      self->file_monitor->privileged = !!(self->flags & AFFILE_PRIVILEGED);
-      self->file_list = uniq_queue_new();
+      if (!self->file_monitor)
+        {
+          self->file_monitor = file_monitor_create_instance(self->reader_options.follow_freq,
+                                                            self->force_directory_polling);
+          self->file_monitor->privileged = !!(self->flags & AFFILE_PRIVILEGED);
+          self->file_list = uniq_queue_new();
+        }
     }
   else
     {

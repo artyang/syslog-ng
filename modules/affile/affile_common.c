@@ -534,6 +534,8 @@ affile_sd_skip_old_messages(LogSrcDriver *s, GlobalConfig *cfg)
     {
       return TRUE;
     }
+
+  affile_file_monitor_init(self, self->filename_pattern->str);
   if (self->file_monitor)
     {
       gpointer args[] = {self, cfg};
@@ -619,7 +621,6 @@ affile_sd_new(gchar *filename, guint32 flags)
   log_reader_options_defaults(&self->reader_options);
   self->reader_options.parse_options.flags |= LP_LOCAL;
 
-  affile_file_monitor_init(self, filename);
   if ( pid_string == NULL )
     pid_string = get_pid_string();
 
@@ -832,6 +833,8 @@ affile_sd_init(LogPipe *s)
     {
       affile_handle_zero_follow_freq(self);
     }
+
+  affile_file_monitor_init(self, self->filename_pattern->str);
 
   if (self->file_monitor)
     {
