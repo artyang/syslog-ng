@@ -25,6 +25,7 @@
 #define AFINET_H_INCLUDED
 
 #include "afsocket.h"
+#include "socket-options-inet.h"
 
 #ifdef _GNU_SOURCE
 #  define _GNU_SOURCE_DEFINED 1
@@ -41,17 +42,9 @@
 #endif
 
 
-typedef struct _InetSocketOptions
-{
-  SocketOptions super;
-  gint ttl;
-  gint tos;
-} InetSocketOptions;
-
 typedef struct _AFInetSourceDriver
 {
   AFSocketSourceDriver super;
-  InetSocketOptions sock_options;
   /* character as it can contain a service name from /etc/services */
   gchar *bind_port;
   gchar *bind_ip;
@@ -64,7 +57,6 @@ void afinet_sd_set_localip(LogDriver *self, gchar *ip);
 typedef struct _AFInetDestDriver
 {
   AFSocketDestDriver super;
-  InetSocketOptions sock_options;
 #if ENABLE_SPOOF_SOURCE
   gboolean spoof_source;
   gchar *spoof_if;

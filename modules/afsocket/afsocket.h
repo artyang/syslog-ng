@@ -47,9 +47,6 @@
 typedef struct _AFSocketSourceDriver AFSocketSourceDriver;
 typedef struct _AFSocketDestDriver AFSocketDestDriver;
 
-
-gboolean afsocket_setup_socket(gint fd, SocketOptions *sock_options, AFSocketDirection dir);
-
 struct _AFSocketSourceDriver
 {
   LogSrcDriver super;
@@ -83,10 +80,6 @@ struct _AFSocketSourceDriver
 
   /* optionally acquire a socket from the runtime environment (e.g. systemd) */
   gboolean (*acquire_socket)(AFSocketSourceDriver *s, gint *fd);
-
-  /* once the socket is opened, set up socket related options (IP_TTL,
-     IP_TOS, SO_RCVBUF etc) */
-
   gboolean (*setup_socket)(AFSocketSourceDriver *s, gint fd);
 };
 
@@ -148,10 +141,6 @@ struct _AFSocketDestDriver
    */
 
   gboolean (*apply_transport)(AFSocketDestDriver *s);
-
-  /* once the socket is opened, set up socket related options (IP_TTL,
-     IP_TOS, SO_RCVBUF etc) */
-
   gboolean (*setup_socket)(AFSocketDestDriver *s, gint fd);
 };
 
