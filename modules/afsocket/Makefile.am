@@ -22,6 +22,8 @@ libafsocket_la_SOURCES =  \
   afsocket.h              \
   afinet.c                \
   afinet.h                \
+  socket-options-inet.c   \
+  socket-options-inet.h   \
   socket-options.h        \
   socket-options.c
 
