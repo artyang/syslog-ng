@@ -73,7 +73,7 @@ tests
 modules/java/(tools|[^/]*$)
 modules/java-modules/(dummy|elastic|elastic-v2|hdfs|http|kafka|[^/]*$)
 modules/(afamqp|affile|afmongodb|afprog|afsmtp|afsql|afstomp|afstreams|afuser|basic-proto|basicfuncs|cef|confgen|convertfuncs|cryptofuncs|csvparser|date|dbparser|dummy|geoip|graphite|json|kvformat|linux-kmsg-format|pacctformat|pseudofile|python|redis|riemann|syslogformat|systemd-journal|system-source|[^/]*$)
-modules/afsocket/((afinet\.[ch]|afsocket\.[ch]|afsocket-grammar\.ym|afsocket-parser\.[ch]|afsocket-plugin\.c|afunix\.[ch])$|.*/)
+modules/afsocket/((afinet\.[ch]|afsocket\.[ch]|afsocket-grammar\.ym|afsocket-parser\.[ch]|afsocket-plugin\.c|afunix\.[ch]|socket-options.*\.[ch])$|.*/)
 scl/(elasticsearch|hdfs|kafka|pacct|syslogconf|system|[^/]*$)
 
  expat

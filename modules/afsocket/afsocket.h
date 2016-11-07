@@ -28,6 +28,7 @@
 #include "logreader.h"
 #include "logwriter.h"
 #include "tlscontext.h"
+#include "socket-options.h"
 
 #include <iv.h>
 
@@ -43,22 +44,9 @@
 
 #define AFSOCKET_WNDSIZE_INITED      0x10000
 
-typedef enum
-{
-  AFSOCKET_DIR_RECV = 0x01,
-  AFSOCKET_DIR_SEND = 0x02,
-} AFSocketDirection;
-
 typedef struct _AFSocketSourceDriver AFSocketSourceDriver;
 typedef struct _AFSocketDestDriver AFSocketDestDriver;
 
-typedef struct _SocketOptions
-{
-  gint sndbuf;
-  gint rcvbuf;
-  gint broadcast;
-  gint keepalive;
-} SocketOptions;
 
 gboolean afsocket_setup_socket(gint fd, SocketOptions *sock_options, AFSocketDirection dir);
 
