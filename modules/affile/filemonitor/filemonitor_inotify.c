@@ -164,7 +164,6 @@ monitor_source_inotify_free(gpointer s)
       self->fd_watch.fd = -1;
       self->watchd = 0;
     }
-  /* Here we have to unregister the ivykis callings */
   if (self->super.base_dir)
     g_free(self->super.base_dir);
 }
@@ -195,23 +194,9 @@ file_monitor_create_inotify(FileMonitor *self, const gchar *base_dir)
 }
 
 static void
-file_monitor_inotify_destroy(gpointer source,gpointer monitor)
+file_monitor_inotify_destroy(gpointer source, gpointer monitor)
 {
-  MonitorInotify *self = (MonitorInotify *)source;
-  if (iv_fd_registered(&self->fd_watch))
-    {
-      iv_fd_unregister(&self->fd_watch);
-    }
-  if (self->fd_watch.fd != -1)
-    {
-      /* release watchd */
-      inotify_rm_watch(self->fd_watch.fd, self->watchd);
-      close(self->fd_watch.fd);
-      self->fd_watch.fd = -1;
-      self->watchd = 0;
-    }
-  if (self->super.base_dir)
-    g_free(self->super.base_dir);
+  monitor_source_inotify_free(source);
 }
 
 static void

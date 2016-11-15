@@ -46,18 +46,6 @@ typedef struct _MonitorPoll
 
 static void file_monitor_poll_timer_callback(gpointer s);
 
-static void
-file_monitor_poll_destroy(gpointer source,gpointer monitor)
-{
-  MonitorPoll *self = (MonitorPoll *)source;
-  if(iv_timer_registered(&self->poll_timer))
-    {
-      iv_timer_unregister(&self->poll_timer);
-    }
-  if (self->super.base_dir)
-    g_free(self->super.base_dir);
-}
-
 static MonitorPoll *
 monitor_source_poll_new(FileMonitor *monitor)
 {
@@ -177,6 +165,13 @@ file_monitor_poll_watch_directory(FileMonitor *self, const gchar *filename_patte
   file_monitor_poll_start(self, source, base_dir);
   g_free(base_dir);
   return TRUE;
+}
+
+static void
+file_monitor_poll_destroy(gpointer source, gpointer monitor)
+{
+  MonitorPoll *self = (MonitorPoll *)source;
+  monitor_poll_free(self);
 }
 
 static void
