@@ -963,6 +963,11 @@ affile_sd_set_force_directory_polling(LogDriver *s, gboolean force_directory_pol
   self->monitor_options.force_directory_polling = force_directory_polling;
 }
 
+void
+affile_file_monitor_stop(AFFileSourceDriver *self)
+{
+  file_monitor_stop(self->file_monitor);
+}
 
 /*
 

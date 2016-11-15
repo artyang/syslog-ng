@@ -174,11 +174,18 @@ file_monitor_poll_destroy(gpointer source, gpointer monitor)
   monitor_poll_free(self);
 }
 
-static void
-file_monitor_poll_deinit(FileMonitor *self)
+static gboolean
+file_monitor_poll_stop(FileMonitor *self)
 {
   if (self->sources)
     g_slist_foreach(self->sources, file_monitor_poll_destroy, NULL);
+  return TRUE;
+}
+
+static void
+file_monitor_poll_deinit(FileMonitor *self)
+{
+  file_monitor_poll_stop(self);
 }
 
 /**
@@ -196,6 +203,7 @@ file_monitor_poll_new(FileMonitorOptions *options)
 #ifndef G_OS_WIN32
   self->raise_caps = file_monitor_unix_raise_caps;
 #endif
+  self->stop = file_monitor_poll_stop;
   self->deinit = file_monitor_poll_deinit;
   self->free_fn = file_monitor_free_method;
 

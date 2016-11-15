@@ -242,11 +242,18 @@ file_monitor_inotify_watch_directory(FileMonitor *self, const gchar *filename_pa
   return TRUE;
 }
 
-static void
-file_monitor_inotify_deinit(FileMonitor *self)
+static gboolean
+file_monitor_inotify_stop(FileMonitor *self)
 {
   if (self->sources)
     g_slist_foreach(self->sources, file_monitor_inotify_destroy, NULL);
+  return TRUE;
+}
+
+static void
+file_monitor_inotify_deinit(FileMonitor *self)
+{
+  file_monitor_inotify_stop(self);
 }
 
 /**
@@ -262,6 +269,7 @@ file_monitor_inotify_new(FileMonitorOptions *options)
   self->options = options;
   self->watch_directory = file_monitor_inotify_watch_directory;
   self->raise_caps = file_monitor_unix_raise_caps;
+  self->stop = file_monitor_inotify_stop;
   self->deinit = file_monitor_inotify_deinit;
   self->free_fn = file_monitor_free_method;
 

@@ -164,12 +164,6 @@ affile_sd_monitor_callback(const gchar *filename, gpointer s, FileActionType act
   return TRUE;
 }
 
-void
-affile_file_monitor_stop(AFFileSourceDriver *self)
-{
-  file_monitor_stop(self->file_monitor);
-}
-
 void affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
   self->monitor_options.poll_freq = self->reader_options.follow_freq;

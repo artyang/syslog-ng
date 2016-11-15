@@ -307,13 +307,6 @@ affile_sd_monitor_callback(const gchar *filename, gpointer s, FileActionType act
   return TRUE;
 }
 
-
-inline void
-affile_file_monitor_stop(AFFileSourceDriver *self)
-{
-/*nop*/
-}
-
 void
 affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
