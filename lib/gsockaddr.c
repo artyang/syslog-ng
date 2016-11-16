@@ -47,6 +47,56 @@ struct sockaddr_un
 
 gsize g_sockaddr_len(GSockAddr *a);
 
+GSockAddr *
+g_sockaddr_new_from_peer(gint fd)
+{
+  GSockAddr *result = NULL;
+  struct sockaddr_storage addr;
+  socklen_t len =  sizeof(addr);
+
+  if (getpeername(fd, (struct sockaddr*)&addr, &len) == 0)
+    {
+      result = g_sockaddr_new((struct sockaddr*)&addr, len);
+    }
+  return result;
+}
+
+guint8 *
+g_sockaddr_get_address(GSockAddr *self, guint8 *buffer, socklen_t buffer_size)
+{
+  if (self->sa.sa_family == AF_INET)
+    {
+      struct in_addr addr = g_sockaddr_inet_get_address(self);
+      socklen_t len = sizeof(addr);
+      if (buffer_size < len)
+        {
+          errno = ENOSPC;
+          return NULL;
+        }
+      memcpy(buffer, &addr, len);
+      return buffer;
+    }
+#if ENABLE_IPV6
+  else if (self->sa.sa_family == AF_INET6)
+    {
+      struct in6_addr *addr = g_sockaddr_inet6_get_address(self);
+      socklen_t len = sizeof(struct in6_addr);
+      if (buffer_size < len)
+        {
+          errno = ENOSPC;
+          return NULL;
+        }
+      memcpy(buffer, addr, len);
+      return buffer;
+    }
+#endif
+  else
+    {
+      errno = EAFNOSUPPORT;
+      return NULL;
+    }
+}
+
 /**
  * g_sockaddr_new:
  *  @sa: libc sockaddr * pointer to convert
