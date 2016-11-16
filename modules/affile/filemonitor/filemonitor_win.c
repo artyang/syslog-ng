@@ -21,7 +21,7 @@
  *
  */
 
-#include "filemonitor_win.h"
+#include "filemonitor.h"
 #include "messages.h"
 #include <stdio.h>
 #include <evtlog.h>
@@ -294,7 +294,7 @@ file_monitor_windows_deinit(FileMonitor *s)
   return;
 }
 
-FileMonitor *
+static FileMonitor *
 file_monitor_windows_new(FileMonitorOptions *options)
 {
   FileMonitorWindows *self = g_new0(FileMonitorWindows, 1);
@@ -318,4 +318,10 @@ file_monitor_windows_new(FileMonitorOptions *options)
   self->check_dir_timer.handler = check_dir_exists;
 
   return &self->super;
+}
+
+FileMonitor *
+file_monitor_create_platform_specific_async(FileMonitorOptions *options)
+{
+  return file_monitor_windows_new(options);
 }

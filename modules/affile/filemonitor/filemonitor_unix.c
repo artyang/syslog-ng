@@ -22,6 +22,7 @@
  */
 
 #include "filemonitor.h"
+#include "filemonitor_inotify.h"
 #include "messages.h"
 #include "mainloop.h"
 #include "timeutils.h"
@@ -116,4 +117,14 @@ file_monitor_unix_raise_caps(FileMonitor *self)
   cap_t old = g_process_cap_save();
   _raise_read_permissions(self);
   return old;
+}
+
+FileMonitor *
+file_monitor_create_platform_specific_async(FileMonitorOptions *options)
+{
+#if ENABLE_MONITOR_INOTIFY
+  return file_monitor_inotify_new(options);
+#endif
+
+  return NULL;
 }

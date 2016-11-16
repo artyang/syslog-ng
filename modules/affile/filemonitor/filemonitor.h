@@ -118,6 +118,7 @@ gboolean file_monitor_is_dir_monitored(FileMonitor *self, const gchar *filename)
 gchar *file_monitor_resolve_base_directory_from_pattern(FileMonitor *self, const gchar *filename_pattern);
 void file_monitor_free_method(FileMonitor *self);
 
+FileMonitor *file_monitor_create_platform_specific_async(FileMonitorOptions *options);
 gchar *resolve_to_absolute_path(const gchar *path, const gchar *basedir);
 
 #endif

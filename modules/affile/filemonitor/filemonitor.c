@@ -22,9 +22,7 @@
  */
 
 #include "filemonitor.h"
-#include "filemonitor_inotify.h"
 #include "filemonitor_poll.h"
-#include "filemonitor_win.h"
 
 #include "messages.h"
 #include "mainloop.h"
@@ -213,27 +211,13 @@ file_monitor_resolve_base_directory_from_pattern(FileMonitor *self, const gchar 
   return base_dir;
 }
 
-static FileMonitor *
-_create_platform_specific_async_file_monitor(FileMonitorOptions *options)
-{
-#if ENABLE_MONITOR_INOTIFY
-  return file_monitor_inotify_new(options);
-#endif
-
-#ifdef G_OS_WIN32
-  return file_monitor_windows_new(options);
-#endif
-
-  return NULL;
-}
-
 FileMonitor *
 file_monitor_create_instance(FileMonitorOptions *options)
 {
   FileMonitor *file_monitor = NULL;
 
   if (!options->force_directory_polling)
-    file_monitor = _create_platform_specific_async_file_monitor(options);
+    file_monitor = file_monitor_create_platform_specific_async(options);
 
   if (!file_monitor)
     file_monitor = file_monitor_poll_new(options);

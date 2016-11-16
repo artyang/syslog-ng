@@ -7,7 +7,6 @@ filemonitor_sources = \
 
 if IS_WINDOWS
 
-filemonitor_headers += filemonitor/filemonitor_win.h
 filemonitor_sources += filemonitor/filemonitor_win.c
 
 else
