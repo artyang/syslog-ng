@@ -80,6 +80,7 @@ nv_registry_alloc_handle(NVRegistry *self, const gchar *name)
       msg_error("Hard wired limit of name-value pairs have been reached, all further name-value pair will expand to nothing",
                 evt_tag_printf("limit", "%"G_GUINT32_FORMAT, self->nvhandle_max_value),
                 evt_tag_str("value", name),
+                evt_tag_id(MSG_CANT_ALLOC_NV_HANDLE),
                 NULL);
       goto exit;
     }
