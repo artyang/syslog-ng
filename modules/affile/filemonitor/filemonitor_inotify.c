@@ -246,7 +246,11 @@ static gboolean
 file_monitor_inotify_stop(FileMonitor *self)
 {
   if (self->sources)
-    g_slist_foreach(self->sources, file_monitor_inotify_destroy, NULL);
+    {
+      g_slist_foreach(self->sources, file_monitor_inotify_destroy, NULL);
+      g_slist_free(self->sources);
+      self->sources = NULL;
+    }
   return TRUE;
 }
 
