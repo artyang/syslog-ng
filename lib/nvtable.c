@@ -122,7 +122,7 @@ nv_registry_set_handle_flags(NVRegistry *self, NVHandle handle, guint16 flags)
 }
 
 NVRegistry *
-nv_registry_new(const gchar **static_names, guint32 nvhandle_max_value)
+nv_registry_new(const gchar **static_names, NVHandle nvhandle_max_value)
 {
   NVRegistry *self = g_new0(NVRegistry, 1);
   gint i;
