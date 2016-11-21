@@ -490,24 +490,6 @@ cfg_lexer_include_file_simple(CfgLexer *self, const gchar *filename)
   return FALSE;
 }
 
-#if HAVE_GLOB_H
-static int
-_cfg_lexer_glob_err (const char *p, gint e)
-{
-  if (e != ENOENT)
-    {
-      msg_debug ("Error processing path for inclusion",
-                 evt_tag_str("path", p),
-                 evt_tag_errno("errno", e),
-                 NULL);
-      return -1;
-    }
-  return 0;
-}
-
-#ifndef GLOB_NOMAGIC
-#define GLOB_NOMAGIC 0
-
 int
 __glob_pattern_p (const char *pattern)
 {
@@ -538,9 +520,6 @@ __glob_pattern_p (const char *pattern)
 
   return 0;
 }
-#else
-#define HAVE_GLOB_NOMAGIC 1
-#endif
 
 static gboolean
 cfg_lexer_include_file_add(CfgLexer *self, const gchar *fn)
@@ -560,6 +539,28 @@ cfg_lexer_include_file_add(CfgLexer *self, const gchar *fn)
 
   return TRUE;
 }
+
+#if HAVE_GLOB_H
+
+static int
+_cfg_lexer_glob_err (const char *p, gint e)
+{
+  if (e != ENOENT)
+    {
+      msg_debug ("Error processing path for inclusion",
+                 evt_tag_str("path", p),
+                 evt_tag_errno("errno", e),
+                 NULL);
+      return -1;
+    }
+  return 0;
+}
+
+#ifndef GLOB_NOMAGIC
+#define GLOB_NOMAGIC 0
+#else
+#define HAVE_GLOB_NOMAGIC 1
+#endif
 
 static gboolean
 cfg_lexer_include_file_glob_at(CfgLexer *self, const gchar *pattern)
@@ -598,6 +599,10 @@ cfg_lexer_include_file_glob_at(CfgLexer *self, const gchar *pattern)
   return TRUE;
 }
 
+#endif
+
+#if HAVE_GLOB_H || defined(_WIN32)
+
 static gboolean
 cfg_lexer_include_file_glob(CfgLexer *self, const gchar *filename_)
 {
@@ -627,6 +632,7 @@ cfg_lexer_include_file_glob(CfgLexer *self, const gchar *filename_)
   else
     return TRUE;
 }
+
 #endif
 
 gboolean
