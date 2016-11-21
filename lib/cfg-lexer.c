@@ -33,9 +33,15 @@
 #include "stringutils.h"
 
 #include <string.h>
+
 #if HAVE_GLOB_H
 #include <glob.h>
 #endif
+
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 #include <sys/stat.h>
 
 struct _CfgArgs
@@ -599,7 +605,43 @@ cfg_lexer_include_file_glob_at(CfgLexer *self, const gchar *pattern)
   return TRUE;
 }
 
+#elif defined(_WIN32)
+
+static gboolean
+cfg_lexer_include_file_glob_at(CfgLexer *self, const gchar *pattern)
+{
+  WIN32_FIND_DATA find_data;
+  HANDLE find_handle = FindFirstFile(pattern, &find_data);
+
+  if (find_handle == INVALID_HANDLE_VALUE)
+    {
+      if (!_glob_pattern_p(pattern))
+        {
+          self->include_depth++;
+          return cfg_lexer_include_file_add(self, pattern);
+        }
+
+      return FALSE;
+    }
+
+  gchar *dirname = g_path_get_dirname(pattern);
+  self->include_depth++;
+
+  do
+    {
+      const gchar *full_path = g_build_path(G_DIR_SEPARATOR_S, dirname, find_data.cFileName, NULL);
+      cfg_lexer_include_file_add(self, full_path);
+      g_free(full_path);
+    }
+  while (FindNextFile(find_handle, &find_data));
+
+  FindClose(find_handle);
+  g_free(dirname);
+  return TRUE;
+}
+
 #endif
+
 
 #if HAVE_GLOB_H || defined(_WIN32)
 
@@ -653,7 +695,7 @@ cfg_lexer_include_file(CfgLexer *self, const gchar *filename_)
   filename = find_file_in_path(cfg_args_get(self->globals, "include-path"), filename_, G_FILE_TEST_EXISTS);
   if (!filename || stat(filename, &st) < 0)
     {
-#if HAVE_GLOB_H
+#if HAVE_GLOB_H || defined(_WIN32)
       if (cfg_lexer_include_file_glob(self, filename_))
         return TRUE;
 #endif
