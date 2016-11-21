@@ -491,7 +491,7 @@ cfg_lexer_include_file_simple(CfgLexer *self, const gchar *filename)
 }
 
 int
-__glob_pattern_p (const char *pattern)
+_glob_pattern_p(const char *pattern)
 {
   register const char *p;
   int open = 0;
@@ -577,7 +577,7 @@ cfg_lexer_include_file_glob_at(CfgLexer *self, const gchar *pattern)
       if (r == GLOB_NOMATCH)
         {
 #ifndef HAVE_GLOB_NOMAGIC
-          if (!__glob_pattern_p (pattern))
+          if (!_glob_pattern_p (pattern))
             {
               self->include_depth++;
               return cfg_lexer_include_file_add(self, pattern);
