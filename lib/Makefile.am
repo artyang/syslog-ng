@@ -139,6 +139,7 @@ libsyslog_ng_la_SOURCES = \
 	center.c		\
 	cfg.c			\
 	cfg-lexer.c		\
+	cfg-lexer-include.c	\
 	cfg-parser.c		\
 	children.c		\
 	compat.c		\
