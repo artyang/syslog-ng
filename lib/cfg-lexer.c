@@ -609,7 +609,7 @@ cfg_lexer_include_file_glob(CfgLexer *self, const gchar *filename_)
   const gchar *path = cfg_args_get(self->globals, "include-path");
   gboolean process = FALSE;
 
-  if (filename_[0] == '/' || !path)
+  if (g_path_is_absolute(filename_) || !path)
     process = cfg_lexer_include_file_glob_at(self, filename_);
   else
     {
