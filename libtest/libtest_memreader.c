@@ -288,7 +288,7 @@ log_transport_memory_new(LogTransportMemoryBuffer *read_buffer, LogTransportMemo
 {
   LogTransportMemory *self = g_new0(LogTransportMemory, 1);
 
-  self->super.fd = 0;
+  self->super.fd = -1;
   self->super.cond = 0;
   self->super.flags = flags;
   self->super.read = log_transport_memory_read_method;
