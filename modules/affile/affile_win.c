@@ -164,16 +164,15 @@ affile_sd_monitor_callback(const gchar *filename, gpointer s, FileActionType act
   return TRUE;
 }
 
-void
-affile_file_monitor_stop(AFFileSourceDriver *self)
-{
-  file_monitor_stop(self->file_monitor);
-}
-
 void affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
-  self->file_monitor = file_monitor_new();
-  self->file_list = uniq_queue_new();
+  self->monitor_options.poll_freq = self->reader_options.follow_freq;
+
+  if (!self->file_monitor)
+  {
+    self->file_monitor = file_monitor_create_instance(&self->monitor_options);
+    self->file_list = uniq_queue_new();
+  }
 }
 
 gboolean

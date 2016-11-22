@@ -40,6 +40,7 @@ static CfgLexerKeyword affile_keywords[] = {
   { "follow_freq",        KW_FOLLOW_FREQ,  },
   { "recursive",          KW_RECURSIVE },
   { "use_own_pid",        KW_USE_OWN_PID },
+  { "force_directory_polling", KW_FORCE_DIRECTORY_POLLING },
 
   { NULL }
 };

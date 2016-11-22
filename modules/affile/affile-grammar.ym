@@ -59,6 +59,7 @@
 %token KW_OVERWRITE_IF_OLDER
 %token KW_RECURSIVE
 %token KW_USE_OWN_PID
+%token KW_FORCE_DIRECTORY_POLLING
 
 %type	<ptr> source_affile
 %type	<ptr> source_affile_params
@@ -105,6 +106,7 @@ source_affile_option
   | KW_MULTI_LINE_GARBAGE '(' string ')' { if (!affile_sd_set_multi_line_garbage(last_driver, $3))
                                              YYERROR;
                                          }
+	| KW_FORCE_DIRECTORY_POLLING '(' yesno ')'	{ affile_sd_set_force_directory_polling(last_driver, $3); }
         | source_reader_option
         ;
 

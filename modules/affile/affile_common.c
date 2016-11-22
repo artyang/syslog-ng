@@ -32,7 +32,7 @@
 #include "mainloop.h"
 #include "mainloop-call.h"
 #include "mainloop-io-worker.h"
-#include "filemonitor.h"
+#include "filemonitor/filemonitor.h"
 #include "versioning.h"
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -534,6 +534,8 @@ affile_sd_skip_old_messages(LogSrcDriver *s, GlobalConfig *cfg)
     {
       return TRUE;
     }
+
+  affile_file_monitor_init(self, self->filename_pattern->str);
   if (self->file_monitor)
     {
       gpointer args[] = {self, cfg};
@@ -619,7 +621,6 @@ affile_sd_new(gchar *filename, guint32 flags)
   log_reader_options_defaults(&self->reader_options);
   self->reader_options.parse_options.flags |= LP_LOCAL;
 
-  affile_file_monitor_init(self, filename);
   if ( pid_string == NULL )
     pid_string = get_pid_string();
 
@@ -833,13 +834,13 @@ affile_sd_init(LogPipe *s)
       affile_handle_zero_follow_freq(self);
     }
 
+  affile_file_monitor_init(self, self->filename_pattern->str);
+
   if (self->file_monitor)
     {
       cap_t old_caps = file_monitor_raise_caps(self->file_monitor);
       /* watch_directory will use the callback, so set it first */
       file_monitor_set_file_callback(self->file_monitor, affile_sd_monitor_callback, self);
-
-      file_monitor_set_poll_freq(self->file_monitor, self->reader_options.follow_freq);
 
       if (!file_monitor_watch_directory(self->file_monitor, self->filename_pattern->str))
         {
@@ -907,8 +908,7 @@ void
 affile_sd_set_recursion(LogDriver *s, const gint recursion)
 {
   AFFileSourceDriver *self = (AFFileSourceDriver *) s;
-  if (self->file_monitor)
-    self->file_monitor->recursion = recursion;
+  self->monitor_options.recursion = recursion;
 }
 
 
@@ -956,7 +956,18 @@ affile_sd_set_multi_line_garbage(LogDriver *s, gchar *garbage)
   return TRUE;
 }
 
+void
+affile_sd_set_force_directory_polling(LogDriver *s, gboolean force_directory_polling)
+{
+  AFFileSourceDriver *self = (AFFileSourceDriver *) s;
+  self->monitor_options.force_directory_polling = force_directory_polling;
+}
 
+void
+affile_file_monitor_stop(AFFileSourceDriver *self)
+{
+  file_monitor_stop(self->file_monitor);
+}
 
 /*
 

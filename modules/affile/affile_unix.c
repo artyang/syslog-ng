@@ -30,7 +30,7 @@
 #include "gprocess.h"
 #include "stats.h"
 #include "mainloop.h"
-#include "filemonitor.h"
+#include "filemonitor/filemonitor.h"
 #include "versioning.h"
 #include "state.h"
 #include "cfg.h"
@@ -307,34 +307,19 @@ affile_sd_monitor_callback(const gchar *filename, gpointer s, FileActionType act
   return TRUE;
 }
 
-
-inline void
-affile_file_monitor_stop(AFFileSourceDriver *self)
-{
-/*nop*/
-}
-
-static inline gboolean
-_is_inotify_enabled(void)
-{
-  gchar *disable_inotify = getenv("DISABLE_INOTIFY");
-  gboolean is_disabled = disable_inotify &&
-                         (strcmp(disable_inotify, "1") == 0);
-  return !(is_disabled);
-}
-
 void
 affile_file_monitor_init(AFFileSourceDriver *self, const gchar *filename)
 {
+  self->monitor_options.poll_freq = self->reader_options.follow_freq;
+
   if (is_wildcard_filename(filename))
     {
-      self->file_monitor = file_monitor_new();
-      self->file_monitor->privileged = !!(self->flags & AFFILE_PRIVILEGED);
-      if (!_is_inotify_enabled())
+      if (!self->file_monitor)
         {
-          self->file_monitor->monitor_type = MONITOR_POLL;
+          self->file_monitor = file_monitor_create_instance(&self->monitor_options);
+          self->file_monitor->privileged = !!(self->flags & AFFILE_PRIVILEGED);
+          self->file_list = uniq_queue_new();
         }
-      self->file_list = uniq_queue_new();
     }
   else
     {

@@ -27,7 +27,7 @@
 #include "driver.h"
 #include "logreader.h"
 #include "logwriter.h"
-#include "filemonitor.h"
+#include "filemonitor/filemonitor.h"
 #include "uniq_queue.h"
 
 #define AFFILE_PIPE        0x00000001
@@ -47,6 +47,7 @@ typedef struct _AFFileSourceDriver
   LogReaderOptions reader_options;
   LogProtoOptions proto_options;
   LogProtoFactory *proto_factory;
+  FileMonitorOptions monitor_options;
   guint32 flags;
   /* state information to follow a set of files using a wildcard expression */
   FileMonitor *file_monitor;
@@ -60,6 +61,7 @@ void affile_sd_set_pri_level(LogDriver *s, const gint16 severity);
 void affile_sd_set_pri_facility(LogDriver *s, const gint16 facility);
 gboolean affile_sd_set_multi_line_prefix(LogDriver *s, gchar *prefix);
 gboolean affile_sd_set_multi_line_garbage(LogDriver *s, gchar *garbage);
+void affile_sd_set_force_directory_polling(LogDriver *s, gboolean force_directory_polling);
 
 typedef struct _AFFileDestWriter AFFileDestWriter;
 

@@ -20,7 +20,7 @@
  *
  */
 
-#include "filemonitor.h"
+#include "filemonitor/filemonitor.h"
 #include <limits.h>
 #include <sys/time.h>
 #include <sys/stat.h>

@@ -4,17 +4,26 @@ export top_srcdir
 
 module_LTLIBRARIES := libaffile.la
 
-libaffile_la_SOURCES = affile-grammar.y affile-parser.c affile-parser.h affile-plugin.c uniq_queue.c uniq_queue.h
+include filemonitor/Makefile.am
+
+libaffile_la_SOURCES =   \
+  affile-grammar.y       \
+  affile-parser.c        \
+  affile-parser.h        \
+  affile-plugin.c        \
+  uniq_queue.c           \
+  uniq_queue.h           \
+  affile_common.h        \
+  affile_common.c        \
+  affile.h               \
+  $(filemonitor_headers) \
+  $(filemonitor_sources)
 
 if IS_WINDOWS
-libaffile_la_SOURCES += \
-	affile_common.h affile_common.c affile_win.c affile.h filemonitor.h filemonitor_win.c
+libaffile_la_SOURCES += affile_win.c
 else
-libaffile_la_SOURCES += \
-	affile_common.h affile_common.c affile_unix.c affile.h filemonitor_unix.c filemonitor.h
+libaffile_la_SOURCES += affile_unix.c
 endif
-
-
 
 BUILT_SOURCES = affile-grammar.y affile-grammar.c affile-grammar.h
 EXTRA_DIST = $(BUILT_SOURCES) affile-grammar.ym
