@@ -264,7 +264,7 @@ cfg_lexer_include_file_glob_at(CfgLexer *self, const gchar *pattern)
 
   do
     {
-      const gchar *full_path = g_build_path(G_DIR_SEPARATOR_S, dirname, find_data.cFileName, NULL);
+      gchar *full_path = g_build_path(G_DIR_SEPARATOR_S, dirname, find_data.cFileName, NULL);
       cfg_lexer_include_file_add(self, full_path);
       g_free(full_path);
     }
