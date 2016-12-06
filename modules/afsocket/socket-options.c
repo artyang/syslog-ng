@@ -47,8 +47,6 @@ socket_options_setup_socket_method(SocketOptions *self, gint fd, GSockAddr *bind
               msg_warning("The kernel refused to set the receive buffer (SO_RCVBUF) to the requested size, you probably need to adjust buffer related kernel parameters",
                           evt_tag_int("so_rcvbuf", self->so_rcvbuf),
                           evt_tag_int("so_rcvbuf_set", so_rcvbuf_set),
-                          evt_tag_int("fd", fd),
-                          evt_tag_errno("error", errno),
                           NULL);
             }
         }
@@ -70,8 +68,6 @@ socket_options_setup_socket_method(SocketOptions *self, gint fd, GSockAddr *bind
               msg_warning("The kernel refused to set the send buffer (SO_SNDBUF) to the requested size, you probably need to adjust buffer related kernel parameters",
                           evt_tag_int("so_sndbuf", self->so_sndbuf),
                           evt_tag_int("so_sndbuf_set", so_sndbuf_set),
-                          evt_tag_int("fd", fd),
-                          evt_tag_errno("error", errno),
                           NULL);
             }
         }
