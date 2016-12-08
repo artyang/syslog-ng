@@ -38,9 +38,9 @@ socket_options_setup_socket_method(SocketOptions *self, gint fd, GSockAddr *bind
           gint so_rcvbuf_set = 0;
           socklen_t sz = sizeof(so_rcvbuf_set);
 
-          rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &self->so_rcvbuf, sizeof(self->so_rcvbuf));
+          rc = setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&self->so_rcvbuf, sizeof(self->so_rcvbuf));
           if (rc < 0 ||
-              getsockopt(fd, SOL_SOCKET, SO_RCVBUF, &so_rcvbuf_set, &sz) < 0 ||
+              getsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *)&so_rcvbuf_set, &sz) < 0 ||
               sz != sizeof(so_rcvbuf_set) ||
               so_rcvbuf_set < self->so_rcvbuf)
             {
@@ -58,10 +58,10 @@ socket_options_setup_socket_method(SocketOptions *self, gint fd, GSockAddr *bind
           gint so_sndbuf_set = 0;
           socklen_t sz = sizeof(so_sndbuf_set);
 
-          rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &self->so_sndbuf, sizeof(self->so_sndbuf));
+          rc = setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&self->so_sndbuf, sizeof(self->so_sndbuf));
 
           if (rc < 0 ||
-              getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &so_sndbuf_set, &sz) < 0 ||
+              getsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *)&so_sndbuf_set, &sz) < 0 ||
               sz != sizeof(so_sndbuf_set) ||
               so_sndbuf_set < self->so_sndbuf)
             {
@@ -72,9 +72,9 @@ socket_options_setup_socket_method(SocketOptions *self, gint fd, GSockAddr *bind
             }
         }
       if (self->so_broadcast)
-        setsockopt(fd, SOL_SOCKET, SO_BROADCAST, &self->so_broadcast, sizeof(self->so_broadcast));
+        setsockopt(fd, SOL_SOCKET, SO_BROADCAST, (char *)&self->so_broadcast, sizeof(self->so_broadcast));
     }
-  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &self->so_keepalive, sizeof(self->so_keepalive));
+  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *)&self->so_keepalive, sizeof(self->so_keepalive));
   return TRUE;
 }
 
