@@ -24,7 +24,9 @@
 #include "messages.h"
 
 #include <sys/types.h>
+#ifndef __WIN32
 #include <sys/socket.h>
+#endif
 
 gboolean
 socket_options_setup_socket_method(SocketOptions *self, gint fd, GSockAddr *bind_addr, AFSocketDirection dir)
