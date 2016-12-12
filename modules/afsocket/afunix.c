@@ -259,7 +259,7 @@ afunix_sd_new(gchar *filename, guint32 flags)
 {
   AFUnixSourceDriver *self = g_new0(AFUnixSourceDriver, 1);
 
-  afsocket_sd_init_instance(&self->super, &self->sock_options, AF_UNIX, flags);
+  afsocket_sd_init_instance(&self->super, socket_options_new(), AF_UNIX, flags);
 
   self->super.super.super.super.init = afunix_sd_init;
   self->super.super.super.super.free_fn = afunix_sd_free;
@@ -324,7 +324,7 @@ afunix_dd_new(gchar *filename, guint flags)
 {
   AFUnixDestDriver *self = g_new0(AFUnixDestDriver, 1);
 
-  afsocket_dd_init_instance(&self->super, &self->sock_options, AF_UNIX, "localhost", flags);
+  afsocket_dd_init_instance(&self->super, socket_options_new(), AF_UNIX, "localhost", flags);
   self->super.super.super.super.free_fn = afunix_dd_free;
   self->super.apply_transport = afunix_dd_apply_transport;
 

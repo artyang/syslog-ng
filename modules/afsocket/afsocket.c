@@ -86,20 +86,7 @@ afsocket_reload_info_free(AFSocketReloadInfo *reload_info)
 gboolean
 afsocket_setup_socket(gint fd, SocketOptions *sock_options, AFSocketDirection dir)
 {
-  if (dir & AFSOCKET_DIR_RECV)
-    {
-      if (sock_options->rcvbuf)
-        setsockopt(fd, SOL_SOCKET, SO_RCVBUF, (char *) &sock_options->rcvbuf, sizeof(sock_options->rcvbuf));
-    }
-  if (dir & AFSOCKET_DIR_SEND)
-    {
-      if (sock_options->sndbuf)
-        setsockopt(fd, SOL_SOCKET, SO_SNDBUF, (char *) &sock_options->sndbuf, sizeof(sock_options->sndbuf));
-      if (sock_options->broadcast)
-        setsockopt(fd, SOL_SOCKET, SO_BROADCAST, (char *) &sock_options->broadcast, sizeof(sock_options->broadcast));
-    }
-  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (char *) &sock_options->keepalive, sizeof(sock_options->keepalive));
-  return TRUE;
+  return socket_options_setup_socket(sock_options, fd, NULL, dir);
 }
 
 static gboolean
@@ -751,7 +738,7 @@ afsocket_sd_init(LogPipe *s)
         }
       self->fd = -1;
 
-      if (!self->setup_socket(self, sock))
+      if (sock !=-1 && !self->setup_socket(self, sock))
         {
           closesocket(sock);
           return FALSE;

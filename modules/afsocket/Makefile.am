@@ -13,9 +13,19 @@ SYSTEMD_SOURCES =
 endif
 
 module_LTLIBRARIES = libafsocket.la
-libafsocket_la_SOURCES = \
-	afsocket-grammar.y afsocket-parser.c afsocket-parser.h afsocket-plugin.c \
-	afsocket.c afsocket.h afinet.c afinet.h
+libafsocket_la_SOURCES =  \
+  afsocket-grammar.y      \
+  afsocket-parser.c       \
+  afsocket-parser.h       \
+  afsocket-plugin.c       \
+  afsocket.c              \
+  afsocket.h              \
+  afinet.c                \
+  afinet.h                \
+  socket-options-inet.c   \
+  socket-options-inet.h   \
+  socket-options.h        \
+  socket-options.c
 
 if !IS_WINDOWS
 libafsocket_la_SOURCES += \
