@@ -37,6 +37,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/vfs.h>
+#include <linux/magic.h>
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
@@ -255,12 +257,28 @@ affile_is_regular_fd(int fd)
   return S_ISREG(st.st_mode) || S_ISLNK(st.st_mode);
 }
 
+static void
+affile_sd_set_nfs_file_properties(OpenFileProperties *props, const gchar *filename)
+{
+  struct statfs stats;
+
+  if (statfs(filename, &stats) == -1)
+    return;
+
+  if (stats.f_type == NFS_SUPER_MAGIC && !props->is_pipe)
+  {
+    props->flags |= O_DIRECT;
+  }
+}
+
 gboolean
 affile_sd_open_file(AFFileSourceDriver *self, gchar *name, gint *fd)
 {
   OpenFileProperties props;
 
   affile_sd_init_open_file_properties(self, &props);
+  affile_sd_set_nfs_file_properties(&props, name);
+
   *fd = affile_open_file(name, &props);
   if (*fd == -1)
     return FALSE;
