@@ -30,8 +30,11 @@
 #include "pathutils.h"
 #include "resolved-configurable-paths.h"
 
-#include <gmodule.h>
+#include <sys/types.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <gmodule.h>
 
 #ifdef _AIX
 #define G_MODULE_SUFFIX "a"
@@ -74,7 +77,7 @@ plugin_candidate_free(PluginCandidate *self)
 }
 
 static Plugin *
-plugin_find_in_list(GlobalConfig *cfg, GList *head, gint plugin_type, const gchar *plugin_name)
+plugin_find_in_list(GList *head, gint plugin_type, const gchar *plugin_name)
 {
   GList *p;
   Plugin *plugin;
@@ -112,7 +115,7 @@ plugin_register(GlobalConfig *cfg, Plugin *p, gint number)
 
   for (i = 0; i < number; i++)
     {
-      if (plugin_find_in_list(cfg, cfg->plugins, p[i].type, p[i].name))
+      if (plugin_find_in_list(cfg->plugins, p[i].type, p[i].name))
         {
           msg_debug("Attempted to register the same plugin multiple times, ignoring",
                     evt_tag_str("context", cfg_lexer_lookup_context_name_by_type(p[i].type)),
@@ -130,13 +133,13 @@ plugin_find(GlobalConfig *cfg, gint plugin_type, const gchar *plugin_name)
   PluginCandidate *candidate;
 
   /* try registered plugins first */
-  p = plugin_find_in_list(cfg, cfg->plugins, plugin_type, plugin_name);
+  p = plugin_find_in_list(cfg->plugins, plugin_type, plugin_name);
   if (p)
     {
       return p;
     }
 
-  candidate = (PluginCandidate *) plugin_find_in_list(cfg, cfg->candidate_plugins, plugin_type, plugin_name);
+  candidate = (PluginCandidate *) plugin_find_in_list(cfg->candidate_plugins, plugin_type, plugin_name);
   if (!candidate)
     return NULL;
 
@@ -144,7 +147,7 @@ plugin_find(GlobalConfig *cfg, gint plugin_type, const gchar *plugin_name)
   plugin_load_module(candidate->module_name, cfg, NULL);
 
   /* by this time it should've registered */
-  p = plugin_find_in_list(cfg, cfg->plugins, plugin_type, plugin_name);
+  p = plugin_find_in_list(cfg->plugins, plugin_type, plugin_name);
   if (p)
     {
       p->failure_info.aux_data = candidate->super.failure_info.aux_data;
@@ -402,12 +405,26 @@ call_init:
   return result;
 }
 
-void
-plugin_load_candidate_modules(GlobalConfig *cfg)
+static void
+_free_candidate_plugins_list(GList *candidate_plugins)
+{
+  g_list_foreach(candidate_plugins, (GFunc) plugin_candidate_free, NULL);
+  g_list_free(candidate_plugins);
+}
+
+/* This functions runs in a separate process during startup, thus we don't
+ * really have a means to report errors, stderr may not be available.  */
+static void
+_enumerate_and_dump_plugin_info_in_modules(int output_fd)
 {
   GModule *mod;
   gchar **mod_paths;
   gint i, j;
+  FILE *discovery;
+
+  discovery = fdopen(output_fd, "w");
+  if (!discovery)
+    return;
 
   mod_paths = g_strsplit(resolvedConfigurablePaths.initial_module_path ? : "", G_SEARCHPATH_SEPARATOR_S, 0);
   for (i = 0; mod_paths[i]; i++)
@@ -415,8 +432,6 @@ plugin_load_candidate_modules(GlobalConfig *cfg)
       GDir *dir;
       const gchar *fname;
 
-      msg_debug("Reading path for candidate modules",
-                evt_tag_str("path", mod_paths[i]));
       dir = g_dir_open(mod_paths[i], 0, NULL);
       if (!dir)
         continue;
@@ -431,10 +446,6 @@ plugin_load_candidate_modules(GlobalConfig *cfg)
                 fname += 3;
               module_name = g_strndup(fname, (gint) (strlen(fname) - strlen(G_MODULE_SUFFIX) - 1));
 
-              msg_debug("Reading shared object for a candidate module",
-                        evt_tag_str("path", mod_paths[i]),
-                        evt_tag_str("fname", fname),
-                        evt_tag_str("module", module_name));
               mod = plugin_dlopen_module(module_name, resolvedConfigurablePaths.initial_module_path);
               module_info = plugin_get_module_info(mod);
 
@@ -443,28 +454,8 @@ plugin_load_candidate_modules(GlobalConfig *cfg)
                   for (j = 0; j < module_info->plugins_len; j++)
                     {
                       Plugin *plugin = &module_info->plugins[j];
-                      PluginCandidate *candidate_plugin;
 
-                      candidate_plugin = (PluginCandidate *) plugin_find_in_list(cfg, cfg->candidate_plugins, plugin->type, plugin->name);
-
-                      msg_debug("Registering candidate plugin",
-                                evt_tag_str("module", module_name),
-                                evt_tag_str("context", cfg_lexer_lookup_context_name_by_type(plugin->type)),
-                                evt_tag_str("name", plugin->name),
-                                evt_tag_int("preference", module_info->preference));
-                      if (candidate_plugin)
-                        {
-                          if (candidate_plugin->preference < module_info->preference)
-                            {
-                              plugin_candidate_set_module_name(candidate_plugin, module_name);
-                              plugin_candidate_set_preference(candidate_plugin, module_info->preference);
-                            }
-                        }
-                      else
-                        {
-                          cfg->candidate_plugins = g_list_prepend(cfg->candidate_plugins, plugin_candidate_new(plugin->type, plugin->name,
-                                                                  module_name, module_info->preference));
-                        }
+                      fprintf(discovery, "%s %d %d %s\n", module_name, module_info->preference, plugin->type, plugin->name);
                     }
                 }
               g_free(module_name);
@@ -477,13 +468,136 @@ plugin_load_candidate_modules(GlobalConfig *cfg)
       g_dir_close(dir);
     }
   g_strfreev(mod_paths);
+  fclose(discovery);
 }
+
+static GList *
+_parse_and_load_plugin_info_in_modules(int input_fd)
+{
+  FILE *discovery;
+  GList *candidate_plugins = NULL;
+  gchar module_name[4096];
+  gint module_pref;
+  gint plugin_type;
+  gchar plugin_name[256];
+
+  discovery = fdopen(input_fd, "r");
+  if (!discovery)
+    {
+      msg_error("Error happened while opening plugin discovery output, fdopen() failed",
+                evt_tag_errno("error", errno));
+      return NULL;
+    }
+
+  while (fscanf(discovery, "%4095s %d %d %255s\n",
+                  module_name,
+                  &module_pref,
+                  &plugin_type,
+                  plugin_name) == 4)
+    {
+
+
+      PluginCandidate *candidate_plugin;
+
+      candidate_plugin = (PluginCandidate *) plugin_find_in_list(candidate_plugins, plugin_type, plugin_name);
+
+      msg_debug("Registering candidate plugin",
+                evt_tag_str("module", module_name),
+                evt_tag_str("context", cfg_lexer_lookup_context_name_by_type(plugin_type)),
+                evt_tag_str("name", plugin_name),
+                evt_tag_int("preference", module_pref));
+      if (candidate_plugin)
+        {
+          if (candidate_plugin->preference < module_pref)
+            {
+              plugin_candidate_set_module_name(candidate_plugin, module_name);
+              plugin_candidate_set_preference(candidate_plugin, module_pref);
+            }
+        }
+      else
+        {
+          candidate_plugins = g_list_prepend(candidate_plugins,
+                                             plugin_candidate_new(plugin_type, plugin_name,
+                                                 module_name, module_pref));
+        }
+
+    }
+
+  if (!feof(discovery))
+    {
+      msg_error("Error parsing the output of the discovery process, "
+                "not all lines were consumed, this is an internal error.");
+    }
+
+  fclose(discovery);
+  return candidate_plugins;
+}
+
+GList *
+plugin_discover_candidate_modules(void)
+{
+  pid_t discover_pid;
+  int discover_pipe[2];
+
+  if (pipe(discover_pipe) < 0)
+    {
+      msg_error("Error creating pipe for discover process",
+                evt_tag_errno("error", errno));
+      return NULL;
+    }
+
+  if ((discover_pid = fork()) < 0)
+    {
+      msg_error("Error creating discover process, fork() failed",
+                evt_tag_errno("error", errno));
+      return NULL;
+    }
+
+  if (discover_pid == 0)
+    {
+      close(discover_pipe[0]);
+      _enumerate_and_dump_plugin_info_in_modules(dup(discover_pipe[1]));
+      close(discover_pipe[1]);
+      _exit(0);
+    }
+  else
+    {
+      int exit_code;
+      GList *candidate_modules;
+
+      close(discover_pipe[1]);
+      candidate_modules = _parse_and_load_plugin_info_in_modules(dup(discover_pipe[0]));
+      close(discover_pipe[0]);
+      if (waitpid(discover_pid, &exit_code, 0) < 0)
+        {
+          msg_error("Error waiting for discover process, waitpid() failed",
+                    evt_tag_errno("error", errno));
+          _free_candidate_plugins_list(candidate_modules);
+          return NULL;
+        }
+      if (exit_code != 0)
+        {
+          msg_error("Error in discover process, exit code is not zero",
+                    evt_tag_int("exit_code", WEXITSTATUS(exit_code)),
+                    evt_tag_int("status", exit_code));
+          _free_candidate_plugins_list(candidate_modules);
+          return NULL;
+        }
+      return candidate_modules;
+    }
+}
+
+void
+plugin_load_candidate_modules(GlobalConfig *cfg)
+{
+  cfg->candidate_plugins = plugin_discover_candidate_modules();
+}
+
 
 void
 plugin_free_candidate_modules(GlobalConfig *cfg)
 {
-  g_list_foreach(cfg->candidate_plugins, (GFunc) plugin_candidate_free, NULL);
-  g_list_free(cfg->candidate_plugins);
+  _free_candidate_plugins_list(cfg->candidate_plugins);
   cfg->candidate_plugins = NULL;
 }
 
