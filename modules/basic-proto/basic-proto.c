@@ -2297,6 +2297,8 @@ log_proto_text_server_fetch_from_buf(LogProtoBufferedServer *s, const guchar *bu
             {
               /* this buffer part has to be dropped */
               state->pending_buffer_pos = eol - self->super.buffer;
+              buffer_start = self->super.buffer + state->pending_buffer_pos;
+              buffer_bytes = state->pending_buffer_end - state->pending_buffer_pos;
               log_proto_buffered_server_put_state(&self->super);
               return log_proto_text_server_fetch_from_buf(&self->super,
                                                            buffer_start,
