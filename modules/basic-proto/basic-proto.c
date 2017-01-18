@@ -2311,7 +2311,7 @@ log_proto_text_server_fetch_from_buf(LogProtoBufferedServer *s, const guchar *bu
             }
         }
     }
-  if ((!eol && (buffer_bytes == state->buffer_size)))
+  if ((!eol && (buffer_bytes >= self->super.max_msg_size)))
     {
       /* our buffer is full and no EOL was found */
       *msg_len = buffer_bytes;
