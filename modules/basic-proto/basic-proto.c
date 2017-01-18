@@ -573,6 +573,7 @@ struct _LogProtoBufferedServer
   StateHandler *state_handler;
 
   gint max_buffer_size;
+  gint max_msg_size;
   gint init_buffer_size;
   guchar *buffer;
   GSockAddr *prev_saddr;
@@ -1898,7 +1899,7 @@ log_proto_buffered_server_free(LogProto *s)
 }
 
 static void
-log_proto_buffered_server_init(LogProtoBufferedServer *self, LogTransport *transport, gint max_buffer_size, gint init_buffer_size, guint flags)
+log_proto_buffered_server_init(LogProtoBufferedServer *self, LogTransport *transport, gint max_msg_size, gint max_buffer_size, gint init_buffer_size, guint flags)
 {
   self->super.prepare = log_proto_buffered_server_prepare;
   self->super.fetch = log_proto_buffered_server_fetch;
@@ -1912,6 +1913,7 @@ log_proto_buffered_server_init(LogProtoBufferedServer *self, LogTransport *trans
   self->super.flags = flags;
   self->init_buffer_size = init_buffer_size;
   self->max_buffer_size = max_buffer_size;
+  self->max_msg_size = max_msg_size;
 }
 
 typedef struct _LogProtoTextServer
@@ -2456,7 +2458,7 @@ log_proto_text_server_free(LogProto *p)
 static void
 log_proto_text_server_init(LogProtoTextServer *self, LogTransport *transport, gint max_msg_size, guint flags)
 {
-  log_proto_buffered_server_init(&self->super, transport, max_msg_size * 6, max_msg_size, flags);
+  log_proto_buffered_server_init(&self->super, transport, max_msg_size, max_msg_size * 6, max_msg_size, flags);
   self->super.fetch_from_buf = log_proto_text_server_fetch_from_buf;
   self->super.super.prepare = log_proto_text_server_prepare;
   self->super.super.get_pending_pos = log_proto_text_server_get_pending_pos;
@@ -2556,7 +2558,7 @@ log_proto_record_server_new(LogTransport *transport, gint record_size, guint fla
 {
   LogProtoRecordServer *self = g_new0(LogProtoRecordServer, 1);
 
-  log_proto_buffered_server_init(&self->super, transport, record_size * 6, record_size, flags);
+  log_proto_buffered_server_init(&self->super, transport, record_size, record_size * 6, record_size, flags);
   self->super.fetch_from_buf = log_proto_record_server_fetch_from_buf;
   self->super.read_data = log_proto_record_server_read_data;
   self->record_size = record_size;
@@ -2590,7 +2592,7 @@ log_proto_dgram_server_new(LogTransport *transport, gint max_msg_size, guint fla
 {
   LogProtoRecordServer *self = g_new0(LogProtoRecordServer, 1);
 
-  log_proto_buffered_server_init(&self->super, transport, max_msg_size * 6, max_msg_size, flags | LPBS_IGNORE_EOF);
+  log_proto_buffered_server_init(&self->super, transport, max_msg_size, max_msg_size * 6, max_msg_size, flags | LPBS_IGNORE_EOF);
   self->super.fetch_from_buf = log_proto_dgram_server_fetch_from_buf;
   return &self->super.super;
 }
