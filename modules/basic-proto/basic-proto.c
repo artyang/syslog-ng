@@ -42,7 +42,7 @@
 #include <limits.h>
 #include <pcre.h>
 
-#define MAX_BUFFER_SIZE_MULTIPLIER 6
+#define MAX_BUFFER_SIZE_MULTIPLIER 8
 
 typedef struct _LogProtoTextClient
 {
