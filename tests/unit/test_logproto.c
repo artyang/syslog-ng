@@ -134,8 +134,9 @@ static LogProtoStatus proto_fetch(LogProto *proto, const guchar **msg, gsize *ms
 
 #define TEST_LOG_PROTO_TEXT_SERVER_SKIP_BAD_CHARS(bad_input, bad_input_size, encoding, good_output) \
     { \
+      const gint max_msg_size = bad_input_size * 6; \
       LogTransport *transport = log_transport_mock_new(TRUE, bad_input, bad_input_size, LTM_EOF); \
-      LogProto *proto = create_log_proto_text_server_new(transport, 32, LPBS_POS_TRACKING); \
+      LogProto *proto = create_log_proto_text_server_new(transport, max_msg_size, LPBS_POS_TRACKING); \
       log_proto_set_encoding(proto, encoding); \
       assert_proto_fetch(proto, good_output, -1); \
       assert_proto_fetch_failure(proto, LPS_EOF, NULL); \
