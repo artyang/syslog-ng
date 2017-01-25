@@ -521,7 +521,7 @@ AC_HEADER_STDC
 AC_CHECK_HEADER(dmalloc.h)
 AC_CHECK_HEADERS(strings.h getopt.h stropts.h sys/strlog.h door.h sys/capability.h sys/prctl.h glob.h utmp.h utmpx.h)
 AC_CHECK_HEADERS(tcpd.h time.h sys/time.h)
-AC_CHECK_HEADER(linux/magic.h, AC_DEFINE(HAVE_LINUX_MAGIC_H,1,""), AC_DEFINE(NFS_SUPER_MAGIC, 0x6969, ""))
+
 
 dnl ***************************************************************************
 dnl Header checks

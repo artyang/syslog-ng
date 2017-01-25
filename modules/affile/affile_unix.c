@@ -38,13 +38,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/vfs.h>
-
-#if HAVE_LINUX_MAGIC_H
 #include <linux/magic.h>
-#else
-#include "config.h"
-#endif
-
 #include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
