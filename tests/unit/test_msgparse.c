@@ -53,14 +53,8 @@ absolute_value(signed long diff)
     return diff;
 }
 
-/* This function determines the year that syslog-ng would find out
- * given the timestamp has no year information. Then returns the UTC
- * representation of "January 1st 00:00:00" of that year. This is to
- * be used for testcases that lack year information. ts_month is the 0
- * based month in the timestamp being parsed.
- */
-time_t
-get_bsd_year_utc(int ts_month)
+static time_t
+_get_epoch_with_bsd_year(int ts_month, int d, int h, int m, int s)
 {
   struct tm *tm;
   time_t t;
@@ -70,11 +64,11 @@ get_bsd_year_utc(int ts_month)
 
   tm->tm_year = determine_year_for_month(ts_month, tm);
 
-  tm->tm_hour = 0;
-  tm->tm_min = 0;
-  tm->tm_sec = 0;
-  tm->tm_mday = 1;
-  tm->tm_mon = 0;
+  tm->tm_hour = h;
+  tm->tm_min = m;
+  tm->tm_sec = s;
+  tm->tm_mday = d;
+  tm->tm_mon = ts_month;
   tm->tm_isdst = -1;
   return mktime(tm);
 }
@@ -287,7 +281,7 @@ test_log_messages_can_be_parsed(void)
 
   testcase("<15>Jan  1 01:00:00 bzorp openvpn[2499]: PTHREAD support initialized", LP_EXPECT_HOSTNAME, NULL,
            15,             // pri
-           get_bsd_year_utc(0) + 3600, 0, 3600,        // timestamp (sec/usec/zone)
+           _get_epoch_with_bsd_year(0, 1, 1, 0, 0), 0, 3600,        // timestamp (sec/usec/zone)
            "bzorp",        // host
            "openvpn",        // openvpn
            "PTHREAD support initialized", // msg
@@ -296,7 +290,7 @@ test_log_messages_can_be_parsed(void)
 
   testcase("<15>Jan 10 01:00:00 bzorp openvpn[2499]: PTHREAD support initialized", LP_EXPECT_HOSTNAME, NULL,
            15,             // pri
-           get_bsd_year_utc(0) + 3600 + 9 * 24 * 3600, 0, 3600,        // timestamp (sec/usec/zone)
+           _get_epoch_with_bsd_year(0, 10, 1, 0, 0), 0, 3600,        // timestamp (sec/usec/zone)
            "bzorp",        // host
            "openvpn",        // openvpn
            "PTHREAD support initialized", // msg
@@ -305,7 +299,7 @@ test_log_messages_can_be_parsed(void)
 
   testcase("<13>Jan  1 14:40:51 alma korte: message", 0, NULL,
        13,
-       get_bsd_year_utc(0) + 60 * 60 * 14 + 40 * 60 + 51, 0, 3600,
+       _get_epoch_with_bsd_year(0, 1, 14, 40, 51), 0, 3600,
        "",
        "alma",
        "korte: message",
@@ -533,7 +527,7 @@ test_log_messages_can_be_parsed(void)
   /* Dell switch */
   testcase("<190>NOV 22 00:00:33 192.168.33.8-1 CMDLOGGER[165319912]: cmd_logger_api.c(83) 13518 %% CLI:192.168.32.100:root:User  logged in", LP_EXPECT_HOSTNAME, NULL,
            190,
-           get_bsd_year_utc(10) + 28166433, 0, 3600,
+           _get_epoch_with_bsd_year(10, 22, 0, 0, 33), 0, 3600,
            "192.168.33.8-1",
            "CMDLOGGER",
            "cmd_logger_api.c(83) 13518 %% CLI:192.168.32.100:root:User  logged in",
