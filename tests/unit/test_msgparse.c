@@ -530,6 +530,16 @@ test_log_messages_can_be_parsed(void)
            NULL, NULL, NULL, ignore_sdata_pairs
            );
 
+  /* Dell switch */
+  testcase("<190>NOV 22 00:00:33 192.168.33.8-1 CMDLOGGER[165319912]: cmd_logger_api.c(83) 13518 %% CLI:192.168.32.100:root:User  logged in", LP_EXPECT_HOSTNAME, NULL,
+           190,
+           get_bsd_year_utc(10) + 28166433, 0, 3600,
+           "192.168.33.8-1",
+           "CMDLOGGER",
+           "cmd_logger_api.c(83) 13518 %% CLI:192.168.32.100:root:User  logged in",
+           NULL, NULL, NULL, ignore_sdata_pairs
+           );
+
   testcase("<190>Apr 15 2007 21:28:13 %ASA: this is a Cisco ASA timestamp", LP_EXPECT_HOSTNAME, "^%",
            190,
            1176665293, 0, 7200,
