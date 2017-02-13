@@ -1080,18 +1080,18 @@ main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
   test_determine_year_for_month(0, 0, 2013);
   test_determine_year_for_month(0, 1, 2013);
   test_determine_year_for_month(0, 2, 2013);
-  test_determine_year_for_month(0, 3, 2012);
-  test_determine_year_for_month(0, 10, 2012);
+  test_determine_year_for_month(0, 3, 2013);
+  test_determine_year_for_month(0, 10, 2013);
   test_determine_year_for_month(0, 11, 2012);
   test_determine_year_for_month(1, 0, 2013);
-  test_determine_year_for_month(1, 11, 2012);
+  test_determine_year_for_month(1, 11, 2013);
   test_determine_year_for_month(6, 0, 2013);
   test_determine_year_for_month(6, 6, 2013);
   test_determine_year_for_month(6, 8, 2013);
-  test_determine_year_for_month(6, 9, 2012);
-  test_determine_year_for_month(6, 11, 2012);
+  test_determine_year_for_month(6, 9, 2013);
+  test_determine_year_for_month(6, 11, 2013);
   test_determine_year_for_month(11, 0, 2014);
-  test_determine_year_for_month(11, 1, 2014);
+  test_determine_year_for_month(11, 1, 2013);
   test_determine_year_for_month(11, 2, 2013);
 
   deinit_syslogformat_module();
