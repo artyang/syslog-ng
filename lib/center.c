@@ -396,17 +396,22 @@ log_center_init_pipe_line(LogCenter *self, LogConnection *conn, GlobalConfig *cf
                           NULL);
                 goto error;
               }
-            pipe = log_center_instantiate_process_pipe_line(self, ep->ref);
-            if (!pipe)
+
+            LogProcessRule *rule = ep->ref;
+            if (rule->head)
               {
-                msg_error("Error referencing processing element",
-                          evt_tag_str("pipeline", ep->name->str),
-                          NULL);
-                goto error;
+                pipe = log_center_instantiate_process_pipe_line(self, rule);
+                if (!pipe)
+                  {
+                    msg_error("Error referencing processing element",
+                              evt_tag_str("pipeline", ep->name->str),
+                              NULL);
+                    goto error;
+                  }
+                if ((ep->type != EP_FILTER) || (pipe->flags & PIF_CLONE))
+                  path_changes_the_message = TRUE;
               }
-            log_process_rule_ref(ep->ref);
-            if ((ep->type != EP_FILTER) || (pipe->flags & PIF_CLONE))
-              path_changes_the_message = TRUE;
+            log_process_rule_ref(rule);
             break;
           }
 
