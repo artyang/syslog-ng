@@ -302,6 +302,33 @@ log_center_instantiate_process_pipe_line(LogCenter *self, LogProcessRule *rule)
     }
 }
 
+static gboolean
+log_center_finalize_initialization_of_process_rule(LogCenter *self, LogPipeItem *pipe_item, LogPipe **out_pipe,
+                                                   gboolean *path_changes_the_message)
+{
+  LogPipe *pipe = NULL;
+  LogProcessRule *rule = pipe_item->ref;
+
+  if (!rule->head)
+    goto empty_rule;
+
+  pipe = log_center_instantiate_process_pipe_line(self, rule);
+  if (!pipe)
+    {
+      msg_error("Error referencing processing element",
+                evt_tag_str("pipeline", pipe_item->name->str),
+                NULL);
+      return FALSE;
+    }
+
+  if ((pipe_item->type != EP_FILTER) || (pipe->flags & PIF_CLONE))
+    *path_changes_the_message = TRUE;
+
+empty_rule:
+  log_process_rule_ref(rule);
+  *out_pipe = pipe;
+  return TRUE;
+}
 
 /* NOTE: returns a borrowed reference! */
 LogPipe *
@@ -397,21 +424,9 @@ log_center_init_pipe_line(LogCenter *self, LogConnection *conn, GlobalConfig *cf
                 goto error;
               }
 
-            LogProcessRule *rule = ep->ref;
-            if (rule->head)
-              {
-                pipe = log_center_instantiate_process_pipe_line(self, rule);
-                if (!pipe)
-                  {
-                    msg_error("Error referencing processing element",
-                              evt_tag_str("pipeline", ep->name->str),
-                              NULL);
-                    goto error;
-                  }
-                if ((ep->type != EP_FILTER) || (pipe->flags & PIF_CLONE))
-                  path_changes_the_message = TRUE;
-              }
-            log_process_rule_ref(rule);
+            if (!log_center_finalize_initialization_of_process_rule(self, ep, &pipe, &path_changes_the_message))
+              goto error;
+
             break;
           }
 
