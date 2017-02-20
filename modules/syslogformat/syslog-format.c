@@ -28,6 +28,7 @@
 #include "misc.h"
 #include "cfg.h"
 #include "str-format.h"
+#include "tls-support.h"
 
 #include <regex.h>
 #include <ctype.h>
@@ -83,6 +84,24 @@
 #define        LOG_NOWAIT   0x10
 #define        LOG_PERROR   0x20
 #endif
+
+#define NUMBER_OF_CACHE_ENTRIES 1024
+
+typedef struct _CacheItem
+{
+  glong assume_timezone;
+  gint32 zone_offset;
+  struct tm tm;
+  time_t tv_sec;
+} CacheItem;
+
+TLS_BLOCK_START
+{
+  CacheItem cache_items[NUMBER_OF_CACHE_ENTRIES];
+}
+TLS_BLOCK_END;
+
+#define cache_items __tls_deref(cache_items)
 
 static const char aix_fwd_string[] = "Message forwarded from ";
 static const char repeat_msg_string[] = "last message repeated";
@@ -570,7 +589,26 @@ log_msg_parse_date_unnormalized(LogMessage *self, const guchar **data, gint *len
   return FALSE;
 }
 
-static void
+/* This functions doesn't check all of the fields, see usage */
+static inline gboolean
+are_tms_equal(const struct tm *tm_a, const struct tm *tm_b)
+{
+  return (tm_a->tm_sec == tm_b->tm_sec &&
+          tm_a->tm_min == tm_b->tm_min &&
+          tm_a->tm_hour == tm_b->tm_hour &&
+          tm_a->tm_mday == tm_b->tm_mday &&
+          tm_a->tm_mon == tm_b->tm_mon &&
+          tm_a->tm_year == tm_b->tm_year &&
+          tm_a->tm_isdst == tm_b->tm_isdst);
+}
+
+static inline gint32
+_get_hash_of_tm(struct tm tm)
+{
+  return 60 * tm.tm_min + tm.tm_sec;
+}
+
+static inline void
 _normalize_time(LogStamp *stamp, struct tm *tm, glong assume_timezone)
 {
   tm->tm_isdst = -1;
@@ -579,6 +617,33 @@ _normalize_time(LogStamp *stamp, struct tm *tm, glong assume_timezone)
   stamp->tv_sec = cached_mktime(tm);
   gint unnormalized_hour = __calculate_unnormalized_hour(&unnormalized_tm, tm);
   stamp->tv_sec = __calculate_correct_time(stamp, tm->tm_hour, unnormalized_hour, assume_timezone);
+}
+
+static inline void
+_normalize_time_cached(LogStamp *stamp, struct tm *tm, glong assume_timezone)
+{
+  gint32 hash = _get_hash_of_tm(*tm) % NUMBER_OF_CACHE_ENTRIES;
+  CacheItem *cache_item = &(cache_items[hash]);
+
+  /* Note: Timezone information parsed from the log is stored in stamp->zone_offset
+   * and tm->tm_gmtoff contains the local timezone! */
+  if (cache_item->assume_timezone == assume_timezone && cache_item->tm.tm_gmtoff == stamp->zone_offset
+      && are_tms_equal(&(cache_item->tm), tm))
+    {
+      stamp->tv_sec = cache_item->tv_sec;
+      stamp->zone_offset = cache_item->zone_offset;
+    }
+  else
+    {
+      cache_item->tm = *tm;
+      cache_item->tm.tm_gmtoff = stamp->zone_offset;
+
+      _normalize_time(stamp, tm, assume_timezone);
+
+      cache_item->assume_timezone = assume_timezone;
+      cache_item->tv_sec = stamp->tv_sec;
+      cache_item->zone_offset = stamp->zone_offset;
+    }
 }
 
 static gboolean
@@ -597,7 +662,7 @@ log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint pa
     }
   else
     {
-      _normalize_time(stamp, &tm, assume_timezone);
+      _normalize_time_cached(stamp, &tm, assume_timezone);
     }
 
   return TRUE;
