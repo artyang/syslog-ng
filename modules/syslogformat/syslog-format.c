@@ -638,10 +638,10 @@ _normalize_time_cached(LogStamp *stamp, struct tm *tm, glong assume_timezone)
     {
       cache_item->tm = *tm;
       cache_item->original_zone_offset = stamp->zone_offset;
+      cache_item->assume_timezone = assume_timezone;
 
       _normalize_time(stamp, tm, assume_timezone);
 
-      cache_item->assume_timezone = assume_timezone;
       cache_item->tv_sec = stamp->tv_sec;
       cache_item->zone_offset = stamp->zone_offset;
     }
