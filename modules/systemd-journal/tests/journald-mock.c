@@ -53,6 +53,12 @@ journald_open(Journald *self, int flags)
   return 0;
 }
 
+gboolean
+journald_is_open(Journald *self)
+{
+  return self->opened;
+}
+
 void
 journald_close(Journald *self)
 {

@@ -154,6 +154,12 @@ journald_open(Journald *self, int flags)
   return sd_journal_open(&self->journal, flags);
 }
 
+gboolean
+journald_is_open(Journald *self)
+{
+  return !!self->journal;
+}
+
 void
 journald_close(Journald *self)
 {
