@@ -90,6 +90,7 @@
 typedef struct _CacheItem
 {
   glong assume_timezone;
+  gint32 original_zone_offset;
   gint32 zone_offset;
   struct tm tm;
   time_t tv_sec;
@@ -627,7 +628,7 @@ _normalize_time_cached(LogStamp *stamp, struct tm *tm, glong assume_timezone)
 
   /* Note: Timezone information parsed from the log is stored in stamp->zone_offset
    * and tm->tm_gmtoff contains the local timezone! */
-  if (cache_item->assume_timezone == assume_timezone && cache_item->tm.tm_gmtoff == stamp->zone_offset
+  if (cache_item->assume_timezone == assume_timezone && cache_item->original_zone_offset == stamp->zone_offset
       && are_tms_equal(&(cache_item->tm), tm))
     {
       stamp->tv_sec = cache_item->tv_sec;
@@ -636,11 +637,11 @@ _normalize_time_cached(LogStamp *stamp, struct tm *tm, glong assume_timezone)
   else
     {
       cache_item->tm = *tm;
-      cache_item->tm.tm_gmtoff = stamp->zone_offset;
+      cache_item->original_zone_offset = stamp->zone_offset;
+      cache_item->assume_timezone = assume_timezone;
 
       _normalize_time(stamp, tm, assume_timezone);
 
-      cache_item->assume_timezone = assume_timezone;
       cache_item->tv_sec = stamp->tv_sec;
       cache_item->zone_offset = stamp->zone_offset;
     }
