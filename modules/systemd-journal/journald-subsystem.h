@@ -45,6 +45,7 @@ Journald *journald_new();
 void journald_free(Journald *self);
 
 int journald_open(Journald *self, int flags);
+gboolean journald_is_open(Journald *self);
 void journald_close(Journald *self);
 int journald_seek_head(Journald *self);
 int journald_seek_tail(Journald *self);

@@ -397,10 +397,19 @@ _fill_bookmark(JournalReader *self, Bookmark *bookmark)
   bookmark->destroy = _destroy_bookmark;
 }
 
+static gboolean
+_journald_open_local_once(Journald *journal)
+{
+  if (!journald_is_open(journal))
+    return journald_open(journal, SD_JOURNAL_LOCAL_ONLY) == 0;
+
+  return TRUE;
+}
+
 gboolean
 journal_reader_skip_old_messages(JournalReader *self, GlobalConfig *cfg)
 {
-  if (journald_open(self->journal, SD_JOURNAL_LOCAL_ONLY) < 0)
+  if (!_journald_open_local_once(self->journal))
     {
       msg_error("Can't open journal",
                 evt_tag_errno("error", errno),
@@ -562,8 +571,7 @@ _init(LogPipe *s)
   if (!log_source_init(s))
     return FALSE;
 
-  gint res = journald_open(self->journal, SD_JOURNAL_LOCAL_ONLY);
-  if (res < 0)
+  if (!_journald_open_local_once(self->journal))
     {
       msg_error("Error opening the journal",
                 evt_tag_errno("error", errno),
