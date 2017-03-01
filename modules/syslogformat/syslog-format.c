@@ -85,6 +85,7 @@
 #define        LOG_PERROR   0x20
 #endif
 
+#ifdef __linux__
 #define NUMBER_OF_CACHE_ENTRIES 1024
 
 typedef struct _CacheItem
@@ -103,6 +104,7 @@ TLS_BLOCK_START
 TLS_BLOCK_END;
 
 #define cache_items __tls_deref(cache_items)
+#endif
 
 static const char aix_fwd_string[] = "Message forwarded from ";
 static const char repeat_msg_string[] = "last message repeated";
@@ -620,6 +622,7 @@ _normalize_time(LogStamp *stamp, struct tm *tm, glong assume_timezone)
   stamp->tv_sec = __calculate_correct_time(stamp, tm->tm_hour, unnormalized_hour, assume_timezone);
 }
 
+#ifdef __linux__
 static inline void
 _normalize_time_cached(LogStamp *stamp, struct tm *tm, glong assume_timezone)
 {
@@ -646,6 +649,7 @@ _normalize_time_cached(LogStamp *stamp, struct tm *tm, glong assume_timezone)
       cache_item->zone_offset = stamp->zone_offset;
     }
 }
+#endif
 
 static gboolean
 log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint parse_flags, glong assume_timezone)
@@ -663,7 +667,11 @@ log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint pa
     }
   else
     {
+#ifdef __linux__
       _normalize_time_cached(stamp, &tm, assume_timezone);
+#else
+      _normalize_time(stamp, &tm, assume_timezone);
+#endif
     }
 
   return TRUE;
