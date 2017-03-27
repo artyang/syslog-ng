@@ -383,15 +383,13 @@ cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc)
           *yylval = *token;
           *yylloc = self->include_stack[self->include_depth].lloc;
           tok = token->type;
+
           if (token->type == LL_TOKEN)
-            {
-              tok = token->token;
-              injected = TRUE;
-            }
+            tok = token->token;
           else if (token->type == LL_IDENTIFIER || token->type == LL_STRING)
-            {
-              yylval->cptr = strdup(token->cptr);
-            }
+            yylval->cptr = strdup(token->cptr);
+
+          injected = TRUE;
 
           goto exit;
         }
