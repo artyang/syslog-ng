@@ -395,14 +395,12 @@ timespec_diff_nsec(struct timespec *t1, struct timespec *t2)
 gint
 determine_year_for_month(gint month, const struct tm *now)
 {
-  gint month_ahead = month - now->tm_mon;
-
-  if G_LIKELY(-9 <= month_ahead && month_ahead <= 2)
-	return now->tm_year;
-  else if (month_ahead > 2)
-	return now->tm_year - 1;
+  if (month == 11 && now->tm_mon == 0)
+    return now->tm_year - 1;
+  else if (month == 0 && now->tm_mon == 11)
+    return now->tm_year + 1;
   else
-	return now->tm_year + 1;
+    return now->tm_year;
 }
 
 /** Time zone file parser code **/
