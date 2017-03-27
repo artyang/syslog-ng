@@ -1506,23 +1506,17 @@ afsocket_dd_init_instance(AFSocketDestDriver *self, SocketOptions *sock_options,
   afsocket_dd_init_watches(self);
 }
 
-gboolean
-afsocket_sd_set_multi_line_prefix(LogDriver *s, gchar *prefix)
+static gboolean
+_multi_line_regex_compile(const gchar* option_name, const gchar *regex_pattern, pcre **option_matcher)
 {
-  AFSocketSourceDriver *self = (AFSocketSourceDriver *) s;
-  LogProtoServerOptions *options = (LogProtoServerOptions *)&self->proto_options;
   const gchar *error;
   gint erroroffset;
-  /*Are we need any options?*/
-  int pcreoptions = PCRE_EXTENDED;
+  int pcreoptions = 0;
 
-  if (options->opts.prefix_pattern)
-    g_free(options->opts.prefix_pattern);
-  options->opts.prefix_pattern = g_strdup(prefix);
-  options->opts.prefix_matcher = pcre_compile(prefix, pcreoptions, &error, &erroroffset, NULL);
-  if (!options->opts.prefix_matcher)
+  *option_matcher = pcre_compile(regex_pattern, pcreoptions, &error, &erroroffset, NULL);
+  if (!(*option_matcher))
     {
-      msg_error("Bad regexp",evt_tag_str("multi_line_prefix", prefix), evt_tag_id(MSG_BAD_REGEXP), NULL);
+      msg_error("Bad regexp",evt_tag_str(option_name, regex_pattern), evt_tag_id(MSG_BAD_REGEXP), NULL);
       return FALSE;
     }
 
@@ -1530,24 +1524,27 @@ afsocket_sd_set_multi_line_prefix(LogDriver *s, gchar *prefix)
 }
 
 gboolean
+afsocket_sd_set_multi_line_prefix(LogDriver *s, gchar *prefix)
+{
+  AFSocketSourceDriver *self = (AFSocketSourceDriver *) s;
+  LogProtoServerOptions *options = (LogProtoServerOptions *)&self->proto_options;
+
+  if (options->opts.prefix_pattern)
+    g_free(options->opts.prefix_pattern);
+  options->opts.prefix_pattern = g_strdup(prefix);
+
+  return _multi_line_regex_compile("multi_line_prefix", prefix, &options->opts.prefix_matcher);
+}
+
+gboolean
 afsocket_sd_set_multi_line_garbage(LogDriver *s, gchar *garbage)
 {
   AFSocketSourceDriver *self = (AFSocketSourceDriver *) s;
   LogProtoServerOptions *options = (LogProtoServerOptions *)&self->proto_options;
-  const gchar *error;
-  gint erroroffset;
-  /*Are we need any options?*/
-  int pcreoptions = PCRE_EXTENDED;
 
   if (options->opts.garbage_pattern)
     g_free(options->opts.garbage_pattern);
   options->opts.garbage_pattern = g_strdup(garbage);
-  options->opts.garbage_matcher = pcre_compile(garbage, pcreoptions, &error, &erroroffset, NULL);
-  if (!options->opts.garbage_matcher)
-    {
-      msg_error("Bad regexp",evt_tag_str("multi_line_garbage", garbage), evt_tag_id(MSG_BAD_REGEXP), NULL);
-      return FALSE;
-    }
 
-  return TRUE;
+  return _multi_line_regex_compile("multi_line_garbage", garbage, &options->opts.garbage_matcher);
 }
