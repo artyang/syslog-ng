@@ -40,6 +40,7 @@
 #include "service-management.h"
 
 #include <sys/types.h>
+#include <sys/sysinfo.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -284,6 +285,7 @@ cfg_lookup_template(GlobalConfig *cfg, const gchar *name)
 }
 
 extern GTimeVal app_uptime;
+extern GTimeVal os_start_time;
 
 static void
 cfg_init_global_internals(GlobalConfig *cfg)
@@ -295,6 +297,22 @@ cfg_init_global_internals(GlobalConfig *cfg)
   reset_cached_hostname();
 }
 
+static inline GTimeVal
+_get_os_start_time()
+{
+  GTimeVal start_time;
+  struct sysinfo info;
+
+  g_get_current_time(&start_time);
+
+  if (0 == sysinfo(&info))
+    {
+      start_time.tv_sec -= info.uptime;
+    }
+
+  return start_time;
+}
+
 gboolean
 cfg_init(GlobalConfig *cfg)
 {
@@ -303,6 +321,9 @@ cfg_init(GlobalConfig *cfg)
   /* init the uptime (SYSUPTIME macro) */
   g_get_current_time(&app_uptime);
   
+  /* init os_start_time for $OSUPTIME macro */
+  os_start_time = _get_os_start_time();
+
   if (cfg->file_template_name && !(cfg->file_template = cfg_lookup_template(cfg, cfg->file_template_name)))
     msg_error("Error resolving file template",
                evt_tag_str("name", cfg->file_template_name),

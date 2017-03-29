@@ -64,6 +64,7 @@ enum
   M_RCPTID,
   M_HOSTID,
   M_UNIQID,
+  M_OSUPTIME,
 /* WARNING: Do NOT insert new IDs below this line, because they can break any
  * code using the last 3 entries (M_TIME_MACROS_MAX, M_RECVD_OFS and
  * M_STAMP_OFS)...
@@ -233,6 +234,7 @@ LogMacroDef macros[] =
         { "RCPTID", M_RCPTID},
         { "HOSTID", M_HOSTID},
         { "UNIQID", M_UNIQID },
+        { "OSUPTIME", M_OSUPTIME },
 
         /* values that have specific behaviour with older syslog-ng config versions */
         { "MSG", M_MESSAGE },
@@ -261,6 +263,7 @@ LogMacroDef macros[] =
 
 GHashTable *macro_hash;
 GTimeVal app_uptime;
+GTimeVal os_start_time;
 
 static void
 result_append(GString *result, const gchar *sstr, gssize len, gboolean escape)
@@ -514,10 +517,17 @@ log_macro_expand(GString *result, gint id, gboolean escape, const LogTemplateOpt
           }
         break;
       }
-   case M_PROGRAM:
+    case M_OSUPTIME:
       {
-       result_append_value(result, msg, LM_V_PROGRAM, escape);
-       break;
+	GTimeVal now;
+	g_get_current_time(&now);
+	g_string_append_printf(result, "%ld", g_time_val_diff(&now, &os_start_time) / 1000 / 10);
+	break;
+      }
+    case M_PROGRAM:
+      {
+        result_append_value(result, msg, LM_V_PROGRAM, escape);
+        break;
       }
     case M_PID:
       {
