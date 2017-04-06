@@ -75,6 +75,7 @@ INITIALIZER(init_paths)
 }
 
 
+#ifndef G_OS_WIN32
 INITIALIZER(check_fips)
 {
   gpointer fips_selftest_func;
@@ -82,3 +83,4 @@ INITIALIZER(check_fips)
   if (mod)
     is_fips_enabled =  g_module_symbol(mod, "FIPS_selftest", &fips_selftest_func);
 }
+#endif
