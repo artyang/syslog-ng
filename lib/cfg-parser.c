@@ -179,13 +179,26 @@ CFG_PARSER_IMPLEMENT_LEXER_BINDING(main_, gpointer *)
 void
 report_syntax_error(CfgLexer *lexer, YYLTYPE *yylloc, const char *what, const char *msg)
 {
+    report_syntax_error_warning(lexer, yylloc, "Error", what, msg);
+}
+
+void
+report_syntax_warning(CfgLexer *lexer, YYLTYPE *yylloc, const char *what, const char *msg)
+{
+    report_syntax_error_warning(lexer, yylloc, "Warning during", what, msg);
+}
+
+void
+report_syntax_error_warning(CfgLexer *lexer, YYLTYPE *yylloc, const char * error_msg_prefix, const char *what, const char *msg)
+{
   CfgIncludeLevel *level = yylloc->level, *from;
   gint lineno = 1;
   gint i;
   gint file_pos;
   gchar buf[1024];
 
-  fprintf(stderr, "Error parsing %s, %s in %n%s at line %d, column %d:\n",
+  fprintf(stderr, "%s parsing %s, %s in %n%s at line %d, column %d:\n",
+          error_msg_prefix,
           what,
           msg,
           &file_pos,

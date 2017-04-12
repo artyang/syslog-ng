@@ -88,6 +88,18 @@ extern struct _ValuePairsTransformSet *last_vp_transset;
       }                                                                 \
   } while (0)
 
+#define CHECK_WARNING(val, token, errorfmt, ...) do {                   \
+    if (!(val))                                                         \
+      {                                                                 \
+        if (errorfmt)                                                   \
+          {                                                             \
+            gchar __buf[256];                                           \
+            g_snprintf(__buf, sizeof(__buf), errorfmt ? errorfmt : "x", ## __VA_ARGS__); \
+            report_syntax_warning(lexer, & (token), "configuration", __buf);               \
+          }                                                             \
+      }                                                                 \
+  } while (0)
+
 #define CHECK_ERROR(val, token, errorfmt, ...) do {                     \
     if (!(val))                                                         \
       {                                                                 \
