@@ -40,7 +40,6 @@ typedef struct _MonitorPoll
 {
   MonitorBase super;
   GDir *dir;
-  gint poll_freq;
   struct iv_timer poll_timer;
 } MonitorPoll;
 
@@ -52,7 +51,6 @@ monitor_source_poll_new(FileMonitor *monitor)
   MonitorPoll *self = g_new0(MonitorPoll,1);
   self->super.base_dir = NULL;
   self->dir = NULL;
-  self->poll_freq = monitor->options->poll_freq;
   IV_TIMER_INIT(&self->poll_timer);
   self->poll_timer.cookie = self;
   self->poll_timer.handler = file_monitor_poll_timer_callback;
@@ -75,13 +73,12 @@ file_monitor_poll_timer_callback(gpointer s)
   MonitorPoll *self = (MonitorPoll *)s;
   FileMonitor *file_monitor = self->super.file_monitor;
 
-  self->poll_freq = file_monitor->options->poll_freq;
   file_monitor_process_poll_event(file_monitor, self);
   if(iv_timer_registered(&self->poll_timer))
     iv_timer_unregister(&self->poll_timer);
   iv_validate_now();
   self->poll_timer.expires = iv_now;
-  timespec_add_msec(&self->poll_timer.expires, self->poll_freq);
+  timespec_add_msec(&self->poll_timer.expires, self->super.file_monitor->options->poll_freq);
   iv_timer_register(&self->poll_timer);
 }
 
@@ -126,7 +123,7 @@ file_monitor_poll_start(FileMonitor *self, MonitorBase *source, const gchar *bas
     iv_timer_unregister(&p_source->poll_timer);
   iv_validate_now();
   p_source->poll_timer.expires = iv_now;
-  timespec_add_msec(&p_source->poll_timer.expires, p_source->poll_freq);
+  timespec_add_msec(&p_source->poll_timer.expires, p_source->super.file_monitor->options->poll_freq);
   iv_timer_register(&p_source->poll_timer);
 }
 
