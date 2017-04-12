@@ -39,7 +39,6 @@
 typedef struct _MonitorPoll
 {
   MonitorBase super;
-  GDir *dir;
   struct iv_timer poll_timer;
 } MonitorPoll;
 
@@ -50,7 +49,6 @@ monitor_source_poll_new(FileMonitor *monitor)
 {
   MonitorPoll *self = g_new0(MonitorPoll,1);
   self->super.base_dir = NULL;
-  self->dir = NULL;
   IV_TIMER_INIT(&self->poll_timer);
   self->poll_timer.cookie = self;
   self->poll_timer.handler = file_monitor_poll_timer_callback;
@@ -92,8 +90,6 @@ file_monitor_poll_init(MonitorPoll *self, const gchar *base_dir)
 static void
 monitor_poll_free(MonitorPoll *self)
 {
-  if (self->dir)
-    g_dir_close(self->dir);
   if (self->super.base_dir)
     g_free(self->super.base_dir);
   if (iv_timer_registered(&self->poll_timer))
