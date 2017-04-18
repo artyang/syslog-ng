@@ -361,18 +361,12 @@ cfg_lexer_unput_token(CfgLexer *self, YYSTYPE *yylval)
   cfg_lexer_inject_token_block(self, block);
 }
 
-int
-cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc)
+static gboolean
+cfg_lexer_consume_next_injected_token(CfgLexer *self, gint *tok, YYSTYPE *yylval, YYLTYPE *yylloc)
 {
-  CfgBlockGenerator *gen;
   CfgTokenBlock *block;
   YYSTYPE *token;
-  gint tok;
-  gboolean injected;
 
- relex:
-
-  injected = FALSE;
   while (self->token_blocks)
     {
       block = self->token_blocks->data;
@@ -382,18 +376,14 @@ cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc)
         {
           *yylval = *token;
           *yylloc = self->include_stack[self->include_depth].lloc;
-          tok = token->type;
-          if (token->type == LL_TOKEN)
-            {
-              tok = token->token;
-              injected = TRUE;
-            }
-          else if (token->type == LL_IDENTIFIER || token->type == LL_STRING)
-            {
-              yylval->cptr = strdup(token->cptr);
-            }
+          *tok = token->type;
 
-          goto exit;
+          if (token->type == LL_TOKEN)
+            *tok = token->token;
+          else if (token->type == LL_IDENTIFIER || token->type == LL_STRING)
+            yylval->cptr = strdup(token->cptr);
+
+          return TRUE;
         }
       else
         {
@@ -402,22 +392,39 @@ cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc)
         }
     }
 
-  if (cfg_lexer_get_context_type(self) == LL_CONTEXT_BLOCK_CONTENT)
-    cfg_lexer_start_block_state(self, "{}");
-  else if (cfg_lexer_get_context_type(self) == LL_CONTEXT_BLOCK_ARG)
-    cfg_lexer_start_block_state(self, "()");
+  return FALSE;
+}
 
-  yylval->type = 0;
+int
+cfg_lexer_lex(CfgLexer *self, YYSTYPE *yylval, YYLTYPE *yylloc)
+{
+  CfgBlockGenerator *gen;
+  gint tok;
+  gboolean injected;
 
-  g_string_truncate(self->token_text, 0);
-  g_string_truncate(self->token_pretext, 0);
+ relex:
 
-  tok = _cfg_lexer_lex(yylval, yylloc, self->state);
-  if (yylval->type == 0)
-    yylval->type = tok;
+  injected = cfg_lexer_consume_next_injected_token(self, &tok, yylval, yylloc);
 
-  g_string_append_printf(self->preprocess_output, "%s", self->token_pretext->str);
- exit:
+  if (!injected)
+    {
+      if (cfg_lexer_get_context_type(self) == LL_CONTEXT_BLOCK_CONTENT)
+        cfg_lexer_start_block_state(self, "{}");
+      else if (cfg_lexer_get_context_type(self) == LL_CONTEXT_BLOCK_ARG)
+        cfg_lexer_start_block_state(self, "()");
+
+      yylval->type = 0;
+
+      g_string_truncate(self->token_text, 0);
+      g_string_truncate(self->token_pretext, 0);
+
+      tok = _cfg_lexer_lex(yylval, yylloc, self->state);
+      if (yylval->type == 0)
+        yylval->type = tok;
+
+      g_string_append_printf(self->preprocess_output, "%s", self->token_pretext->str);
+    }
+
   if (tok == LL_PRAGMA)
     {
       gpointer dummy;
