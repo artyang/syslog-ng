@@ -31,6 +31,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#endif
+
 #ifndef _WIN32
 #include <netinet/in.h>
 #include <sys/socket.h>
@@ -997,4 +1001,19 @@ privileged_stat(const gchar *fname, struct stat *result)
   g_process_cap_restore(act_caps);
 
   return res;
+}
+
+gboolean
+os_uptime_in_seconds(guint64 *uptime)
+{
+#ifdef __linux__
+  struct sysinfo info;
+  if (sysinfo(&info) == 0)
+    {
+      *uptime = (guint64) info.uptime;
+      return TRUE;
+    }
+#endif
+
+  return FALSE;
 }

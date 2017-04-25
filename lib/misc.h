@@ -192,4 +192,6 @@ gboolean f_is_file_regular(gint fd);
 
 gboolean pwrite_strict(gint fd, const void *buf, size_t count, off_t offset);
 
+gboolean os_uptime_in_seconds(guint64 *uptime);
+
 #endif

@@ -40,7 +40,6 @@
 #include "service-management.h"
 
 #include <sys/types.h>
-#include <sys/sysinfo.h>
 #include <signal.h>
 #include <stdio.h>
 #include <string.h>
@@ -300,14 +299,14 @@ cfg_init_global_internals(GlobalConfig *cfg)
 static inline GTimeVal
 _get_os_start_time()
 {
+  guint64 uptime;
   GTimeVal start_time;
-  struct sysinfo info;
 
   g_get_current_time(&start_time);
 
-  if (0 == sysinfo(&info))
+  if (os_uptime_in_seconds(&uptime))
     {
-      start_time.tv_sec -= info.uptime;
+      start_time.tv_sec -= uptime;
     }
 
   return start_time;
