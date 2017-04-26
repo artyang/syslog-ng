@@ -458,7 +458,10 @@ source_stmt
 	: string
           { cfg_lexer_push_context(lexer, LL_CONTEXT_SOURCE, NULL, "source"); }
           '{' source_items '}'
-          { cfg_lexer_pop_context(lexer); }     { $$ = log_source_group_new($1, $4); free($1); }
+          { cfg_lexer_pop_context(lexer); }     { CHECK_ERROR(!g_hash_table_lookup(configuration->sources, $1), @1,
+                                                              "duplicate definition");
+                                                  $$ = log_source_group_new($1, $4);
+                                                  free($1); }
 	;
 
 filter_stmt
@@ -467,26 +470,37 @@ filter_stmt
 	    last_filter_expr = NULL;
 	    CHECK_ERROR(cfg_parser_parse(&filter_expr_parser, lexer, (gpointer *) &last_filter_expr, NULL), @1, NULL);
 	  }
-          '}'                               { $$ = log_process_rule_new($1, g_list_prepend(NULL, log_filter_pipe_new(last_filter_expr, $1))); free($1); }
+          '}'                               { CHECK_ERROR(!g_hash_table_lookup(configuration->filters, $1), @1, "duplicate definition");
+                                              $$ = log_process_rule_new($1, g_list_prepend(NULL, log_filter_pipe_new(last_filter_expr, $1)));
+                                              free($1); }
 	;
-	
+
 parser_stmt
         : string '{'
           {
             CHECK_ERROR(cfg_parser_parse(&parser_expr_parser, lexer, (gpointer *) &last_parser_expr, NULL), @1, NULL);
-          } '}'	                                { $$ = log_process_rule_new($1, last_parser_expr); free($1); }
+          } '}'	                                { CHECK_ERROR(!g_hash_table_lookup(configuration->parsers, $1), @1,
+                                                                      "duplicate definition");
+                                                          $$ = log_process_rule_new($1, last_parser_expr);
+                                                          free($1); }
 
 rewrite_stmt
         : string '{'
           {
             CHECK_ERROR(cfg_parser_parse(&rewrite_expr_parser, lexer, (gpointer *) &last_rewrite_expr, NULL), @1, NULL);
-          } '}'                                 { $$ = log_process_rule_new($1, last_rewrite_expr); free($1); }
+          } '}'                                 { CHECK_ERROR(!g_hash_table_lookup(configuration->rewriters, $1), @1,
+                                                  "duplicate definition");
+                                                  $$ = log_process_rule_new($1, last_rewrite_expr);
+                                                  free($1); }
 
 dest_stmt
         : string
           { cfg_lexer_push_context(lexer, LL_CONTEXT_DESTINATION, NULL, "destination"); }
           '{' dest_items '}'
-          { cfg_lexer_pop_context(lexer); }         { $$ = log_dest_group_new($1, $4); free($1); }
+          { cfg_lexer_pop_context(lexer); }         {  CHECK_ERROR(!g_hash_table_lookup(configuration->destinations, $1), @1,
+                                                                   "duplicate definition");
+                                                       $$ = log_dest_group_new($1, $4);
+                                                       free($1); }
 	;
 
 log_stmt
@@ -495,7 +509,7 @@ log_stmt
            { cfg_lexer_pop_context(lexer); }	{ LogPipeItem *pi = log_pipe_item_append_tail($3, $4); $$ = log_connection_new(pi, $5); }
 
 	;
-	
+
 block_stmt
         : { cfg_lexer_push_context(lexer, LL_CONTEXT_BLOCK_DEF, block_def_keywords, "block definition"); }
           LL_IDENTIFIER LL_IDENTIFIER
@@ -576,7 +590,7 @@ log_flags_items
 options_stmt
         : '{' options_items '}'			{ $$ = NULL; }
 	;
-	
+
 
 
 source_items
@@ -1094,4 +1108,3 @@ vp_rekey_option
 
 
 %%
-
