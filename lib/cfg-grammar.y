@@ -88,6 +88,18 @@ extern struct _ValuePairsTransformSet *last_vp_transset;
       }                                                                 \
   } while (0)
 
+#define CHECK_WARNING(val, token, errorfmt, ...) do {                   \
+    if (!(val))                                                         \
+      {                                                                 \
+        if (errorfmt)                                                   \
+          {                                                             \
+            gchar __buf[256];                                           \
+            g_snprintf(__buf, sizeof(__buf), errorfmt ? errorfmt : "x", ## __VA_ARGS__); \
+            report_syntax_warning(lexer, & (token), "configuration", __buf);               \
+          }                                                             \
+      }                                                                 \
+  } while (0)
+
 #define CHECK_ERROR(val, token, errorfmt, ...) do {                     \
     if (!(val))                                                         \
       {                                                                 \
@@ -428,6 +440,9 @@ ValuePairsTransformSet *last_vp_transset;
 %type   <num> facility_string
 %type   <num> level_string
 
+%type   <num> positive_integer
+%type   <num> nonnegative_integer
+
 /* END_DECLS */
 
 
@@ -730,10 +745,10 @@ options_items
 	;
 
 options_item
-	: KW_MARK_FREQ '(' LL_NUMBER ')'		{ configuration->mark_freq = $3; }
-	| KW_STATS_FREQ '(' LL_NUMBER ')'          { configuration->stats_freq = $3; }
+	: KW_MARK_FREQ '(' nonnegative_integer ')'		{ configuration->mark_freq = $3; }
+	| KW_STATS_FREQ '(' nonnegative_integer ')'          { configuration->stats_freq = $3; }
 	| KW_STATS_LEVEL '(' LL_NUMBER ')'         { configuration->stats_level = $3; stats_set_stats_level($3); }
-	| KW_FLUSH_LINES '(' LL_NUMBER ')'		{ configuration->flush_lines = $3; }
+	| KW_FLUSH_LINES '(' positive_integer ')'		{ configuration->flush_lines = $3; }
         | KW_MARK_MODE '(' KW_INTERNAL ')'         { cfg_set_mark_mode(configuration, "internal"); }
         | KW_MARK_MODE '(' string ')'
           {
@@ -748,7 +763,7 @@ options_item
                 free($3);
               }
           }
-	| KW_FLUSH_TIMEOUT '(' LL_NUMBER ')'	{ configuration->flush_timeout = $3; }
+	| KW_FLUSH_TIMEOUT '(' positive_integer ')'	{ configuration->flush_timeout = $3; }
 	| KW_CHAIN_HOSTNAMES '(' yesno ')'	{ configuration->chain_hostnames = $3; }
 	| KW_NORMALIZE_HOSTNAMES '(' yesno ')'	{ configuration->normalize_hostnames = $3; }
 	| KW_KEEP_HOSTNAME '(' yesno ')'	{ configuration->keep_hostname = $3; }
@@ -757,10 +772,10 @@ options_item
 	| KW_USE_FQDN '(' yesno ')'		{ configuration->use_fqdn = $3; }
   | KW_CUSTOM_DOMAIN '(' LL_STRING ')' { configuration->custom_domain = g_strdup($3); free($3); }
 	| KW_USE_DNS '(' dnsmode ')'		{ configuration->use_dns = $3; }
-	| KW_TIME_REOPEN '(' LL_NUMBER ')'		{ configuration->time_reopen = $3; }
-	| KW_TIME_REAP '(' LL_NUMBER ')'		{ configuration->time_reap = $3; }
-	| KW_TIME_SLEEP '(' LL_NUMBER ')'	{}
-	| KW_SUPPRESS '(' LL_NUMBER ')'		{ configuration->suppress = $3; }
+	| KW_TIME_REOPEN '(' positive_integer ')'		{ configuration->time_reopen = $3; }
+	| KW_TIME_REAP '(' positive_integer ')'		{ configuration->time_reap = $3; }
+	| KW_TIME_SLEEP '(' nonnegative_integer ')'	{}
+	| KW_SUPPRESS '(' nonnegative_integer ')'		{ configuration->suppress = $3; }
 	| KW_THREADED '(' yesno ')'
       {
 #if ENABLE_THREADED
@@ -773,10 +788,10 @@ options_item
         configuration->threaded = 0;
 #endif
       }
-	| KW_LOG_FIFO_SIZE '(' LL_NUMBER ')'	{ configuration->log_fifo_size = $3; }
-	| KW_LOG_IW_SIZE '(' LL_NUMBER ')'	{ msg_error("Using a global log-iw-size() option was removed, please use a per-source log-iw-size()", NULL); }
-	| KW_LOG_FETCH_LIMIT '(' LL_NUMBER ')'	{ msg_error("Using a global log-fetch-limit() option was removed, please use a per-source log-fetch-limit()", NULL); }
-	| KW_LOG_MSG_SIZE '(' LL_NUMBER ')'	{ configuration->log_msg_size = $3; }
+	| KW_LOG_FIFO_SIZE '(' positive_integer ')'	{ configuration->log_fifo_size = $3; }
+	| KW_LOG_IW_SIZE '(' positive_integer ')'	{ msg_error("Using a global log-iw-size() option was removed, please use a per-source log-iw-size()", NULL); }
+	| KW_LOG_FETCH_LIMIT '(' positive_integer ')'	{ msg_error("Using a global log-fetch-limit() option was removed, please use a per-source log-fetch-limit()", NULL); }
+	| KW_LOG_MSG_SIZE '(' positive_integer ')'	{ configuration->log_msg_size = $3; }
 	| KW_KEEP_TIMESTAMP '(' yesno ')'	{ configuration->keep_timestamp = $3; }
 	| KW_CREATE_DIRS '(' yesno ')'		{ configuration->create_dirs = $3; }
 	| KW_OWNER '(' string_or_number ')'	{ cfg_file_owner_set(configuration, $3); free($3); }
@@ -792,9 +807,9 @@ options_item
 	| KW_DIR_PERM '(' LL_NUMBER ')'		{ cfg_dir_perm_set(configuration, $3); }
 	| KW_DIR_PERM '('  ')'		        { cfg_dir_perm_set(configuration, -2); }
 	| KW_DNS_CACHE '(' yesno ')' 		{ configuration->use_dns_cache = $3; }
-	| KW_DNS_CACHE_SIZE '(' LL_NUMBER ')'	{ configuration->dns_cache_size = $3; }
-	| KW_DNS_CACHE_EXPIRE '(' LL_NUMBER ')'	{ configuration->dns_cache_expire = $3; }
-	| KW_DNS_CACHE_EXPIRE_FAILED '(' LL_NUMBER ')'
+	| KW_DNS_CACHE_SIZE '(' positive_integer ')'	{ configuration->dns_cache_size = $3; }
+	| KW_DNS_CACHE_EXPIRE '(' positive_integer ')'	{ configuration->dns_cache_expire = $3; }
+	| KW_DNS_CACHE_EXPIRE_FAILED '(' positive_integer ')'
 	  			{ configuration->dns_cache_expire_failed = $3; }
 	| KW_DNS_CACHE_HOSTS '(' string ')'     { configuration->dns_cache_hosts = g_strdup($3); free($3); }
 	| KW_FILE_TEMPLATE '(' string ')'	{ configuration->file_template_name = g_strdup($3); free($3); }
@@ -832,6 +847,21 @@ dnsmode
 	: yesno					{ $$ = $1; }
 	| KW_PERSIST_ONLY                       { $$ = 2; }
 	;
+
+nonnegative_integer
+        : LL_NUMBER
+          {
+            CHECK_WARNING(($1 >= 0), @1, "It should not be negative");
+          }
+        ;
+
+positive_integer
+        : LL_NUMBER
+          {
+            CHECK_WARNING(($1 > 0), @1, "It should be positive");
+          }
+        ;
+
 
 string_or_number
         : string                                { $$ = $1; }
@@ -896,7 +926,7 @@ parser_column_opt
 /* LogSource related options */
 source_option
         /* NOTE: plugins need to set "last_source_options" in order to incorporate this rule in their grammar */
-	: KW_LOG_IW_SIZE '(' LL_NUMBER ')'	{ last_source_options->init_window_size = $3; }
+	: KW_LOG_IW_SIZE '(' positive_integer ')'	{ last_source_options->init_window_size = $3; }
 	| KW_CHAIN_HOSTNAMES '(' yesno ')'	{ last_source_options->chain_hostnames = $3; }
 	| KW_NORMALIZE_HOSTNAMES '(' yesno ')'	{ last_source_options->normalize_hostnames = $3; }
 	| KW_KEEP_HOSTNAME '(' yesno ')'	{ last_source_options->keep_hostname = $3; }
@@ -925,9 +955,9 @@ source_reader_option
 	: KW_TIME_ZONE '(' string ')'		{ last_reader_options->parse_options.recv_time_zone = g_strdup($3); free($3); }
 	| KW_CHECK_HOSTNAME '(' yesno ')'	{ last_reader_options->check_hostname = $3; }
 	| KW_FLAGS '(' source_reader_option_flags ')'
-	| KW_LOG_MSG_SIZE '(' LL_NUMBER ')'	{ last_reader_options->msg_size = $3; }
-	| KW_LOG_FETCH_LIMIT '(' LL_NUMBER ')'	{ last_reader_options->fetch_limit = $3; }
-	| KW_PAD_SIZE '(' LL_NUMBER ')'		{ last_reader_options->padding = $3; }
+	| KW_LOG_MSG_SIZE '(' positive_integer ')'	{ last_reader_options->msg_size = $3; }
+	| KW_LOG_FETCH_LIMIT '(' positive_integer ')'	{ last_reader_options->fetch_limit = $3; }
+	| KW_PAD_SIZE '(' nonnegative_integer ')'		{ last_reader_options->padding = $3; }
         | KW_ENCODING '(' string ')'		{ last_reader_options->text_encoding = g_strdup($3); free($3); }
         | KW_FORMAT '(' string ')'              { last_reader_options->parse_options.format = g_strdup($3); free($3); }
 	| KW_DEFAULT_LEVEL '(' level_string ')'
@@ -952,7 +982,7 @@ source_reader_option_flags
 	;
 
 threaded_dest_driver_option
- : KW_RETRIES '(' LL_NUMBER ')'
+ : KW_RETRIES '(' positive_integer ')'
         {
           log_threaded_dest_driver_set_max_retries(last_driver, $3);
         }
@@ -961,8 +991,8 @@ threaded_dest_driver_option
 dest_driver_option
         /* NOTE: plugins need to set "last_driver" in order to incorporate this rule in their grammar */
 
-	: KW_LOG_FIFO_SIZE '(' LL_NUMBER ')'	{ ((LogDestDriver *) last_driver)->log_fifo_size = $3; }
-	| KW_THROTTLE '(' LL_NUMBER ')'         { ((LogDestDriver *) last_driver)->throttle = $3; }
+	: KW_LOG_FIFO_SIZE '(' positive_integer ')'	{ ((LogDestDriver *) last_driver)->log_fifo_size = $3; }
+	| KW_THROTTLE '(' nonnegative_integer ')'         { ((LogDestDriver *) last_driver)->throttle = $3; }
         | LL_IDENTIFIER
           {
             Plugin *p;
@@ -992,9 +1022,9 @@ dest_writer_option
         /* NOTE: plugins need to set "last_writer_options" in order to incorporate this rule in their grammar */
 
 	: KW_FLAGS '(' dest_writer_options_flags ')' { last_writer_options->options = $3; }
-	| KW_FLUSH_LINES '(' LL_NUMBER ')'		{ last_writer_options->flush_lines = $3; }
-	| KW_FLUSH_TIMEOUT '(' LL_NUMBER ')'	{ last_writer_options->flush_timeout = $3; }
-        | KW_SUPPRESS '(' LL_NUMBER ')'            { last_writer_options->suppress = $3; }
+	| KW_FLUSH_LINES '(' positive_integer ')'		{ last_writer_options->flush_lines = $3; }
+	| KW_FLUSH_TIMEOUT '(' positive_integer ')'	{ last_writer_options->flush_timeout = $3; }
+        | KW_SUPPRESS '(' nonnegative_integer ')'            { last_writer_options->suppress = $3; }
 	| KW_TEMPLATE '(' string ')'       	{
                                                   GError *error = NULL;
 
@@ -1003,8 +1033,8 @@ dest_writer_option
 	                                          free($3);
 	                                        }
 	| KW_TEMPLATE_ESCAPE '(' yesno ')'	{ log_writer_options_set_template_escape(last_writer_options, $3); }
-	| KW_PAD_SIZE '(' LL_NUMBER ')'         { last_writer_options->padding = $3; }
-	| KW_MARK_FREQ '(' LL_NUMBER ')'        { last_writer_options->mark_freq = $3; }
+	| KW_PAD_SIZE '(' nonnegative_integer ')'         { last_writer_options->padding = $3; }
+	| KW_MARK_FREQ '(' nonnegative_integer ')'        { last_writer_options->mark_freq = $3; }
         | KW_MARK_MODE '(' KW_INTERNAL ')'      { log_writer_options_set_mark_mode(last_writer_options, "internal"); }
 	| KW_MARK_MODE '(' string ')'
 	  {
@@ -1029,7 +1059,7 @@ dest_writer_options_flags
 
 template_option
 	: KW_TS_FORMAT '(' string ')'		{ last_template_options->ts_format = cfg_ts_format_value($3); free($3); }
-	| KW_FRAC_DIGITS '(' LL_NUMBER ')'	{ last_template_options->frac_digits = $3; }
+	| KW_FRAC_DIGITS '(' nonnegative_integer ')'	{ last_template_options->frac_digits = $3; }
 	| KW_TIME_ZONE '(' string ')'		{ last_template_options->time_zone[LTZ_SEND] = g_strdup($3); free($3); }
 	| KW_SEND_TIME_ZONE '(' string ')'      { last_template_options->time_zone[LTZ_SEND] = g_strdup($3); free($3); }
 	| KW_LOCAL_TIME_ZONE '(' string ')'     { last_template_options->time_zone[LTZ_LOCAL] = g_strdup($3); free($3); }

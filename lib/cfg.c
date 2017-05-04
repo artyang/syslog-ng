@@ -468,7 +468,7 @@ cfg_new(gint version)
   self->persist_names = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
   self->connections = g_ptr_array_new();
 
-  self->flush_lines = 0;
+  self->flush_lines = 1;
   self->flush_timeout = 10000;  /* 10 seconds */
   self->mark_freq = 1200;	/* 20 minutes */
   self->mark_mode = MM_HOST_IDLE;

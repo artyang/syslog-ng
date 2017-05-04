@@ -73,7 +73,7 @@ afsmtp_options
 
 afsmtp_option
         : KW_HOST '(' string ')'		{ afsmtp_dd_set_host(last_driver, $3); free($3); }
-        | KW_PORT '(' LL_NUMBER ')'		{ afsmtp_dd_set_port(last_driver, $3); }
+        | KW_PORT '(' positive_integer ')'		{ afsmtp_dd_set_port(last_driver, $3); }
 	| KW_SUBJECT '(' string ')'	 	{ afsmtp_dd_set_subject(last_driver, $3); free($3); }
 	| KW_BODY '(' string ')'		{ afsmtp_dd_set_body(last_driver, $3); free($3); }
 	| KW_HEADER '(' string string ')'	{
