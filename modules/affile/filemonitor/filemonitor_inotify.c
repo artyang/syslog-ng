@@ -50,8 +50,12 @@ typedef struct _MonitorInotify
 {
   MonitorBase super;
   struct iv_fd fd_watch;
+  struct iv_timer retry_timer;
   guint32 watchd;
 } MonitorInotify;
+
+static void file_monitor_inotify_start(FileMonitor *self, MonitorBase *source, const gchar *base_dir);
+static void monitor_inotify_try_to_add_watch(MonitorInotify *self);
 
 static gboolean
 file_monitor_process_inotify_event(FileMonitor *monitor, MonitorInotify *self)
@@ -121,11 +125,37 @@ monitor_inotify_init_watches(MonitorInotify *self)
   self->fd_watch.handler_in = monitor_inotify_process_input;
 }
 
+static void
+monitor_inotify_unregister_timer(struct iv_timer *retry_timer)
+{
+  if(iv_timer_registered(retry_timer))
+    iv_timer_unregister(retry_timer);
+}
+
+static void
+monitor_inotify_timer_callback(gpointer s)
+{
+  MonitorInotify *self = (MonitorInotify *) s;
+
+  monitor_inotify_unregister_timer(&self->retry_timer);
+  monitor_inotify_try_to_add_watch(self);
+}
+
+static void
+monitor_inotify_create_timer(MonitorInotify *self)
+{
+  monitor_inotify_unregister_timer(&self->retry_timer);
+  iv_validate_now();
+  self->retry_timer.expires = iv_now;
+  timespec_add_msec(&self->retry_timer.expires,
+                    self->super.file_monitor->options->poll_freq);
+  iv_timer_register(&self->retry_timer);
+}
+
 static gboolean
 monitor_inotify_init(MonitorInotify *self, const gchar *base_dir)
 {
   main_loop_assert_main_thread();
-  gint watchd = -1;
   /* Init inotify interface */
   gint ifd = inotify_init();
   monitor_inotify_init_watches(self);
@@ -137,21 +167,51 @@ monitor_inotify_init(MonitorInotify *self, const gchar *base_dir)
   /* Set the base directory */
   self->super.base_dir = g_strdup(base_dir);
   self->fd_watch.fd = ifd;
-  watchd = inotify_add_watch(self->fd_watch.fd, base_dir, IN_MODIFY | IN_MOVED_TO | IN_CREATE);
+
+  IV_TIMER_INIT(&self->retry_timer);
+  self->retry_timer.cookie = self;
+  self->retry_timer.handler = monitor_inotify_timer_callback;
+  monitor_inotify_try_to_add_watch(self);
+  return TRUE;
+}
+
+static void
+monitor_inotify_try_to_add_watch(MonitorInotify *self)
+{
+  gint watchd = -1;
+  watchd = inotify_add_watch(self->fd_watch.fd, self->super.base_dir, IN_MODIFY | IN_MOVED_TO | IN_CREATE);
   if (watchd == -1)
     {
-      msg_error("Failed to add directory to inotify monitoring", evt_tag_str("directory", base_dir), evt_tag_errno("inotify_add_watch",errno), NULL);
-      return FALSE;
+      if (errno == ENOENT)
+        {
+          msg_warning("Failed to add directory to inotify monitoring, retrying later",
+                      evt_tag_str("directory", self->super.base_dir),
+                      evt_tag_errno("inotify_add_watch", errno),
+                      NULL);
+          monitor_inotify_create_timer(self);
+        }
+      else
+        {
+          msg_error("Failed to add directory to inotify monitoring, skipping it",
+                      evt_tag_str("directory", self->super.base_dir),
+                      evt_tag_errno("inotify_add_watch", errno),
+                      NULL);
+        }
     }
-  self->watchd = watchd;
-  iv_fd_register(&self->fd_watch);
-  return TRUE;
+  else
+    {
+      msg_debug("Directory successfully added to inotify monitoring", evt_tag_str("directory", self->super.base_dir), NULL);
+      self->watchd = watchd;
+      iv_fd_register(&self->fd_watch);
+      file_monitor_inotify_start(self->super.file_monitor, &self->super, self->super.base_dir);
+    }
 }
 
 static void
 monitor_source_inotify_free(gpointer s)
 {
   MonitorInotify *self = (MonitorInotify*) s;
+  monitor_inotify_unregister_timer(&self->retry_timer);
   if (iv_fd_registered(&self->fd_watch))
     {
       iv_fd_unregister(&self->fd_watch);
