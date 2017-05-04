@@ -177,18 +177,6 @@ CfgParser main_parser =
 CFG_PARSER_IMPLEMENT_LEXER_BINDING(main_, gpointer *)
 
 void
-report_syntax_error(CfgLexer *lexer, YYLTYPE *yylloc, const char *what, const char *msg)
-{
-    report_syntax_error_warning(lexer, yylloc, "Error", what, msg);
-}
-
-void
-report_syntax_warning(CfgLexer *lexer, YYLTYPE *yylloc, const char *what, const char *msg)
-{
-    report_syntax_error_warning(lexer, yylloc, "Warning during", what, msg);
-}
-
-void
 report_syntax_error_warning(CfgLexer *lexer, YYLTYPE *yylloc, const char * error_msg_prefix, const char *what, const char *msg)
 {
   CfgIncludeLevel *level = yylloc->level, *from;
@@ -265,6 +253,18 @@ report_syntax_error_warning(CfgLexer *lexer, YYLTYPE *yylloc, const char * error
   fprintf(stderr, "\nsyslog-ng documentation: http://www.balabit.com/support/documentation/?product=syslog-ng\n"
                   "mailing list: https://lists.balabit.hu/mailman/listinfo/syslog-ng\n");
 
+}
+
+void
+report_syntax_error(CfgLexer *lexer, YYLTYPE *yylloc, const char *what, const char *msg)
+{
+    report_syntax_error_warning(lexer, yylloc, "Error", what, msg);
+}
+
+void
+report_syntax_warning(CfgLexer *lexer, YYLTYPE *yylloc, const char *what, const char *msg)
+{
+    report_syntax_error_warning(lexer, yylloc, "Warning during", what, msg);
 }
 
 /*
