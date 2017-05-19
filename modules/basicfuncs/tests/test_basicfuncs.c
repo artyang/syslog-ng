@@ -69,7 +69,15 @@ test_str_funcs(void)
   assert_template_format("$(strip ${APP.STRIP4})", "value");
   assert_template_format("$(strip ${APP.STRIP5})", "");
 
+
+  assert_template_format("$(strip ${APP.STRIP5} ${APP.STRIP1} ${APP.STRIP5})", "value");
   assert_template_format("$(strip ${APP.STRIP1} ${APP.STRIP2} ${APP.STRIP3} ${APP.STRIP4} ${APP.STRIP5})", "value value value value");
+
+  assert_template_format("$(strip)", "");
+  assert_template_format("$(strip '   a   ')", "a");
+  assert_template_format("$(strip '  a  b   ')", "a  b");
+  assert_template_format("$(strip '  ÁRVÍZTŰRŐ  TÜKÖRFÚRÓGÉP  ')", "ÁRVÍZTŰRŐ  TÜKÖRFÚRÓGÉP");
+  assert_template_format("$(strip ' \n\t\r  a  b \n\t\r ')", "a  b");
 }
 
 void
