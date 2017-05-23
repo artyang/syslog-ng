@@ -925,6 +925,73 @@ data_to_hex_string(guint8 *data, guint32 length)
   return string;
 }
 
+gint
+_hex_char_to_value(gchar ch)
+{
+    if (ch >= '0' && ch <= '9')
+        return ch - '0';
+    if (ch >= 'A' && ch <= 'F')
+        return ch - 'A' + 10;
+    if (ch >= 'a' && ch <= 'f')
+        return ch - 'a' + 10;
+    return -1;
+}
+
+guint8 *
+hex_string_to_data(const gchar *string, guint32 *size, GError **error)
+{
+  guint8 *data = NULL;
+  guint8 *pdata = NULL;
+  const gchar *tstring = string;
+
+  guint32 string_length = strlen(string);
+  if (string_length % 3 != 2)
+    {
+      if (error)
+        {
+            *error = g_error_new(1, 2, "The length of hex string is not valid.");
+        }
+      *size = 0;
+      return NULL;
+    }
+
+  guint32 length = (string_length + 1 ) / 3;
+  *size = length;
+
+  data = g_malloc0(sizeof(guint8) * length);
+
+  pdata = data;
+
+  for (guint32 i = 0; i < length; i++) {
+
+     gint ch1 = _hex_char_to_value(*tstring);
+     if (ch1 < 0)
+         goto error;
+     tstring++;
+
+     gint ch2 = _hex_char_to_value(*tstring);
+     if (ch2 < 0)
+         goto error;
+     tstring++;
+
+     if (i < length - 1 && *tstring != ' ')
+         goto error;
+     tstring++;
+
+     *pdata = (guint8)(ch1 * 16 + ch2);
+     pdata += 1;
+  }
+  return data;
+
+error:
+  if (data)
+      g_free(data);
+  *size = 0;
+  if (error)
+    *error = g_error_new(1, 2, "Error parsing hex string at position %d (character: '%c')", tstring - string, *tstring);
+  return NULL;
+}
+
 gchar *
 replace_string(const gchar *source, const gchar *substring, const gchar *replacement)
 {

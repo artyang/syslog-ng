@@ -185,6 +185,7 @@ LPWSTR utf8_to_wide(const gchar *str);
 
 gchar *replace_char(gchar *buffer,gchar from,gchar to,gboolean in_place);
 gchar *data_to_hex_string(guint8 *data, guint32 length);
+guint8 *hex_string_to_data(const char *string, guint32 *size, GError **error);
 gchar *replace_string(const gchar *source, const gchar *substring, const gchar *replacement);
 gchar *get_pid_string();
 
