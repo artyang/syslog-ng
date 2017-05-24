@@ -310,6 +310,64 @@ state_handler_init(StateHandler *self, PersistState *persist_state,
   self->name = g_strdup(name);
 }
 
+PersistEntryHandle
+state_handler_rcptid_alloc_state(StateHandler *self)
+{
+  PersistEntryHandle result = 0;
+  if (self->persist_state)
+    {
+      result = persist_state_alloc_entry(self->persist_state, self->name, sizeof(RcptidState));
+    }
+  return result;
+}
+
+gboolean
+_state_handler_rcptid_state_is_valid(NameValueContainer *container)
+{
+  gboolean result = TRUE;
+  result = result && name_value_container_is_name_exists(container, "version");
+  result = result && name_value_container_is_name_exists(container, "big_endian");
+  result = result && name_value_container_is_name_exists(container, "rcptid");
+  return result;
+}
+
+gboolean
+state_handler_rcptid_load_state(StateHandler *self, NameValueContainer *container, GError **error)
+{
+  RcptidState *new_state = NULL;
+  if (!_state_handler_rcptid_state_is_valid(container))
+    {
+      if (error)
+        {
+          *error = g_error_new(1, 2, "Some member is missing from the given state");
+        }
+      return FALSE;
+    }
+  if (!state_handler_entry_exists(self))
+    {
+      if (!state_handler_alloc_state(self))
+        {
+          if (error)
+            {
+              *error = g_error_new(1, 3, "Can't allocate new state");
+            }
+          return FALSE;
+        }
+    }
+  new_state = state_handler_get_state(self);
+  new_state->super.version = name_value_container_get_int(container, "version");
+  new_state->super.big_endian = name_value_container_get_boolean(container, "big_endian");
+  new_state->g_rcptid = name_value_container_get_int(container, "rcptid");
+
+  if ((new_state->super.big_endian && G_BYTE_ORDER == G_LITTLE_ENDIAN) ||
+      (!new_state->super.big_endian && G_BYTE_ORDER == G_BIG_ENDIAN))
+    {
+      new_state->g_rcptid = GUINT32_SWAP_LE_BE(new_state->g_rcptid);
+    }
+  state_handler_put_state(self);
+  return TRUE;
+}
+
 static NameValueContainer*
 state_handler_rcptid_dump_state(StateHandler *self)
 {
@@ -332,6 +390,8 @@ create_state_handler_rcptid(PersistState *persist_state, const gchar *name)
   StateHandler *self = g_new0(StateHandler, 1);
   state_handler_init(self, persist_state, name);
   self->dump_state = state_handler_rcptid_dump_state;
+  self->alloc_state = state_handler_rcptid_alloc_state;
+  self->load_state = state_handler_rcptid_load_state;
   return self;
 }
 
