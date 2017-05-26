@@ -80,7 +80,6 @@ struct _TLSContext
   gchar *cipher_suite;
   gchar *curve_list;
   gchar *cert_subject;
-  CADirLayout ca_dir_layout;
   SSL_CTX *ssl_ctx;
   GList *trusted_fingerpint_list;
   GList *trusted_dn_list;
