@@ -156,7 +156,7 @@ affile_sd_curpos(/tmp/foo\&.txt) = { "version": 1, "big_endian": false, "raw_buf
 .PP
 Use the
 \fBgenerate\fR
-command to generate a persist file based on the content of the given configuration file\&. It will find all files and event sources that match the sources configured in the configuration file, and generate a state entry into the persist file for all of them\&. The position for the state entries will be set to the end of the source, therefore syslog\-ng will continue them from the last position instead of sending messages from the beginning\&. Any other type of source will be skipped from persist generation\&. If the persist file already exists, persist\-tool will display an error message and exit to prevent overwriting an already existing persist file\&.
+command to generate a persist file based on the content of the given configuration file\&. It will find all files and event sources that match the sources configured in the configuration file, and generate a state entry into the persist file for all of them\&. The position for the state entries will be set to the end of the source, therefore syslog\-ng will continue them from the last position instead of sending messages from the beginning\&. Any other type of entries will be skipped from persist generation\&. If the persist file already exists, persist\-tool will display an error message and exit to prevent overwriting an already existing persist file\&.
 .PP
 To use the
 \fBgenerate\fR
