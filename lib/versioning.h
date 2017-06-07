@@ -51,6 +51,7 @@
 #define VERSION_PE_5_2 "syslog-ng PE 5.2"
 #define VERSION_PE_5_3 "syslog-ng PE 5.3"
 #define VERSION_PE_5_4 "syslog-ng PE 5.4"
+#define VERSION_PE_6_0 "syslog-ng PE 6.0"
 
 #define VERSION_VALUE_2_1      0x0201
 #define VERSION_VALUE_3_0      0x0300

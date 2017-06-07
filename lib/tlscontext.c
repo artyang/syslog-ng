@@ -312,28 +312,6 @@ tls_context_verify_locations(TLSContext *self, gchar *dir)
   return TRUE;
 }
 
-static void
-tls_context_set_default_ca_dir_layout(TLSContext *self, GlobalConfig *cfg)
-{
-  if (cfg->version < 0x500)
-    {
-      if (is_fips_enabled)
-        {
-          msg_warning("WARNING: The MD5 hash is disabled in FIPS version thus the SHA1 hash algorithm is used for the CA certificates, please rehash the directory if you encounter problems with the hashing", NULL);
-          self->ca_dir_layout = CA_DIR_LAYOUT_SHA1;
-        }
-      else
-        {
-          msg_warning("WARNING: The default value of type of the hash used for the CA certificates is changed in version 5.0 from MD5 to SHA1, please rehash the directory when you upgrade your configuration", NULL);
-          self->ca_dir_layout = CA_DIR_LAYOUT_MD5;
-        }
-    }
-  else
-    {
-      self->ca_dir_layout = CA_DIR_LAYOUT_SHA1;
-    }
-}
-
 static gint
 _get_number_of_available_compression_methods(void)
 {
@@ -508,9 +486,6 @@ tls_context_setup_context(TLSContext *self, GlobalConfig *cfg)
   if (self->key_file && self->cert_file && !SSL_CTX_check_private_key(self->ssl_ctx))
     goto error;
 
-  if (self->ca_dir_layout == CA_DIR_LAYOUT_DEFAULT)
-    tls_context_set_default_ca_dir_layout(self, cfg);
-
   if (!tls_context_verify_locations(self, self->ca_dir))
     goto error;
 
@@ -601,7 +576,6 @@ tls_context_new(TLSMode mode)
   g_atomic_counter_set(&self->ref_cnt, 1);
   self->mode = mode;
   self->verify_mode = TVM_REQUIRED | TVM_TRUSTED;
-  self->ca_dir_layout = CA_DIR_LAYOUT_DEFAULT;
   self->allow_compress = -1;
   return self;
 }
