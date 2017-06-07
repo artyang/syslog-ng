@@ -63,33 +63,21 @@ test_cond_funcs(void)
 void
 test_str_funcs(void)
 {
-  assert_template_format("$(ipv4-to-int $SOURCEIP)", "168496141");
-
-  assert_template_format("$(length $HOST $PID)", "5 5");
-  assert_template_format("$(length $HOST)", "5");
-  assert_template_format("$(length)", "");
-
-  assert_template_format("$(substr $HOST 1 3)", "zor");
-  assert_template_format("$(substr $HOST 1)", "zorp");
-  assert_template_format("$(substr $HOST -1)", "p");
-  assert_template_format("$(substr $HOST -2 1)", "r");
-
   assert_template_format("$(strip ${APP.STRIP1})", "value");
   assert_template_format("$(strip ${APP.STRIP2})", "value");
   assert_template_format("$(strip ${APP.STRIP3})", "value");
   assert_template_format("$(strip ${APP.STRIP4})", "value");
   assert_template_format("$(strip ${APP.STRIP5})", "");
 
-  assert_template_format("$(strip ${APP.STRIP1} ${APP.STRIP2} ${APP.STRIP3} ${APP.STRIP4} ${APP.STRIP5})", "value value value value ");
 
-  assert_template_format("$(sanitize alma/bela)", "alma_bela");
-  assert_template_format("$(sanitize -r @ alma/bela)", "alma@bela");
-  assert_template_format("$(sanitize -i @ alma@bela)", "alma_bela");
-  assert_template_format("$(sanitize -i '@/l ' alma@/bela)", "a_ma__be_a");
-  assert_template_format("$(sanitize alma\x1b_bela)", "alma__bela");
-  assert_template_format("$(sanitize -C alma\x1b_bela)", "alma\x1b_bela");
+  assert_template_format("$(strip ${APP.STRIP5} ${APP.STRIP1} ${APP.STRIP5})", "value");
+  assert_template_format("$(strip ${APP.STRIP1} ${APP.STRIP2} ${APP.STRIP3} ${APP.STRIP4} ${APP.STRIP5})", "value value value value");
 
-  assert_template_format("$(sanitize $HOST $PROGRAM)", "bzorp/syslog-ng");
+  assert_template_format("$(strip)", "");
+  assert_template_format("$(strip '   a   ')", "a");
+  assert_template_format("$(strip '  a  b   ')", "a  b");
+  assert_template_format("$(strip '  ÁRVÍZTŰRŐ  TÜKÖRFÚRÓGÉP  ')", "ÁRVÍZTŰRŐ  TÜKÖRFÚRÓGÉP");
+  assert_template_format("$(strip ' \n\t\r  a  b \n\t\r ')", "a  b");
 }
 
 void
@@ -115,6 +103,7 @@ main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
   plugin_load_module("basicfuncs", configuration, NULL);
 
   test_cond_funcs();
+  test_str_funcs();
 
   deinit_template_tests();
   app_shutdown();

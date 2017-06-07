@@ -29,6 +29,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <ctype.h>
 
 static void
 append_args(gint argc, GString *argv[], GString *result)
@@ -50,6 +51,39 @@ tf_echo(LogMessage *msg, gint argc, GString *argv[], GString *result)
 }
 
 TEMPLATE_FUNCTION_SIMPLE(tf_echo);
+
+/*
+ * $(strip $arg1 $arg2 ...)
+ */
+static void
+tf_strip(LogMessage *msg, gint argc, GString *argv[], GString *result)
+{
+  gint i;
+
+  for (i = 0; i < argc; i++)
+    {
+      if (argv[i]->len == 0)
+        continue;
+
+      gint spaces_end = 0;
+      while (isspace(argv[i]->str[argv[i]->len - spaces_end - 1]) && spaces_end < argv[i]->len)
+        spaces_end++;
+
+      if (argv[i]->len == spaces_end)
+        continue;
+
+      gint spaces_start = 0;
+      while (isspace(argv[i]->str[spaces_start]))
+        spaces_start++;
+
+      if (result->len > 0)
+        g_string_append_c(result, ' ');
+
+      g_string_append_len(result, &argv[i]->str[spaces_start], argv[i]->len - spaces_end - spaces_start);
+    }
+}
+
+TEMPLATE_FUNCTION_SIMPLE(tf_strip);
 
 static gboolean
 tf_parse_int(const gchar *s, long *d)
@@ -347,6 +381,7 @@ TEMPLATE_FUNCTION(tf_context_length, tf_context_length_prepare, tf_context_lengt
 static Plugin basicfuncs_plugins[] =
 {
   TEMPLATE_FUNCTION_PLUGIN(tf_echo, "echo"),
+  TEMPLATE_FUNCTION_PLUGIN(tf_strip, "strip"),
   TEMPLATE_FUNCTION_PLUGIN(tf_grep, "grep"),
   TEMPLATE_FUNCTION_PLUGIN(tf_if, "if"),
   TEMPLATE_FUNCTION_PLUGIN(tf_indent_multi_line, "indent-multi-line"),
