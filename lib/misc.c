@@ -988,7 +988,7 @@ error:
       g_free(data);
   *size = 0;
   if (error)
-    *error = g_error_new(1, 2, "Error parsing hex string at position %d (character: '%c')", tstring - string, *tstring);
+    *error = g_error_new(1, 2, "Error parsing hex string at position %d (character: '%c')", (gint)(tstring - string), *tstring);
   return NULL;
 }
 
