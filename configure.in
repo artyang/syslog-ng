@@ -1608,6 +1608,7 @@ dnl PE modules
 	windows-tools/Makefile
 	windows-tools/upgrade-tool/Makefile
 	windows-tools/upgrade-tool/tests/Makefile
+	windows-tools/windebun/Makefile
 dnl PE modules
 
 

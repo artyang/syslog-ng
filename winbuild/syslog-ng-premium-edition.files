@@ -1,5 +1,6 @@
 bin/*.exe
 bin/*.dll
+bin/syslog-windebun.*
 etc/*
 lib/init-functions
 libexec/*

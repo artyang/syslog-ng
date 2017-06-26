@@ -46,6 +46,8 @@ case "$cmd" in
             $INSTALL -d -m 755 $ZBS_STAGE_DIR/share/man/man1
             $INSTALL -d -m 755 $ZBS_STAGE_DIR/share/man/man5
             $INSTALL -d -m 755 $ZBS_STAGE_DIR/share/man/man8
+            $INSTALL -m 644 -c windows-tools/windebun/syslog-windebun.ps1 $ZBS_STAGE_DIR/bin
+            $INSTALL -m 644 -c windows-tools/windebun/syslog-windebun.README.txt $ZBS_STAGE_DIR/bin
             $INSTALL -m 644 -c AUTHORS $ZBS_STAGE_DIR/share/doc
             $INSTALL -m 644 -c doc/man/pdbtool.1 $ZBS_STAGE_DIR/share/man/man1
             $INSTALL -m 644 -c doc/man/syslog-ng.8 $ZBS_STAGE_DIR/share/man/man8
