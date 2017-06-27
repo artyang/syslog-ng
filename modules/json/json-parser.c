@@ -62,7 +62,7 @@ void
 json_parser_set_extract_prefix(LogParser *s, const gchar *extract_prefix)
 {
   JSONParser *self = (JSONParser *) s;
-  
+
   g_free(self->extract_prefix);
   self->extract_prefix = g_strdup(extract_prefix);
 }
@@ -189,7 +189,7 @@ json_parser_extract(JSONParser *self, struct json_object *jso, LogMessage *msg)
     {
       return FALSE;
     }
-  
+
   json_parser_process_object(jso, self->prefix, msg);
   return TRUE;
 }
@@ -215,7 +215,7 @@ json_parser_process(LogParser *s, LogMessage **pmsg, const LogPathOptions *path_
         return FALSE;
       input += self->marker_len;
 
-      while (isspace(*input))
+      while (g_ascii_isspace(*input))
         input++;
     }
 

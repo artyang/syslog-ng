@@ -616,9 +616,9 @@ strptime(const char *buf, const char *fmt, struct tm *tm)
       alt_format = 0;
       i = 0;
 
-      if (isspace(c))
+      if (g_ascii_isspace(c))
         {
-          while (isspace(*bp))
+          while (g_ascii_isspace(*bp))
             bp++;
           continue;
         }
@@ -835,7 +835,7 @@ literal:
 
             case 'n':
             case 't':
-              while (isspace(*bp))
+              while (g_ascii_isspace(*bp))
                 bp++;
               LEGAL_ALT(0);
             continue;

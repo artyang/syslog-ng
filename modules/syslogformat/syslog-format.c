@@ -412,7 +412,7 @@ static gboolean
 __is_bsd_linksys(const guchar *src, guint32 left)
 {
   return left >= 21 && src[3] == ' ' && src[6] == ' ' && src[9] == ':' && src[12] == ':' && src[15] == ' ' &&
-      isdigit(src[16]) && isdigit(src[17]) && isdigit(src[18]) && isdigit(src[19]) && isspace(src[20]);
+      isdigit(src[16]) && isdigit(src[17]) && isdigit(src[18]) && isdigit(src[19]) && g_ascii_isspace(src[20]);
 }
 
 static gboolean
