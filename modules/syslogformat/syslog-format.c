@@ -85,27 +85,6 @@
 #define        LOG_PERROR   0x20
 #endif
 
-#ifdef __linux__
-#define NUMBER_OF_CACHE_ENTRIES 1024
-
-typedef struct _CacheItem
-{
-  glong assume_timezone;
-  gint32 original_zone_offset;
-  gint32 zone_offset;
-  struct tm tm;
-  time_t tv_sec;
-} CacheItem;
-
-TLS_BLOCK_START
-{
-  CacheItem cache_items[NUMBER_OF_CACHE_ENTRIES];
-}
-TLS_BLOCK_END;
-
-#define cache_items __tls_deref(cache_items)
-#endif
-
 static const char aix_fwd_string[] = "Message forwarded from ";
 static const char repeat_msg_string[] = "last message repeated";
 
@@ -622,35 +601,6 @@ _normalize_time(LogStamp *stamp, struct tm *tm, glong assume_timezone)
   stamp->tv_sec = __calculate_correct_time(stamp, tm->tm_hour, unnormalized_hour, assume_timezone);
 }
 
-#ifdef __linux__
-static inline void
-_normalize_time_cached(LogStamp *stamp, struct tm *tm, glong assume_timezone)
-{
-  gint32 hash = _get_hash_of_tm(*tm) % NUMBER_OF_CACHE_ENTRIES;
-  CacheItem *cache_item = &(cache_items[hash]);
-
-  /* Note: Timezone information parsed from the log is stored in stamp->zone_offset
-   * and tm->tm_gmtoff contains the local timezone! */
-  if (cache_item->assume_timezone == assume_timezone && cache_item->original_zone_offset == stamp->zone_offset
-      && are_tms_equal(&(cache_item->tm), tm))
-    {
-      stamp->tv_sec = cache_item->tv_sec;
-      stamp->zone_offset = cache_item->zone_offset;
-    }
-  else
-    {
-      cache_item->tm = *tm;
-      cache_item->original_zone_offset = stamp->zone_offset;
-      cache_item->assume_timezone = assume_timezone;
-
-      _normalize_time(stamp, tm, assume_timezone);
-
-      cache_item->tv_sec = stamp->tv_sec;
-      cache_item->zone_offset = stamp->zone_offset;
-    }
-}
-#endif
-
 static gboolean
 log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint parse_flags, glong assume_timezone)
 {
@@ -667,11 +617,7 @@ log_msg_parse_date(LogMessage *self, const guchar **data, gint *length, guint pa
     }
   else
     {
-#ifdef __linux__
-      _normalize_time_cached(stamp, &tm, assume_timezone);
-#else
       _normalize_time(stamp, &tm, assume_timezone);
-#endif
     }
 
   return TRUE;
