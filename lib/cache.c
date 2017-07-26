@@ -60,3 +60,10 @@ cache_lookup(Cache *self, gchar *key)
     }
   return result;
 }
+
+void
+cache_clear(Cache *self)
+{
+  g_hash_table_remove_all(self->hash_table);
+}
+
