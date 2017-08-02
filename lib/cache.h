@@ -58,5 +58,6 @@ provider_free(Provider *self)
 Cache *cache_new(Provider *provider, GDestroyNotify value_destroy_func);
 void *cache_lookup(Cache *self, gchar *key);
 void cache_free(Cache *self);
+void cache_clear(Cache *self);
 
 #endif /*__CACHE_H*/
