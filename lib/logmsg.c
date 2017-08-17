@@ -1556,18 +1556,18 @@ log_msg_refcache_stop(void)
   logmsg_cached_suspend = FALSE;
 
   old_value = log_msg_update_ack_and_ref_and_abort_and_suspended(logmsg_current, 0, current_cached_acks, current_cached_abort, current_cached_suspend);
-  
+
   if ((LOGMSG_REFCACHE_VALUE_TO_ACK(old_value) == -current_cached_acks) && logmsg_cached_ack_needed)
     {
       AckType ack_type_cumulated = _ack_and_ref_and_abort_and_suspend_to_acktype(old_value);
-      
+
       if (current_cached_suspend)
         ack_type_cumulated = AT_SUSPENDED;
       else if (current_cached_abort)
         ack_type_cumulated = AT_ABORTED;
-      
+
       /* 3) call the ack handler */
-      
+
       logmsg_current->ack_func(logmsg_current, ack_type_cumulated);
 
       /* the ack callback may not change the ack counters, it already
