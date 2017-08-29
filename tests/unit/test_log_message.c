@@ -74,6 +74,52 @@ test_misc_stuff(void)
   MSG_TESTCASE(test_log_msg_set_value_indirect_with_self_referencing_handle_results_in_a_nonindirect_value);
 }
 
+static void
+assert_sdata_value_equals(LogMessage *msg, const gchar *expected)
+{
+  GString *result = g_string_sized_new(0);
+
+  log_msg_append_format_sdata(msg, result, 0);
+  assert_string(result->str, expected, "SDATA value does not match, '%s' vs '%s'", expected, result->str);
+  g_string_free(result, TRUE);
+}
+
+
+void
+test_sdata_keys_are_sanitized(void)
+{
+  LogMessage *msg;
+  /* These keys looks strange, but JSON object can be parsed to SDATA,
+   * so the key could contain any character, while the specification
+   * does not declare any way to encode the the keys, just the values.
+   * The goal is to have a syntactically valid syslog message. */
+
+  msg = log_msg_new_empty();
+  log_msg_set_value_by_name(msg, ".SDATA.foo.bar[0]", "value[0]", -1);
+  assert_sdata_value_equals(msg, "[foo bar%5B0%5D=\"value[0\\]\"]");
+  log_msg_unref(msg);
+
+  msg = log_msg_new_empty();
+  log_msg_set_value_by_name(msg, ".SDATA.foo.bácsi", "bácsi", -1);
+  assert_sdata_value_equals(msg, "[foo b%C3%A1csi=\"bácsi\"]");
+  log_msg_unref(msg);
+
+  msg = log_msg_new_empty();
+  log_msg_set_value_by_name(msg, ".SDATA.foo.sp ace", "sp ace", -1);
+  assert_sdata_value_equals(msg, "[foo sp%20ace=\"sp ace\"]");
+  log_msg_unref(msg);
+
+  msg = log_msg_new_empty();
+  log_msg_set_value_by_name(msg, ".SDATA.foo.eq=al", "eq=al", -1);
+  assert_sdata_value_equals(msg, "[foo eq%3Dal=\"eq=al\"]");
+  log_msg_unref(msg);
+
+  msg = log_msg_new_empty();
+  log_msg_set_value_by_name(msg, ".SDATA.foo.quo\"te", "quo\"te", -1);
+  assert_sdata_value_equals(msg, "[foo quo%22te=\"quo\\\"te\"]");
+  log_msg_unref(msg);
+}
+
 int
 main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
 {
@@ -82,6 +128,7 @@ main(int argc G_GNUC_UNUSED, char *argv[] G_GNUC_UNUSED)
   init_and_load_syslogformat_module();
 
   test_misc_stuff();
+  test_sdata_keys_are_sanitized();
 
   app_shutdown();
   return 0;
