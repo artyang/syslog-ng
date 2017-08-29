@@ -270,6 +270,7 @@ log_msg_update_sdata_slow(LogMessage *self, NVHandle handle, const gchar *name, 
           gssize sdata_name_len;
           const gchar *sdata_name;
 
+          sdata_name_len = 0;
           sdata_name = log_msg_get_value_name(self->sdata[i], &sdata_name_len);
           if (sdata_name_len > prefix_and_block_len &&
               strncmp(sdata_name, name, prefix_and_block_len) == 0)
@@ -455,6 +456,7 @@ log_msg_set_value(LogMessage *self, NVHandle handle, const gchar *value, gssize 
   if (handle == LM_V_NONE)
     return;
 
+  name_len = 0;
   name = log_msg_get_value_name(handle, &name_len);
 
   if (value_len < 0)
@@ -512,6 +514,7 @@ log_msg_set_value_indirect(LogMessage *self, NVHandle handle, NVHandle ref_handl
 
   g_assert(handle >= LM_V_MAX);
 
+  name_len = 0;
   name = log_msg_get_value_name(handle, &name_len);
 
   log_msg_get_value(self, ref_handle, &value_len);
@@ -532,7 +535,15 @@ log_msg_set_value_indirect(LogMessage *self, NVHandle handle, NVHandle ref_handl
       log_msg_set_flag(self, LF_STATE_OWN_PAYLOAD);
     }
 
-  while (!nv_table_add_value_indirect(self->payload, handle, name, name_len, ref_handle, type, ofs, len, &new_entry))
+  NVReferencedSlice referenced_slice =
+  {
+    .handle = ref_handle,
+    .ofs = ofs,
+    .len = len,
+    .type = type
+  };
+
+  while (!nv_table_add_value_indirect(self->payload, handle, name, name_len, &referenced_slice, &new_entry))
     {
       /* error allocating string in payload, reallocate */
       if (!nv_table_realloc(self->payload, &self->payload))
@@ -812,6 +823,7 @@ log_msg_append_format_sdata(LogMessage *self, GString *result,  guint32 seq_num)
       guint16 handle_flags;
       gint sd_id_len;
 
+      sdata_name_len = 0;
       sdata_name = log_msg_get_value_name(handle, &sdata_name_len);
       handle_flags = nv_registry_get_handle_flags(logmsg_registry, handle);
 
@@ -1556,18 +1568,18 @@ log_msg_refcache_stop(void)
   logmsg_cached_suspend = FALSE;
 
   old_value = log_msg_update_ack_and_ref_and_abort_and_suspended(logmsg_current, 0, current_cached_acks, current_cached_abort, current_cached_suspend);
-  
+
   if ((LOGMSG_REFCACHE_VALUE_TO_ACK(old_value) == -current_cached_acks) && logmsg_cached_ack_needed)
     {
       AckType ack_type_cumulated = _ack_and_ref_and_abort_and_suspend_to_acktype(old_value);
-      
+
       if (current_cached_suspend)
         ack_type_cumulated = AT_SUSPENDED;
       else if (current_cached_abort)
         ack_type_cumulated = AT_ABORTED;
-      
+
       /* 3) call the ack handler */
-      
+
       logmsg_current->ack_func(logmsg_current, ack_type_cumulated);
 
       /* the ack callback may not change the ack counters, it already

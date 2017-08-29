@@ -99,6 +99,16 @@ nv_registry_get_handle_name(NVRegistry *self, NVHandle handle, gssize *length)
   return stored->name;
 }
 
+typedef struct _NVReferencedSlice
+{
+  NVHandle handle;
+  guint32 ofs;
+  guint32 len;
+  guint8 type;
+
+  gchar name[0];
+} NVReferencedSlice;
+
 /*
  * Contains a name-value pair.
  */
@@ -121,14 +131,8 @@ struct _NVEntry
       /* variable data, first the name of this entry, then the value, both are NUL terminated */
       gchar data[0];
     } vdirect;
-    struct
-    {
-      NVHandle handle;
-      guint32 ofs;
-      guint32 len;
-      guint8 type;
-      gchar name[0];
-    } vindirect;
+
+    NVReferencedSlice vindirect;
   };
 };
 
@@ -218,7 +222,8 @@ struct _NVTable
 #define NV_TABLE_MAX_BYTES  (256*1024*1024)
 
 gboolean nv_table_add_value(NVTable *self, NVHandle handle, const gchar *name, gsize name_len, const gchar *value, gsize value_len, gboolean *new_entry);
-gboolean nv_table_add_value_indirect(NVTable *self, NVHandle handle, const gchar *name, gsize name_len, NVHandle ref_handle, guint8 type, guint32 ofs, guint32 len, gboolean *new_entry);
+gboolean nv_table_add_value_indirect(NVTable *self, NVHandle handle, const gchar *name, gsize name_len,
+  NVReferencedSlice *referenced_slice, gboolean *new_entry);
 
 gboolean nv_table_foreach(NVTable *self, NVRegistry *registry, NVTableForeachFunc func, gpointer user_data);
 gboolean nv_table_foreach_entry(NVTable *self, NVTableForeachEntryFunc func, gpointer user_data);
