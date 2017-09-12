@@ -55,15 +55,12 @@ typedef struct _ConfgenExec
 } ConfgenExec;
 
 gboolean
-confgen_exec_generate(CfgBlockGenerator *s, GlobalConfig *cfg, CfgLexer *lexer, CfgArgs *args)
+confgen_exec_generate(CfgBlockGenerator *s, GlobalConfig *cfg, CfgArgs *args, GString *result)
 {
   ConfgenExec *self = (ConfgenExec *) s;
-  gchar *value;
-  gsize value_len = 0;
   FILE *out;
   gsize res;
   gchar buf[256];
-  gboolean result;
 
   g_snprintf(buf, sizeof(buf), "%s confgen %s", cfg_lexer_lookup_context_name_by_type(self->super.context),
              self->super.name);
@@ -81,11 +78,11 @@ confgen_exec_generate(CfgBlockGenerator *s, GlobalConfig *cfg, CfgLexer *lexer, 
                 evt_tag_errno("error", errno));
       return FALSE;
     }
-  value = g_malloc(1024);
-  while ((res = fread(value + value_len, 1, 1024, out)) > 0)
+  g_string_set_size(result, 1024);
+  while ((res = fread(result->str + result->len, 1, 1024, out)) > 0)
     {
-      value_len += res;
-      value = g_realloc(value, value_len + 1024);
+      result->len += res;
+      g_string_set_size(result, result->len + 1024);
     }
   res = pclose(out);
   if (res != 0)
@@ -95,12 +92,9 @@ confgen_exec_generate(CfgBlockGenerator *s, GlobalConfig *cfg, CfgLexer *lexer, 
                 evt_tag_str("block", self->super.name),
                 evt_tag_str("exec", self->exec),
                 evt_tag_int("rc", res));
-      g_free(value);
       return FALSE;
     }
-  result = cfg_lexer_include_buffer(lexer, buf, value, value_len);
-  g_free(value);
-  return result;
+  return TRUE;
 }
 
 static void
